@@ -219,9 +219,9 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
                   </Link>
                 </Button>
                 <Button className="w-full justify-start" variant="outline" asChild>
-                  <Link href={`/dashboard/websites/${website.id}/policies/generate`}>
+                  <Link href={`/dashboard/websites/${website.id}/policies`}>
                     <FileText className="mr-2 h-4 w-4" />
-                    Generate Privacy Policy
+                    Manage Policies
                   </Link>
                 </Button>
                 <Button className="w-full justify-start" variant="outline" asChild>
@@ -307,7 +307,7 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
                   </p>
                   <Button className="mt-4" asChild>
                     <Link
-                      href={`/dashboard/websites/${website.id}/policies/generate`}
+                      href={`/dashboard/websites/${website.id}/policies`}
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Generate Policy
