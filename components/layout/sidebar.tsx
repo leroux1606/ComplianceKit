@@ -9,6 +9,7 @@ import {
   CreditCard,
   Settings,
   Shield,
+  Inbox,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -24,6 +25,11 @@ const navigation = [
     name: "Websites",
     href: "/dashboard/websites",
     icon: Globe,
+  },
+  {
+    name: "DSAR",
+    href: "/dashboard/dsar",
+    icon: Inbox,
   },
   {
     name: "Policies",

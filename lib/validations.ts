@@ -94,4 +94,29 @@ export const bannerConfigSchema = z.object({
 
 export type BannerConfigInput = z.infer<typeof bannerConfigSchema>;
 
+// ============================================
+// DSAR Validations
+// ============================================
+
+export const dsarSubmissionSchema = z.object({
+  requestType: z.enum(["access", "erasure", "rectification", "portability", "restriction", "objection"]),
+  requesterEmail: z.string().email("Please enter a valid email address"),
+  requesterName: z.string().min(2, "Name must be at least 2 characters").optional(),
+  requesterPhone: z.string().optional(),
+  description: z.string().min(10, "Please provide more details about your request"),
+  additionalInfo: z.string().optional(),
+});
+
+export type DsarSubmissionInput = z.infer<typeof dsarSubmissionSchema>;
+
+export const dsarUpdateSchema = z.object({
+  status: z.enum(["pending", "verified", "in_progress", "completed", "rejected"]).optional(),
+  priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+  assignedTo: z.string().optional(),
+  internalNotes: z.string().optional(),
+  responseContent: z.string().optional(),
+});
+
+export type DsarUpdateInput = z.infer<typeof dsarUpdateSchema>;
+
 

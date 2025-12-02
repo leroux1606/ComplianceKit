@@ -100,6 +100,7 @@ model Website {
   policies     Policy[]
   bannerConfig BannerConfig?
   consents     Consent[]
+  dsarRequests DataSubjectRequest[]
 
   @@index([userId])
   @@map("websites")
@@ -318,4 +319,83 @@ model Invoice {
   @@index([subscriptionId])
   @@index([status])
   @@map("invoices")
+}
+
+// ============================================
+// PHASE 7: DSAR Management
+// ============================================
+
+model DataSubjectRequest {
+  id              String    @id @default(cuid())
+  websiteId       String
+  requestType     String    // access, erasure, rectification, portability, restriction, objection
+  status          String    @default("pending") // pending, in_progress, completed, rejected
+  priority        String    @default("normal") // low, normal, high, urgent
+  
+  // Requester information
+  requesterEmail  String
+  requesterName   String?
+  requesterPhone  String?
+  
+  // Request details
+  description     String    @db.Text
+  additionalInfo  String?   @db.Text
+  
+  // Verification
+  verificationToken String  @unique @default(cuid())
+  verifiedAt      DateTime?
+  
+  // Processing
+  assignedTo      String?   // User ID of assigned team member
+  internalNotes   String?   @db.Text
+  responseContent String?   @db.Text
+  
+  // Deadlines (GDPR requires response within 30 days)
+  dueDate         DateTime
+  completedAt     DateTime?
+  
+  // Audit trail
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  website         Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  activities      DsarActivity[]
+  attachments     DsarAttachment[]
+
+  @@index([websiteId])
+  @@index([status])
+  @@index([requesterEmail])
+  @@index([verificationToken])
+  @@map("data_subject_requests")
+}
+
+model DsarActivity {
+  id          String   @id @default(cuid())
+  dsarId      String
+  action      String   // created, status_changed, note_added, response_sent, completed, etc.
+  description String
+  performedBy String?  // User ID or "system" or "requester"
+  metadata    Json?    // Additional action-specific data
+  createdAt   DateTime @default(now())
+
+  dsar DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
+
+  @@index([dsarId])
+  @@map("dsar_activities")
+}
+
+model DsarAttachment {
+  id          String   @id @default(cuid())
+  dsarId      String
+  filename    String
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  uploadedBy  String   // User ID or "requester"
+  createdAt   DateTime @default(now())
+
+  dsar DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
+
+  @@index([dsarId])
+  @@map("dsar_attachments")
 }
