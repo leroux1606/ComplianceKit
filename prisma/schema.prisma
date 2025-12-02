@@ -1,0 +1,321 @@
+// ComplianceKit Database Schema
+// GDPR Compliance SaaS Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// PHASE 1: Authentication & User Management
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?   // For credentials auth
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  websites     Website[]
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// PHASE 2: Website Management
+// ============================================
+
+model Website {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  url         String
+  description String?
+  status      String   @default("active") // active, scanning, error
+  embedCode   String?  @unique
+  lastScanAt  DateTime?
+  lastScanStatus String?
+  
+  // Company information for policies
+  companyName    String?
+  companyAddress String?
+  companyEmail   String?
+  dpoName        String?
+  dpoEmail       String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scans        Scan[]
+  policies     Policy[]
+  bannerConfig BannerConfig?
+  consents     Consent[]
+
+  @@index([userId])
+  @@map("websites")
+}
+
+// ============================================
+// PHASE 3: Website Scanning
+// ============================================
+
+model Scan {
+  id          String    @id @default(cuid())
+  websiteId   String
+  status      String    @default("pending") // pending, running, completed, failed
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  score       Int?      // Compliance score 0-100
+  createdAt   DateTime  @default(now())
+
+  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  cookies  Cookie[]
+  scripts  Script[]
+  findings Finding[]
+
+  @@index([websiteId])
+  @@index([status])
+  @@map("scans")
+}
+
+model Cookie {
+  id          String    @id @default(cuid())
+  scanId      String
+  name        String
+  domain      String
+  path        String    @default("/")
+  secure      Boolean   @default(false)
+  httpOnly    Boolean   @default(false)
+  sameSite    String?   // Strict, Lax, None
+  expires     DateTime?
+  category    String?   // necessary, analytics, marketing, functional
+  description String?
+  createdAt   DateTime  @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@map("cookies")
+}
+
+model Script {
+  id         String   @id @default(cuid())
+  scanId     String
+  url        String?
+  content    String?  @db.Text
+  type       String   // inline, external
+  category   String?  // analytics, marketing, functional, unknown
+  name       String?  // Google Analytics, Facebook Pixel, etc.
+  detectedAt DateTime @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@map("scripts")
+}
+
+model Finding {
+  id             String   @id @default(cuid())
+  scanId         String
+  type           String   // cookie_banner, privacy_policy, tracking_script, etc.
+  severity       String   // info, warning, error
+  title          String
+  description    String   @db.Text
+  recommendation String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@map("findings")
+}
+
+// ============================================
+// PHASE 4: Cookie Consent Banner
+// ============================================
+
+model BannerConfig {
+  id           String   @id @default(cuid())
+  websiteId    String   @unique
+  theme        String   @default("light") // light, dark, custom
+  position     String   @default("bottom") // bottom, top, center
+  primaryColor String   @default("#0f172a")
+  textColor    String   @default("#ffffff")
+  buttonStyle  String   @default("rounded") // rounded, square, pill
+  animation    String   @default("slide") // slide, fade, none
+  customCss    String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@map("banner_configs")
+}
+
+model Consent {
+  id          String   @id @default(cuid())
+  websiteId   String
+  visitorId   String   // Anonymous visitor identifier
+  preferences Json     // { necessary: true, analytics: false, marketing: false, functional: true }
+  ipAddress   String?
+  userAgent   String?
+  consentedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+  @@index([visitorId])
+  @@map("consents")
+}
+
+// ============================================
+// PHASE 5: Legal Document Generator
+// ============================================
+
+model Policy {
+  id          String   @id @default(cuid())
+  websiteId   String
+  type        String   // privacy_policy, cookie_policy
+  language    String   @default("en")
+  content     String   @db.Text
+  htmlContent String?  @db.Text
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+  @@index([websiteId, type, isActive])
+  @@map("policies")
+}
+
+model PolicyTemplate {
+  id        String   @id @default(cuid())
+  type      String   // privacy_policy, cookie_policy
+  language  String
+  content   String   @db.Text
+  variables Json     // Template variables
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, language, isDefault])
+  @@map("policy_templates")
+}
+
+// ============================================
+// PHASE 6: Subscriptions & Billing
+// ============================================
+
+model Plan {
+  id               String   @id @default(cuid())
+  name             String   // Starter, Professional, Enterprise
+  slug             String   @unique
+  paystackPlanCode String   @unique
+  price            Decimal  @db.Decimal(10, 2)
+  currency         String   @default("ZAR")
+  interval         String   @default("monthly") // monthly, yearly
+  maxWebsites      Int?
+  features         Json     // Feature flags
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  planId             String
+  paystackPlanCode   String
+  paystackSubCode    String?
+  paystackCustomerCode String?
+  status             String    // active, cancelled, expired, past_due
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean   @default(false)
+  cancelledAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  paystackRef    String?
+  amount         Decimal   @db.Decimal(10, 2)
+  currency       String    @default("ZAR")
+  status         String    // paid, pending, failed
+  paidAt         DateTime?
+  dueDate        DateTime
+  pdfUrl         String?
+  createdAt      DateTime  @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("invoices")
+}
