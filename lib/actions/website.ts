@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
+import { checkPlanLimit } from "@/lib/actions/subscription";
 import type { Website, Scan, Policy, BannerConfig } from "@prisma/client";
 
 // Types for website with relations
@@ -86,6 +87,15 @@ export async function createWebsite(values: WebsiteInput) {
 
   if (!session?.user?.id) {
     return { error: "Unauthorized" };
+  }
+
+  // Check plan limits
+  const limitCheck = await checkPlanLimit("websites");
+  if (!limitCheck.allowed) {
+    return { 
+      error: `You've reached your plan limit of ${limitCheck.limit} website${limitCheck.limit !== 1 ? 's' : ''}. Please upgrade to add more.`,
+      limitReached: true
+    };
   }
 
   const validatedFields = websiteSchema.safeParse(values);

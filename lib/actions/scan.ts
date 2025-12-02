@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Scanner } from "@/lib/scanner";
+import { checkPlanLimit } from "@/lib/actions/subscription";
 import type { Scan, Cookie, Script, Finding } from "@prisma/client";
 
 export type ScanWithRelations = Scan & {
@@ -20,6 +21,15 @@ export async function triggerScan(websiteId: string) {
 
   if (!session?.user?.id) {
     return { error: "Unauthorized" };
+  }
+
+  // Check plan limits
+  const limitCheck = await checkPlanLimit("scans");
+  if (!limitCheck.allowed) {
+    return { 
+      error: `You've reached your monthly scan limit of ${limitCheck.limit}. Please upgrade to run more scans.`,
+      limitReached: true
+    };
   }
 
   // Verify ownership
