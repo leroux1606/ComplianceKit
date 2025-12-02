@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScanButton } from "@/components/dashboard/scan-button";
 import { getWebsite } from "@/lib/actions/website";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
@@ -97,12 +98,7 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
               Edit
             </Link>
           </Button>
-          <Button asChild>
-            <Link href={`/dashboard/websites/${website.id}/scan`}>
-              <Scan className="mr-2 h-4 w-4" />
-              Run Scan
-            </Link>
-          </Button>
+          <ScanButton websiteId={website.id} />
         </div>
       </div>
 
