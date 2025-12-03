@@ -168,3 +168,5 @@ export const COOKIE_PATTERNS: Record<string, { category: CookieCategory; descrip
   "preferences": { category: "functional", description: "User preferences" },
 };
 
+
+

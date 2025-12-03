@@ -60,3 +60,5 @@ function formatCategory(category: string): string {
   return categories[category] || category;
 }
 
+
+

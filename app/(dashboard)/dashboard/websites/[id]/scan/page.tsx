@@ -192,3 +192,5 @@ export default async function ScanPage({ params }: ScanPageProps) {
   );
 }
 
+
+

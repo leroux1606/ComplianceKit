@@ -249,3 +249,5 @@ export async function analyzeBannerCompliance(page: Page): Promise<Finding[]> {
   return findings;
 }
 
+
+

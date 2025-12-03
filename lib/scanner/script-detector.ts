@@ -195,3 +195,5 @@ export function getScriptStats(scripts: DetectedScript[]) {
   return stats;
 }
 
+
+

@@ -10,6 +10,7 @@ import {
   Settings,
   Shield,
   Inbox,
+  BarChart3,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -25,6 +26,11 @@ const navigation = [
     name: "Websites",
     href: "/dashboard/websites",
     icon: Globe,
+  },
+  {
+    name: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
   },
   {
     name: "DSAR",
