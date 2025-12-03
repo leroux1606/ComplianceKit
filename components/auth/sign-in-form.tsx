@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ import { signInWithCredentials, signInWithGoogle } from "@/lib/auth-actions";
 import { GoogleIcon } from "@/components/icons/google";
 
 export function SignInForm() {
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -61,7 +64,7 @@ export function SignInForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t("email")}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -79,7 +82,7 @@ export function SignInForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t("password")}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -101,7 +104,7 @@ export function SignInForm() {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In
+            {t("signIn")}
           </Button>
         </form>
       </Form>
@@ -112,7 +115,7 @@ export function SignInForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
+            {tCommon("or")}
           </span>
         </div>
       </div>
@@ -124,16 +127,16 @@ export function SignInForm() {
         disabled={isLoading}
       >
         <GoogleIcon className="mr-2 h-4 w-4" />
-        Google
+        {t("signInWithGoogle")}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
+        {t("dontHaveAccount")}{" "}
         <Link
           href="/sign-up"
           className="font-medium text-primary hover:underline"
         >
-          Sign up
+          {t("signUp")}
         </Link>
       </p>
     </div>

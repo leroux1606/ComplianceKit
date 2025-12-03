@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   Globe,
@@ -16,39 +17,39 @@ import {
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons/logo";
 
-const navigation = [
+const navigationItems = [
   {
-    name: "Dashboard",
+    key: "dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    name: "Websites",
+    key: "websites",
     href: "/dashboard/websites",
     icon: Globe,
   },
   {
-    name: "Analytics",
+    key: "analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
   },
   {
-    name: "DSAR",
+    key: "dsar",
     href: "/dashboard/dsar",
     icon: Inbox,
   },
   {
-    name: "Policies",
+    key: "policies",
     href: "/dashboard/policies",
     icon: FileText,
   },
   {
-    name: "Billing",
+    key: "billing",
     href: "/dashboard/billing",
     icon: CreditCard,
   },
   {
-    name: "Settings",
+    key: "settings",
     href: "/dashboard/settings",
     icon: Settings,
   },
@@ -56,6 +57,8 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations("navigation");
+  const tBilling = useTranslations("billing");
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
@@ -68,12 +71,12 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
+        {navigationItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
-              key={item.name}
+              key={item.key}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -83,7 +86,7 @@ export function Sidebar() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.name}
+              {t(item.key)}
             </Link>
           );
         })}
@@ -97,7 +100,7 @@ export function Sidebar() {
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium">Free Plan</p>
+              <p className="text-sm font-medium">{tBilling("plans.free")}</p>
               <p className="text-xs text-muted-foreground">1 website</p>
             </div>
           </div>
@@ -105,7 +108,7 @@ export function Sidebar() {
             href="/dashboard/billing"
             className="mt-3 block text-center text-sm font-medium text-primary hover:underline"
           >
-            Upgrade Plan
+            {tBilling("upgrade")}
           </Link>
         </div>
       </div>

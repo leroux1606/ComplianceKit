@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,8 @@ import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { createWebsite } from "@/lib/actions/website";
 
 export function AddWebsiteForm() {
+  const t = useTranslations("websites");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +49,7 @@ export function AddWebsiteForm() {
       return;
     }
 
-    toast.success("Website added successfully");
+    toast.success(t("websiteAdded"));
     router.push(`/dashboard/websites/${result.websiteId}`);
     router.refresh();
   }
@@ -59,7 +62,7 @@ export function AddWebsiteForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Website Name</FormLabel>
+              <FormLabel>{t("websiteName")}</FormLabel>
               <FormControl>
                 <Input
                   placeholder="My Website"
@@ -68,7 +71,7 @@ export function AddWebsiteForm() {
                 />
               </FormControl>
               <FormDescription>
-                A friendly name to identify your website
+                {t("websiteNameDescription")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -80,7 +83,7 @@ export function AddWebsiteForm() {
           name="url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Website URL</FormLabel>
+              <FormLabel>{t("websiteUrl")}</FormLabel>
               <FormControl>
                 <Input
                   placeholder="https://example.com"
@@ -89,7 +92,7 @@ export function AddWebsiteForm() {
                 />
               </FormControl>
               <FormDescription>
-                The full URL of your website (we&apos;ll add https:// if missing)
+                {t("websiteUrlDescription")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -101,7 +104,7 @@ export function AddWebsiteForm() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
+              <FormLabel>{t("descriptionOptional")}</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="A brief description of your website..."
@@ -111,7 +114,7 @@ export function AddWebsiteForm() {
                 />
               </FormControl>
               <FormDescription>
-                Help you remember what this website is for
+                {t("descriptionDescription")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -121,7 +124,7 @@ export function AddWebsiteForm() {
         <div className="flex gap-4">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add Website
+            {t("addWebsite")}
           </Button>
           <Button
             type="button"
@@ -129,7 +132,7 @@ export function AddWebsiteForm() {
             onClick={() => router.back()}
             disabled={isLoading}
           >
-            Cancel
+            {tCommon("cancel")}
           </Button>
         </div>
       </form>
