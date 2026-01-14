@@ -43,3 +43,9 @@ For better performance, use the **"Connection pooling"** connection string inste
 - Use port **6543** (pooler) instead of **5432** (direct)
 - This is better for serverless environments like Vercel
 
+
+
+
+
+
+
