@@ -52,18 +52,23 @@ export async function detectAgeVerification(page: Page): Promise<{
       return formData;
     });
 
-    // Check for age verification
+    // Check for age verification (multi-language)
     const agePatterns = [
-      /age\s*verification/i,
-      /verify.*age/i,
-      /confirm.*age/i,
-      /18\+/i,
-      /over\s*18/i,
-      /13\+/i,
-      /minimum\s*age/i,
-      /date\s*of\s*birth/i,
-      /dob/i,
-      /birthday/i,
+      // English
+      /age\s*verification/i, /verify.*age/i, /confirm.*age/i, /18\+/i, /over\s*18/i,
+      /13\+/i, /minimum\s*age/i, /date\s*of\s*birth/i, /dob/i, /birthday/i,
+      // German
+      /altersverifizierung/i, /alter.*bestätigen/i, /alter.*überprüfen/i, /mindestens.*18/i,
+      /mindestalter/i, /geburtsdatum/i, /geburtstag/i,
+      // French
+      /vérification.*d'âge/i, /vérifier.*âge/i, /confirmer.*âge/i, /plus.*de.*18/i,
+      /âge.*minimum/i, /date.*de.*naissance/i, /anniversaire/i,
+      // Spanish
+      /verificación.*de.*edad/i, /verificar.*edad/i, /confirmar.*edad/i, /mayor.*de.*18/i,
+      /edad.*mínima/i, /fecha.*de.*nacimiento/i, /cumpleaños/i,
+      // Dutch
+      /leeftijdsverificatie/i, /leeftijd.*verifiëren/i, /leeftijd.*bevestigen/i, /18\+/i,
+      /minimale.*leeftijd/i, /geboortedatum/i, /verjaardag/i,
     ];
 
     const hasAgeVerification =
@@ -73,12 +78,18 @@ export async function detectAgeVerification(page: Page): Promise<{
         (f.name.includes("age") || f.name.includes("birth") || f.label.includes("age"))
       );
 
-    // Check for parental consent
+    // Check for parental consent (multi-language)
     const parentalPatterns = [
-      /parental\s*consent/i,
-      /parent.*permission/i,
-      /guardian.*consent/i,
-      /parent.*approval/i,
+      // English
+      /parental\s*consent/i, /parent.*permission/i, /guardian.*consent/i, /parent.*approval/i,
+      // German
+      /elterliche.*zustimmung/i, /einwilligung.*der.*eltern/i, /erziehungsberechtigte/i,
+      // French
+      /consentement.*parental/i, /autorisation.*parentale/i, /consentement.*tuteur/i,
+      // Spanish
+      /consentimiento.*parental/i, /permiso.*de.*los.*padres/i, /autorización.*tutor/i,
+      // Dutch
+      /ouderlijke.*toestemming/i, /toestemming.*ouders/i, /voogd.*toestemming/i,
     ];
 
     const hasParentalConsent = parentalPatterns.some((pattern) => pattern.test(pageText));
@@ -109,17 +120,116 @@ export async function detectSensitiveDataProcessing(page: Page): Promise<{
       return document.body.textContent?.toLowerCase() || "";
     });
 
-    // Article 9 special categories of data
+    // Article 9 special categories of data (multi-language)
     const sensitiveDataPatterns = {
-      health: [/health\s*data/i, /medical/i, /fitness/i, /wellness/i, /disease/i],
-      biometric: [/biometric/i, /fingerprint/i, /facial\s*recognition/i, /face\s*id/i],
-      genetic: [/genetic/i, /DNA/i, /genomic/i],
-      racial: [/race/i, /ethnicity/i, /ethnic\s*origin/i],
-      political: [/political\s*opinion/i, /political\s*view/i],
-      religious: [/religious\s*belief/i, /religion/i, /faith/i],
-      philosophical: [/philosophical\s*belief/i],
-      union: [/trade\s*union/i, /union\s*membership/i],
-      sexual: [/sexual\s*orientation/i, /gender\s*identity/i],
+      health: [
+        // English
+        /health\s*data/i, /medical/i, /fitness/i, /wellness/i, /disease/i,
+        // German
+        /gesundheitsdaten/i, /medizinisch/i, /krankheit/i,
+        // French
+        /données.*de.*santé/i, /médical/i, /maladie/i,
+        // Spanish
+        /datos.*de.*salud/i, /médico/i, /enfermedad/i,
+        // Dutch
+        /gezondheidsgegevens/i, /medisch/i, /ziekte/i,
+      ],
+      biometric: [
+        // English
+        /biometric/i, /fingerprint/i, /facial\s*recognition/i, /face\s*id/i,
+        // German
+        /biometrisch/i, /fingerabdruck/i, /gesichtserkennung/i,
+        // French
+        /biométrique/i, /empreinte.*digitale/i, /reconnaissance.*faciale/i,
+        // Spanish
+        /biométrico/i, /huella.*digital/i, /reconocimiento.*facial/i,
+        // Dutch
+        /biometrisch/i, /vingerafdruk/i, /gezichtsherkenning/i,
+      ],
+      genetic: [
+        // English
+        /genetic/i, /DNA/i, /genomic/i,
+        // German
+        /genetisch/i, /DNS/i, /genomisch/i,
+        // French
+        /génétique/i, /ADN/i, /génomique/i,
+        // Spanish
+        /genético/i, /ADN/i, /genómico/i,
+        // Dutch
+        /genetisch/i, /DNA/i, /genomisch/i,
+      ],
+      racial: [
+        // English
+        /race/i, /ethnicity/i, /ethnic\s*origin/i,
+        // German
+        /rasse/i, /ethnische.*herkunft/i, /ethnie/i,
+        // French
+        /race/i, /origine.*ethnique/i, /ethnicité/i,
+        // Spanish
+        /raza/i, /origen.*étnico/i, /etnia/i,
+        // Dutch
+        /ras/i, /etnische.*afkomst/i, /etniciteit/i,
+      ],
+      political: [
+        // English
+        /political\s*opinion/i, /political\s*view/i,
+        // German
+        /politische.*meinung/i, /politische.*ansicht/i,
+        // French
+        /opinion.*politique/i, /vue.*politique/i,
+        // Spanish
+        /opinión.*política/i, /ideología.*política/i,
+        // Dutch
+        /politieke.*opvatting/i, /politieke.*mening/i,
+      ],
+      religious: [
+        // English
+        /religious\s*belief/i, /religion/i, /faith/i,
+        // German
+        /religiöse.*überzeugung/i, /religion/i, /glaube/i,
+        // French
+        /conviction.*religieuse/i, /religion/i, /foi/i,
+        // Spanish
+        /creencia.*religiosa/i, /religión/i, /fe/i,
+        // Dutch
+        /religieuze.*overtuiging/i, /religie/i, /geloof/i,
+      ],
+      philosophical: [
+        // English
+        /philosophical\s*belief/i,
+        // German
+        /weltanschauung/i, /philosophische.*überzeugung/i,
+        // French
+        /conviction.*philosophique/i,
+        // Spanish
+        /creencia.*filosófica/i,
+        // Dutch
+        /filosofische.*overtuiging/i, /levensbeschouwing/i,
+      ],
+      union: [
+        // English
+        /trade\s*union/i, /union\s*membership/i,
+        // German
+        /gewerkschaft/i, /gewerkschaftszugehörigkeit/i,
+        // French
+        /syndicat/i, /adhésion.*syndicale/i,
+        // Spanish
+        /sindicato/i, /afiliación.*sindical/i,
+        // Dutch
+        /vakbond/i, /vakbondslidmaatschap/i,
+      ],
+      sexual: [
+        // English
+        /sexual\s*orientation/i, /gender\s*identity/i,
+        // German
+        /sexuelle.*orientierung/i, /geschlechtsidentität/i,
+        // French
+        /orientation.*sexuelle/i, /identité.*de.*genre/i,
+        // Spanish
+        /orientación.*sexual/i, /identidad.*de.*género/i,
+        // Dutch
+        /seksuele.*geaardheid/i, /genderidentiteit/i,
+      ],
     };
 
     const foundCategories: string[] = [];
@@ -132,12 +242,18 @@ export async function detectSensitiveDataProcessing(page: Page): Promise<{
       }
     }
 
-    // Check for explicit consent
+    // Check for explicit consent (multi-language)
     const explicitConsentPatterns = [
-      /explicit\s*consent/i,
-      /special\s*category/i,
-      /sensitive\s*data/i,
-      /sensitive\s*personal/i,
+      // English
+      /explicit\s*consent/i, /special\s*category/i, /sensitive\s*data/i, /sensitive\s*personal/i,
+      // German
+      /ausdrückliche.*einwilligung/i, /besondere.*kategorie/i, /sensible.*daten/i,
+      // French
+      /consentement.*explicite/i, /catégorie.*particulière/i, /données.*sensibles/i,
+      // Spanish
+      /consentimiento.*explícito/i, /categoría.*especial/i, /datos.*sensibles/i,
+      // Dutch
+      /uitdrukkelijke.*toestemming/i, /bijzondere.*categorie/i, /gevoelige.*gegevens/i,
     ];
 
     const hasExplicitConsent = explicitConsentPatterns.some((pattern) => pattern.test(pageText));
@@ -169,30 +285,50 @@ export async function detectAutomatedDecisions(page: Page): Promise<{
       return document.body.textContent?.toLowerCase() || "";
     });
 
-    // Check for mentions of automated decisions
+    // Check for mentions of automated decisions (multi-language)
     const automationPatterns = [
-      /automated\s*decision/i,
-      /algorithmic\s*decision/i,
-      /profiling/i,
-      /machine\s*learning/i,
-      /AI\s*decision/i,
-      /artificial\s*intelligence/i,
-      /credit\s*scoring/i,
-      /risk\s*assessment/i,
-      /recommendation\s*engine/i,
-      /personalization/i,
-      /automated\s*processing/i,
+      // English
+      /automated\s*decision/i, /algorithmic\s*decision/i, /profiling/i,
+      /machine\s*learning/i, /AI\s*decision/i, /artificial\s*intelligence/i,
+      /credit\s*scoring/i, /risk\s*assessment/i, /recommendation\s*engine/i,
+      /personalization/i, /automated\s*processing/i,
+      // German
+      /automatisierte.*entscheidung/i, /algorithmische.*entscheidung/i, /profiling/i,
+      /maschinelles.*lernen/i, /KI.*entscheidung/i, /künstliche.*intelligenz/i,
+      /kredit.*scoring/i, /risikobewertung/i, /personalisierung/i, /automatisierte.*verarbeitung/i,
+      // French
+      /décision.*automatisée/i, /décision.*algorithmique/i, /profilage/i,
+      /apprentissage.*automatique/i, /décision.*IA/i, /intelligence.*artificielle/i,
+      /notation.*crédit/i, /évaluation.*risque/i, /personnalisation/i, /traitement.*automatisé/i,
+      // Spanish
+      /decisión.*automatizada/i, /decisión.*algorítmica/i, /elaboración.*de.*perfiles/i,
+      /aprendizaje.*automático/i, /decisión.*IA/i, /inteligencia.*artificial/i,
+      /puntuación.*crédito/i, /evaluación.*riesgo/i, /personalización/i, /tratamiento.*automatizado/i,
+      // Dutch
+      /geautomatiseerde.*besluitvorming/i, /algoritmische.*beslissing/i, /profilering/i,
+      /machine.*learning/i, /AI.*beslissing/i, /kunstmatige.*intelligentie/i,
+      /kredietbeoordeling/i, /risicobeoordeling/i, /personalisatie/i, /geautomatiseerde.*verwerking/i,
     ];
 
     const hasAutomatedDecisions = automationPatterns.some((pattern) => pattern.test(pageText));
 
-    // Check if automation is disclosed
+    // Check if automation is disclosed (multi-language)
     const disclosurePatterns = [
-      /automated\s*decision.*article\s*22/i,
-      /right.*not.*subject.*automated/i,
-      /solely.*automated/i,
-      /human\s*review/i,
-      /human\s*intervention/i,
+      // English
+      /automated\s*decision.*article\s*22/i, /right.*not.*subject.*automated/i,
+      /solely.*automated/i, /human\s*review/i, /human\s*intervention/i,
+      // German
+      /automatisierte.*entscheidung.*artikel\s*22/i, /recht.*nicht.*ausschließlich.*automatisiert/i,
+      /ausschließlich.*automatisiert/i, /menschliche.*überprüfung/i, /menschliches.*eingreifen/i,
+      // French
+      /décision.*automatisée.*article\s*22/i, /droit.*de.*ne.*pas.*faire.*objet.*décision.*automatisée/i,
+      /uniquement.*automatisée/i, /examen.*humain/i, /intervention.*humaine/i,
+      // Spanish
+      /decisión.*automatizada.*artículo\s*22/i, /derecho.*a.*no.*ser.*objeto.*decisión.*automatizada/i,
+      /únicamente.*automatizada/i, /revisión.*humana/i, /intervención.*humana/i,
+      // Dutch
+      /geautomatiseerde.*besluitvorming.*artikel\s*22/i, /recht.*om.*niet.*onderworpen.*geautomatiseerd/i,
+      /uitsluitend.*geautomatiseerd/i, /menselijke.*beoordeling/i, /menselijke.*tussenkomst/i,
     ];
 
     const disclosesAutomation = disclosurePatterns.some((pattern) => pattern.test(pageText));
@@ -220,14 +356,21 @@ export async function detectLegalBasis(page: Page): Promise<boolean> {
     });
 
     const legalBasisPatterns = [
-      /legal\s*basis/i,
-      /lawful\s*basis/i,
-      /article\s*6/i,
-      /legitimate\s*interest/i,
-      /contractual\s*necessity/i,
-      /legal\s*obligation/i,
-      /vital\s*interest/i,
-      /public\s*task/i,
+      // English
+      /legal\s*basis/i, /lawful\s*basis/i, /article\s*6/i, /legitimate\s*interest/i,
+      /contractual\s*necessity/i, /legal\s*obligation/i, /vital\s*interest/i, /public\s*task/i,
+      // German
+      /rechtsgrundlage/i, /artikel\s*6/i, /berechtigtes.*interesse/i, /vertragserfüllung/i,
+      /rechtliche.*verpflichtung/i, /lebenswichtige.*interessen/i, /öffentliche.*aufgabe/i,
+      // French
+      /base.*légale/i, /fondement.*juridique/i, /article\s*6/i, /intérêt.*légitime/i,
+      /nécessité.*contractuelle/i, /obligation.*légale/i, /intérêt.*vital/i, /mission.*d'intérêt.*public/i,
+      // Spanish
+      /base.*legal/i, /fundamento.*jurídico/i, /artículo\s*6/i, /interés.*legítimo/i,
+      /necesidad.*contractual/i, /obligación.*legal/i, /interés.*vital/i, /misión.*de.*interés.*público/i,
+      // Dutch
+      /rechtsgrond/i, /artikel\s*6/i, /gerechtvaardigd.*belang/i, /contractuele.*noodzaak/i,
+      /wettelijke.*verplichting/i, /vitaal.*belang/i, /publieke.*taak/i,
     ];
 
     return legalBasisPatterns.some((pattern) => pattern.test(pageText));

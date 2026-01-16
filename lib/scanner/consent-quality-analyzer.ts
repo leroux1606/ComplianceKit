@@ -86,14 +86,36 @@ export async function analyzeConsentQuality(page: Page, hasBanner: boolean): Pro
         }
       });
 
-      // Check for accept button
-      const acceptPatterns = [/accept/i, /agree/i, /allow/i, /ok/i, /got\s*it/i, /understood/i];
+      // Check for accept button (multi-language)
+      const acceptPatterns = [
+        // English
+        /accept/i, /agree/i, /allow/i, /ok/i, /got\s*it/i, /understood/i,
+        // German
+        /akzeptieren/i, /zustimmen/i, /erlauben/i, /einverstanden/i,
+        // French
+        /accepter/i, /consentir/i, /autoriser/i, /d'accord/i,
+        // Spanish
+        /aceptar/i, /consentir/i, /permitir/i, /de acuerdo/i,
+        // Dutch
+        /accepteren/i, /toestemmen/i, /toestaan/i, /akkoord/i,
+      ];
       const acceptButtons = buttonTexts.filter((btn) =>
         acceptPatterns.some((pattern) => pattern.test(btn.text))
       );
 
-      // Check for reject button
-      const rejectPatterns = [/reject/i, /decline/i, /deny/i, /refuse/i, /no\s*thanks/i, /dismiss/i];
+      // Check for reject button (multi-language)
+      const rejectPatterns = [
+        // English
+        /reject/i, /decline/i, /deny/i, /refuse/i, /no\s*thanks/i, /dismiss/i,
+        // German
+        /ablehnen/i, /verweigern/i, /zurückweisen/i, /nein\s*danke/i,
+        // French
+        /refuser/i, /décliner/i, /rejeter/i, /non\s*merci/i,
+        // Spanish
+        /rechazar/i, /denegar/i, /declinar/i, /no\s*gracias/i,
+        // Dutch
+        /weigeren/i, /afwijzen/i, /weiger/i, /nee\s*bedankt/i,
+      ];
       const rejectButtons = buttonTexts.filter((btn) =>
         rejectPatterns.some((pattern) => pattern.test(btn.text))
       );
@@ -126,13 +148,21 @@ export async function analyzeConsentQuality(page: Page, hasBanner: boolean): Pro
       // Check for granular consent (checkboxes for different categories)
       const checkboxes = bannerElement.querySelectorAll('input[type="checkbox"]');
       const categoryKeywords = [
-        /necessary/i,
-        /functional/i,
-        /analytics/i,
-        /marketing/i,
-        /advertising/i,
-        /preferences/i,
-        /statistics/i,
+        // English
+        /necessary/i, /essential/i, /functional/i, /analytics/i, /marketing/i,
+        /advertising/i, /preferences/i, /statistics/i,
+        // German
+        /notwendig/i, /erforderlich/i, /funktional/i, /analytik/i, /analyse/i,
+        /marketing/i, /werbung/i, /präferenzen/i, /statistik/i,
+        // French
+        /nécessaire/i, /essentiel/i, /fonctionnel/i, /analytique/i, /analyse/i,
+        /marketing/i, /publicité/i, /préférences/i, /statistiques/i,
+        // Spanish
+        /necesaria/i, /esencial/i, /funcional/i, /analítica/i, /análisis/i,
+        /marketing/i, /publicidad/i, /preferencias/i, /estadística/i,
+        // Dutch
+        /noodzakelijk/i, /essentieel/i, /functioneel/i, /analytisch/i, /analyse/i,
+        /marketing/i, /reclame/i, /voorkeuren/i, /statistiek/i,
       ];
 
       let categoryCheckboxes = 0;
@@ -165,24 +195,43 @@ export async function analyzeConsentQuality(page: Page, hasBanner: boolean): Pro
       });
       result.noPretickedBoxes = !hasPretickedBoxes;
 
-      // Check for clear language
+      // Check for clear language (multi-language)
       const bannerText = (bannerElement.textContent || "").toLowerCase();
       const clarityKeywords = [
-        /cookie/i,
-        /consent/i,
-        /privacy/i,
-        /data/i,
-        /personal information/i,
+        // English
+        /cookie/i, /consent/i, /privacy/i, /data/i, /personal information/i,
+        // German
+        /cookie/i, /keks/i, /einwilligung/i, /zustimmung/i, /datenschutz/i,
+        /daten/i, /persönliche.*daten/i,
+        // French
+        /cookie/i, /témoin/i, /consentement/i, /confidentialité/i, /vie privée/i,
+        /données/i, /données.*personnelles/i,
+        // Spanish
+        /cookie/i, /galleta/i, /consentimiento/i, /privacidad/i,
+        /datos/i, /datos.*personales/i,
+        // Dutch
+        /cookie/i, /toestemming/i, /privacy/i, /gegevens/i,
+        /persoonlijke.*gegevens/i,
       ];
       result.hasClearLanguage = clarityKeywords.some((pattern) => pattern.test(bannerText));
 
-      // Check for withdraw option
+      // Check for withdraw option (multi-language)
       const withdrawPatterns = [
-        /withdraw/i,
-        /change.*preference/i,
-        /manage.*cookie/i,
-        /cookie.*setting/i,
-        /privacy.*setting/i,
+        // English
+        /withdraw/i, /change.*preference/i, /manage.*cookie/i,
+        /cookie.*setting/i, /privacy.*setting/i,
+        // German
+        /widerrufen/i, /zurückziehen/i, /einstellungen.*ändern/i,
+        /cookie.*verwalten/i, /cookie.*einstellungen/i, /datenschutz.*einstellungen/i,
+        // French
+        /retirer/i, /révoquer/i, /modifier.*préférences/i,
+        /gérer.*cookies/i, /paramètres.*cookies/i, /paramètres.*confidentialité/i,
+        // Spanish
+        /retirar/i, /revocar/i, /cambiar.*preferencias/i,
+        /gestionar.*cookies/i, /configuración.*cookies/i, /configuración.*privacidad/i,
+        // Dutch
+        /intrekken/i, /herroepen/i, /voorkeuren.*wijzigen/i,
+        /cookies.*beheren/i, /cookie.*instellingen/i, /privacy.*instellingen/i,
       ];
 
       const allText = document.body.textContent || "";

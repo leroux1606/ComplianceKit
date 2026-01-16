@@ -2,58 +2,93 @@ import { Page } from "puppeteer";
 import type { UserRightsDetection, Finding } from "./types";
 
 /**
- * Patterns to detect user profile/settings pages
+ * Patterns to detect user profile/settings pages (multi-language)
  */
 const PROFILE_PATTERNS = [
-  /profile/i,
-  /account/i,
-  /settings/i,
-  /my-account/i,
-  /user-settings/i,
-  /edit-profile/i,
-  /personal-info/i,
-  /update-profile/i,
+  // English
+  /profile/i, /account/i, /settings/i, /my-account/i, /user-settings/i,
+  /edit-profile/i, /personal-info/i, /update-profile/i,
+  // German
+  /profil/i, /konto/i, /einstellungen/i, /mein-konto/i, /benutzerkonto/i,
+  /profil.*bearbeiten/i, /persönliche.*daten/i,
+  // French
+  /profil/i, /compte/i, /paramètres/i, /mon-compte/i, /mes-paramètres/i,
+  /modifier.*profil/i, /informations.*personnelles/i,
+  // Spanish
+  /perfil/i, /cuenta/i, /configuración/i, /mi-cuenta/i, /ajustes/i,
+  /editar.*perfil/i, /información.*personal/i,
+  // Dutch
+  /profiel/i, /account/i, /instellingen/i, /mijn-account/i,
+  /profiel.*bewerken/i, /persoonlijke.*gegevens/i,
 ];
 
 /**
- * Patterns to detect data export functionality
+ * Patterns to detect data export functionality (multi-language)
  */
 const DATA_EXPORT_PATTERNS = [
-  /export.*data/i,
-  /download.*data/i,
-  /data.*portability/i,
-  /download.*information/i,
-  /export.*account/i,
-  /request.*data/i,
-  /get.*my.*data/i,
+  // English
+  /export.*data/i, /download.*data/i, /data.*portability/i,
+  /download.*information/i, /export.*account/i, /request.*data/i, /get.*my.*data/i,
+  // German
+  /daten.*exportieren/i, /daten.*herunterladen/i, /datenübertragbarkeit/i,
+  /daten.*anfordern/i, /meine.*daten.*laden/i,
+  // French
+  /exporter.*données/i, /télécharger.*données/i, /portabilité.*données/i,
+  /demander.*données/i, /obtenir.*mes.*données/i,
+  // Spanish
+  /exportar.*datos/i, /descargar.*datos/i, /portabilidad.*datos/i,
+  /solicitar.*datos/i, /obtener.*mis.*datos/i,
+  // Dutch
+  /gegevens.*exporteren/i, /gegevens.*downloaden/i, /gegevensoverdraagbaarheid/i,
+  /gegevens.*aanvragen/i, /mijn.*gegevens.*ophalen/i,
 ];
 
 /**
- * Patterns to detect account deletion
+ * Patterns to detect account deletion (multi-language)
  */
 const ACCOUNT_DELETION_PATTERNS = [
-  /delete.*account/i,
-  /close.*account/i,
-  /remove.*account/i,
-  /deactivate.*account/i,
-  /cancel.*account/i,
-  /erase.*data/i,
-  /right.*to.*erasure/i,
-  /right.*to.*be.*forgotten/i,
+  // English
+  /delete.*account/i, /close.*account/i, /remove.*account/i,
+  /deactivate.*account/i, /cancel.*account/i, /erase.*data/i,
+  /right.*to.*erasure/i, /right.*to.*be.*forgotten/i,
+  // German
+  /konto.*löschen/i, /konto.*schließen/i, /konto.*entfernen/i,
+  /konto.*deaktivieren/i, /daten.*löschen/i, /recht.*auf.*löschung/i,
+  /recht.*auf.*vergessenwerden/i,
+  // French
+  /supprimer.*compte/i, /fermer.*compte/i, /effacer.*compte/i,
+  /désactiver.*compte/i, /effacer.*données/i, /droit.*à.*l'effacement/i,
+  /droit.*à.*l'oubli/i,
+  // Spanish
+  /eliminar.*cuenta/i, /cerrar.*cuenta/i, /borrar.*cuenta/i,
+  /desactivar.*cuenta/i, /borrar.*datos/i, /derecho.*al.*olvido/i,
+  /derecho.*de.*supresión/i,
+  // Dutch
+  /account.*verwijderen/i, /account.*sluiten/i, /account.*wissen/i,
+  /account.*deactiveren/i, /gegevens.*wissen/i, /recht.*op.*vergetelheid/i,
+  /recht.*op.*gegevenswissing/i,
 ];
 
 /**
- * Patterns to detect DSAR (Data Subject Access Request) mechanisms
+ * Patterns to detect DSAR (Data Subject Access Request) mechanisms (multi-language)
  */
 const DSAR_PATTERNS = [
-  /dsar/i,
-  /data.*subject.*request/i,
-  /privacy.*request/i,
-  /data.*request/i,
-  /gdpr.*request/i,
-  /submit.*request/i,
-  /access.*request/i,
-  /data.*protection/i,
+  // English
+  /dsar/i, /data.*subject.*request/i, /privacy.*request/i,
+  /data.*request/i, /gdpr.*request/i, /submit.*request/i,
+  /access.*request/i, /data.*protection/i,
+  // German
+  /dsar/i, /auskunftsersuchen/i, /datenschutzanfrage/i, /betroffenenanfrage/i,
+  /dsgvo.*anfrage/i, /anfrage.*einreichen/i, /datenschutz/i,
+  // French
+  /dsar/i, /demande.*d'accès/i, /demande.*de.*confidentialité/i,
+  /demande.*rgpd/i, /soumettre.*demande/i, /protection.*des.*données/i,
+  // Spanish
+  /dsar/i, /solicitud.*de.*acceso/i, /solicitud.*de.*privacidad/i,
+  /solicitud.*rgpd/i, /enviar.*solicitud/i, /protección.*de.*datos/i,
+  // Dutch
+  /dsar/i, /verzoek.*inzage/i, /privacyverzoek/i, /gegevensverzoek/i,
+  /avg.*verzoek/i, /verzoek.*indienen/i, /gegevensbescherming/i,
 ];
 
 /**

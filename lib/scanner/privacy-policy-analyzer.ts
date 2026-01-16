@@ -23,91 +23,192 @@ interface PrivacyPolicyAnalysis {
 }
 
 /**
- * Patterns to detect required privacy policy elements
+ * Patterns to detect required privacy policy elements (multi-language)
  */
 const REQUIRED_ELEMENTS = {
   controllerIdentity: [
-    /controller/i,
-    /data\s*controller/i,
-    /company\s*name/i,
-    /contact\s*information/i,
-    /registered\s*office/i,
+    // English
+    /controller/i, /data\s*controller/i, /company\s*name/i,
+    /contact\s*information/i, /registered\s*office/i,
+    // German
+    /verantwortlich/i, /datenverantwortlich/i, /firmenname/i,
+    /kontaktinformationen/i, /eingetragener.*sitz/i,
+    // French
+    /responsable/i, /responsable.*du.*traitement/i, /nom.*de.*la.*société/i,
+    /coordonnées/i, /siège.*social/i,
+    // Spanish
+    /responsable/i, /responsable.*del.*tratamiento/i, /nombre.*de.*la.*empresa/i,
+    /información.*de.*contacto/i, /domicilio.*social/i,
+    // Dutch
+    /verwerkingsverantwoordelijke/i, /bedrijfsnaam/i,
+    /contactgegevens/i, /geregistreerd.*kantoor/i,
   ],
   dpoContact: [
-    /data\s*protection\s*officer/i,
-    /dpo/i,
-    /privacy\s*officer/i,
-    /dpo@/i,
-    /privacy@/i,
+    // English
+    /data\s*protection\s*officer/i, /dpo/i, /privacy\s*officer/i,
+    /dpo@/i, /privacy@/i,
+    // German
+    /datenschutzbeauftragter/i, /dsb/i, /datenschutzbeauftragte/i,
+    /dsb@/i, /datenschutz@/i,
+    // French
+    /délégué.*à.*la.*protection.*des.*données/i, /dpd/i, /dpo/i,
+    /dpd@/i, /confidentialite@/i,
+    // Spanish
+    /delegado.*de.*protección.*de.*datos/i, /dpd/i, /dpo/i,
+    /dpd@/i, /privacidad@/i,
+    // Dutch
+    /functionaris.*gegevensbescherming/i, /fg/i, /dpo/i,
+    /fg@/i, /privacy@/i,
   ],
   processingPurposes: [
-    /purpose/i,
-    /why\s*we\s*collect/i,
-    /how\s*we\s*use/i,
-    /processing\s*purposes/i,
+    // English
+    /purpose/i, /why\s*we\s*collect/i, /how\s*we\s*use/i, /processing\s*purposes/i,
+    // German
+    /zweck/i, /verarbeitungszweck/i, /warum.*wir.*erheben/i, /wie.*wir.*verwenden/i,
+    // French
+    /finalité/i, /objectif/i, /pourquoi.*nous.*collectons/i, /comment.*nous.*utilisons/i,
+    // Spanish
+    /finalidad/i, /propósito/i, /por.*qué.*recopilamos/i, /cómo.*usamos/i,
+    // Dutch
+    /doel/i, /verwerkingsdoel/i, /waarom.*we.*verzamelen/i, /hoe.*we.*gebruiken/i,
   ],
   legalBasis: [
-    /legal\s*basis/i,
-    /lawful\s*basis/i,
-    /consent/i,
-    /legitimate\s*interest/i,
-    /contractual\s*necessity/i,
-    /legal\s*obligation/i,
-    /article\s*6/i,
+    // English
+    /legal\s*basis/i, /lawful\s*basis/i, /consent/i, /legitimate\s*interest/i,
+    /contractual\s*necessity/i, /legal\s*obligation/i, /article\s*6/i,
+    // German
+    /rechtsgrundlage/i, /einwilligung/i, /berechtigtes.*interesse/i,
+    /vertragserfüllung/i, /rechtliche.*verpflichtung/i, /artikel\s*6/i,
+    // French
+    /base.*légale/i, /fondement.*juridique/i, /consentement/i, /intérêt.*légitime/i,
+    /nécessité.*contractuelle/i, /obligation.*légale/i, /article\s*6/i,
+    // Spanish
+    /base.*legal/i, /fundamento.*jurídico/i, /consentimiento/i, /interés.*legítimo/i,
+    /necesidad.*contractual/i, /obligación.*legal/i, /artículo\s*6/i,
+    // Dutch
+    /rechtsgrond/i, /toestemming/i, /gerechtvaardigd.*belang/i,
+    /contractuele.*noodzaak/i, /wettelijke.*verplichting/i, /artikel\s*6/i,
   ],
   dataCategories: [
-    /personal\s*data/i,
-    /information\s*we\s*collect/i,
-    /data\s*categories/i,
-    /types\s*of\s*data/i,
+    // English
+    /personal\s*data/i, /information\s*we\s*collect/i, /data\s*categories/i, /types\s*of\s*data/i,
+    // German
+    /personenbezogene.*daten/i, /informationen.*die.*wir.*erheben/i,
+    /datenkategorien/i, /arten.*von.*daten/i,
+    // French
+    /données.*personnelles/i, /informations.*que.*nous.*collectons/i,
+    /catégories.*de.*données/i, /types.*de.*données/i,
+    // Spanish
+    /datos.*personales/i, /información.*que.*recopilamos/i,
+    /categorías.*de.*datos/i, /tipos.*de.*datos/i,
+    // Dutch
+    /persoonsgegevens/i, /informatie.*die.*we.*verzamelen/i,
+    /gegevenscategorieën/i, /soorten.*gegevens/i,
   ],
   retentionPeriods: [
-    /retention/i,
-    /how\s*long/i,
-    /storage\s*period/i,
-    /keep\s*your\s*data/i,
-    /delete.*data/i,
+    // English
+    /retention/i, /how\s*long/i, /storage\s*period/i, /keep\s*your\s*data/i, /delete.*data/i,
+    // German
+    /aufbewahrung/i, /speicherdauer/i, /wie\s*lange/i, /daten.*aufbewahren/i, /daten.*löschen/i,
+    // French
+    /conservation/i, /durée.*de.*conservation/i, /combien.*de.*temps/i,
+    /conserver.*données/i, /supprimer.*données/i,
+    // Spanish
+    /conservación/i, /período.*de.*retención/i, /cuánto.*tiempo/i,
+    /conservar.*datos/i, /eliminar.*datos/i,
+    // Dutch
+    /bewaring/i, /bewaartermijn/i, /hoe.*lang/i, /gegevens.*bewaren/i, /gegevens.*verwijderen/i,
   ],
   dataRecipients: [
-    /third.*part/i,
-    /recipient/i,
-    /share.*with/i,
-    /disclose.*to/i,
-    /service\s*provider/i,
+    // English
+    /third.*part/i, /recipient/i, /share.*with/i, /disclose.*to/i, /service\s*provider/i,
+    // German
+    /dritte/i, /empfänger/i, /teilen.*mit/i, /weitergabe/i, /dienstleister/i,
+    // French
+    /tiers/i, /destinataire/i, /partager.*avec/i, /divulguer/i, /prestataire/i,
+    // Spanish
+    /tercero/i, /destinatario/i, /compartir.*con/i, /divulgar/i, /proveedor.*de.*servicio/i,
+    // Dutch
+    /derde/i, /ontvanger/i, /delen.*met/i, /verstrekken/i, /dienstverlener/i,
   ],
   internationalTransfers: [
-    /international\s*transfer/i,
-    /outside.*EEA/i,
-    /outside.*EU/i,
-    /cross.*border/i,
-    /adequacy\s*decision/i,
-    /standard\s*contractual\s*clauses/i,
-    /SCC/i,
+    // English
+    /international\s*transfer/i, /outside.*EEA/i, /outside.*EU/i, /cross.*border/i,
+    /adequacy\s*decision/i, /standard\s*contractual\s*clauses/i, /SCC/i,
+    // German
+    /internationale.*übermittlung/i, /außerhalb.*EWR/i, /außerhalb.*EU/i,
+    /grenzüberschreitend/i, /angemessenheitsbeschluss/i, /standardvertragsklauseln/i,
+    // French
+    /transfert.*international/i, /en.*dehors.*de.*l'EEE/i, /hors.*UE/i,
+    /transfrontière/i, /décision.*d'adéquation/i, /clauses.*contractuelles.*types/i,
+    // Spanish
+    /transferencia.*internacional/i, /fuera.*del.*EEE/i, /fuera.*de.*la.*UE/i,
+    /transfronterizo/i, /decisión.*de.*adecuación/i, /cláusulas.*contractuales.*tipo/i,
+    // Dutch
+    /internationale.*doorgifte/i, /buiten.*EER/i, /buiten.*EU/i,
+    /grensoverschrijdend/i, /adequaatheidsbesluit/i, /modelcontractbepalingen/i,
   ],
   userRights: [
-    /your\s*rights/i,
-    /data\s*subject\s*rights/i,
-    /right\s*to\s*access/i,
-    /right\s*to\s*erasure/i,
-    /right\s*to\s*rectification/i,
-    /right\s*to\s*portability/i,
+    // English
+    /your\s*rights/i, /data\s*subject\s*rights/i, /right\s*to\s*access/i,
+    /right\s*to\s*erasure/i, /right\s*to\s*rectification/i, /right\s*to\s*portability/i,
+    // German
+    /ihre.*rechte/i, /betroffenenrechte/i, /auskunftsrecht/i, /recht.*auf.*löschung/i,
+    /recht.*auf.*berichtigung/i, /recht.*auf.*datenübertragbarkeit/i,
+    // French
+    /vos.*droits/i, /droits.*des.*personnes.*concernées/i, /droit.*d'accès/i,
+    /droit.*à.*l'effacement/i, /droit.*de.*rectification/i, /droit.*à.*la.*portabilité/i,
+    // Spanish
+    /sus.*derechos/i, /derechos.*del.*interesado/i, /derecho.*de.*acceso/i,
+    /derecho.*de.*supresión/i, /derecho.*de.*rectificación/i, /derecho.*a.*la.*portabilidad/i,
+    // Dutch
+    /uw.*rechten/i, /rechten.*van.*betrokkenen/i, /recht.*op.*inzage/i,
+    /recht.*op.*vergetelheid/i, /recht.*op.*rectificatie/i, /recht.*op.*overdraagbaarheid/i,
   ],
   complaintRight: [
-    /supervisory\s*authority/i,
-    /lodge.*complaint/i,
-    /data\s*protection\s*authority/i,
+    // English
+    /supervisory\s*authority/i, /lodge.*complaint/i, /data\s*protection\s*authority/i,
     /right\s*to\s*complain/i,
+    // German
+    /aufsichtsbehörde/i, /beschwerde.*einreichen/i, /datenschutzbehörde/i,
+    /beschwerderecht/i,
+    // French
+    /autorité.*de.*contrôle/i, /déposer.*une.*plainte/i, /autorité.*de.*protection/i,
+    /droit.*de.*réclamation/i,
+    // Spanish
+    /autoridad.*de.*control/i, /presentar.*queja/i, /autoridad.*de.*protección/i,
+    /derecho.*a.*reclamar/i,
+    // Dutch
+    /toezichthoudende.*autoriteit/i, /klacht.*indienen/i, /autoriteit.*persoonsgegevens/i,
+    /recht.*op.*klacht/i,
   ],
   dataSource: [
-    /source.*data/i,
-    /where.*obtain/i,
-    /collect.*from/i,
+    // English
+    /source.*data/i, /where.*obtain/i, /collect.*from/i,
+    // German
+    /datenquelle/i, /herkunft.*daten/i, /woher.*erhalten/i, /erheben.*von/i,
+    // French
+    /source.*données/i, /provenance.*données/i, /où.*obtenir/i, /collecter.*auprès/i,
+    // Spanish
+    /fuente.*datos/i, /origen.*datos/i, /dónde.*obtener/i, /recopilar.*de/i,
+    // Dutch
+    /gegevensbron/i, /herkomst.*gegevens/i, /waar.*verkrijgen/i, /verzamelen.*van/i,
   ],
   automatedDecisions: [
-    /automated\s*decision/i,
-    /profiling/i,
-    /algorithmic/i,
-    /automated\s*processing/i,
+    // English
+    /automated\s*decision/i, /profiling/i, /algorithmic/i, /automated\s*processing/i,
+    // German
+    /automatisierte.*entscheidung/i, /profiling/i, /profilbildung/i,
+    /algorithmisch/i, /automatisierte.*verarbeitung/i,
+    // French
+    /décision.*automatisée/i, /profilage/i, /algorithmique/i,
+    /traitement.*automatisé/i,
+    // Spanish
+    /decisión.*automatizada/i, /elaboración.*de.*perfiles/i, /algorítmico/i,
+    /tratamiento.*automatizado/i,
+    // Dutch
+    /geautomatiseerde.*besluitvorming/i, /profilering/i, /algoritmisch/i,
+    /geautomatiseerde.*verwerking/i,
   ],
 };
 
