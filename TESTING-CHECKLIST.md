@@ -779,9 +779,207 @@
 
 ---
 
-## 🔧 PHASE 10: Edge Cases & Navigation
+## 🌐 PHASE 10: Multi-Language Scanner Tests
 
-### Test 10.1: Delete Website
+**Purpose:** Test that the scanner can detect GDPR compliance elements on websites in all 5 supported languages (English, German, French, Spanish, Dutch).
+
+### Test 10.1: Scan English Website
+
+**Steps:**
+1. Create a new website with URL: `https://example.com` (or any English website with privacy policy)
+2. Run a scan
+3. Wait for completion
+
+**Expected:**
+- Scan completes successfully
+- Detects privacy policy (if exists)
+- Detects consent banner (if exists)
+- Compliance score calculated
+
+**Status:** ☐ PASS / ☐ FAIL
+
+**Compliance Score:** _______________
+
+---
+
+### Test 10.2: Scan German Website
+
+**Steps:**
+1. Create a new website with a German site, for example:
+   - **URL:** `https://www.bundesregierung.de` (German government site)
+   - Or any German site with "Datenschutzerklärung" (privacy policy)
+2. Run a scan
+3. Review scan results
+
+**Expected:**
+- Scanner detects German privacy policy link (containing "datenschutz")
+- If consent banner exists, detects German buttons ("Akzeptieren", "Ablehnen")
+- Scan completes without errors
+
+**Status:** ☐ PASS / ☐ FAIL
+
+**Was "Datenschutz" detected?** ☐ YES / ☐ NO
+
+---
+
+### Test 10.3: Scan French Website
+
+**Steps:**
+1. Create a new website with a French site, for example:
+   - **URL:** `https://www.service-public.fr` (French government site)
+   - Or any French site with "Politique de confidentialité"
+2. Run a scan
+3. Review results
+
+**Expected:**
+- Scanner detects French privacy policy link (containing "confidentialité")
+- Detects French consent buttons if present ("Accepter", "Refuser")
+- Scan completes successfully
+
+**Status:** ☐ PASS / ☐ FAIL
+
+**Was French privacy policy detected?** ☐ YES / ☐ NO
+
+---
+
+### Test 10.4: Scan Spanish Website
+
+**Steps:**
+1. Create a new website with a Spanish site, for example:
+   - **URL:** `https://www.boe.es` (Spanish government site)
+   - Or any Spanish site with "Política de privacidad"
+2. Run a scan
+3. Review results
+
+**Expected:**
+- Scanner detects Spanish privacy policy ("política de privacidad")
+- Detects Spanish consent buttons if present ("Aceptar", "Rechazar")
+- Scan completes successfully
+
+**Status:** ☐ PASS / ☐ FAIL
+
+---
+
+### Test 10.5: Scan Dutch Website
+
+**Steps:**
+1. Create a new website with a Dutch site, for example:
+   - **URL:** `https://www.rijksoverheid.nl` (Dutch government site)
+   - Or any Dutch site with "Privacybeleid"
+2. Run a scan
+3. Review results
+
+**Expected:**
+- Scanner detects Dutch privacy policy ("privacybeleid")
+- Detects Dutch consent buttons if present ("Accepteren", "Weigeren")
+- Scan completes successfully
+
+**Status:** ☐ PASS / ☐ FAIL
+
+---
+
+### Test 10.6: Privacy Policy Content Analysis (Multi-language)
+
+**Steps:**
+1. Pick one of the scanned foreign language websites (German, French, Spanish, or Dutch)
+2. Navigate to the scan results
+3. Look at the "Findings" section
+4. Check if scanner detected privacy policy content elements
+
+**Expected:**
+- Scanner analyzes privacy policy content in the foreign language
+- Detects elements like: "legal basis", "user rights", "data categories" (in that language)
+- Privacy policy completeness score is calculated
+
+**Status:** ☐ PASS / ☐ FAIL / ☐ PARTIAL
+
+**Elements detected:** _______________________________________________
+
+---
+
+### Test 10.7: Consent Banner Quality Analysis (Multi-language)
+
+**Steps:**
+1. Find a website with a consent banner in a foreign language (German/French/Spanish/Dutch)
+   - Try: German news sites, French e-commerce sites, etc.
+2. Run a scan
+3. Check if scanner detects:
+   - Accept/reject buttons in that language
+   - Granular consent categories (if present)
+   - Banner quality score
+
+**Expected:**
+- Scanner detects buttons even if they're in German ("Akzeptieren"/"Ablehnen")
+- Analyzes banner quality
+- Generates appropriate findings
+
+**Status:** ☐ PASS / ☐ FAIL / ☐ SKIP (couldn't find suitable site)
+
+**Banner detected?** ☐ YES / ☐ NO
+
+**Buttons detected in foreign language?** ☐ YES / ☐ NO
+
+---
+
+### Test 10.8: User Rights Detection (Multi-language)
+
+**Steps:**
+1. Pick a website with user account features in a foreign language
+2. Run a scan
+3. Check scan results for user rights detection
+
+**Expected:**
+- Scanner detects profile/settings links in foreign language
+   - German: "Profil", "Einstellungen"
+   - French: "Profil", "Paramètres"
+   - Spanish: "Perfil", "Configuración"
+   - Dutch: "Profiel", "Instellingen"
+- Reports on missing user rights features
+
+**Status:** ☐ PASS / ☐ FAIL / ☐ SKIP
+
+---
+
+### Test 10.9: Mixed Language Website
+
+**Steps:**
+1. Scan a website that has content in multiple languages
+   - Example: European company website with language switcher
+2. Run a scan
+3. Review results
+
+**Expected:**
+- Scanner handles mixed language content without errors
+- Detects compliance elements in any of the supported languages
+- Doesn't crash or produce incorrect results
+
+**Status:** ☐ PASS / ☐ FAIL / ☐ SKIP
+
+---
+
+### Test 10.10: Compare Language Detection
+
+**Steps:**
+1. Take the same website in 2 different languages (if available)
+   - Example: Amazon.de vs Amazon.fr
+2. Scan both versions
+3. Compare the results
+
+**Expected:**
+- Both scans complete successfully
+- Similar compliance scores (unless content differs)
+- Both detect privacy policies and consent mechanisms
+- Demonstrates scanner works equally well across languages
+
+**Status:** ☐ PASS / ☐ FAIL / ☐ SKIP
+
+**Score difference (if any):** _______________
+
+---
+
+## 🔧 PHASE 11: Edge Cases & Navigation
+
+### Test 11.1: Delete Website
 
 **Steps:**
 1. Go to website list/dashboard
@@ -798,7 +996,7 @@
 
 ---
 
-### Test 10.2: Create Second Website
+### Test 11.2: Create Second Website
 
 **Steps:**
 1. Add another website:
@@ -815,7 +1013,7 @@
 
 ---
 
-### Test 10.3: Test Navigation
+### Test 11.3: Test Navigation
 
 **Steps:**
 1. Click through all main navigation items:
@@ -833,7 +1031,7 @@
 
 ---
 
-### Test 10.4: Mobile Responsiveness (Optional)
+### Test 11.4: Mobile Responsiveness (Optional)
 
 **Steps:**
 1. Press F12 to open Developer Tools
@@ -850,7 +1048,7 @@
 
 ---
 
-### Test 10.5: Browser Console Check
+### Test 11.5: Browser Console Check
 
 **Steps:**
 1. Open browser console (F12 > Console tab)
@@ -872,7 +1070,7 @@
 
 ### Fill This Out After Completing All Tests:
 
-**Total Tests Passed:** _____ / ~50
+**Total Tests Passed:** _____ / ~60
 
 **Total Tests Failed:** _____
 
