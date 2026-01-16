@@ -230,16 +230,18 @@ ComplianceKit helps you handle all GDPR user rights requests:
 ### 7. 🌐 **Multi-Language Support**
 
 **Available Languages:**
-- English
-- German (Deutsch)
-- French (Français)
-- Spanish (Español)
+- English 🇬🇧
+- German (Deutsch) 🇩🇪
+- French (Français) 🇫🇷
+- Spanish (Español) 🇪🇸
+- Dutch (Nederlands) 🇳🇱
+
+**Coming Soon:**
 - Italian (Italiano)
-- Dutch (Nederlands)
 - Polish (Polski)
 - Portuguese (Português)
 
-All legal documents, consent banners, and UI elements available in multiple languages.
+All legal documents, consent banners, and UI elements available in the 5 supported languages.
 
 ---
 

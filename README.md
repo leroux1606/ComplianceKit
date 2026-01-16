@@ -42,7 +42,7 @@ ComplianceKit is a comprehensive SaaS platform that automates GDPR compliance fo
 - Detailed compliance reports
 
 ### 🌐 **Multi-Language Support**
-- 8 languages supported
+- 5 languages supported (English, German, French, Spanish, Dutch)
 - Localized legal documents
 - Internationalization ready
 
@@ -385,7 +385,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - **Lines of Code:** ~15,000+
 - **GDPR Articles Covered:** 25+
 - **Compliance Checks:** 50+
-- **Languages Supported:** 8
+- **Languages Supported:** 5 (English, German, French, Spanish, Dutch)
 - **Test Cases:** 50+
 - **Dependencies:** Secure, regularly updated
 
