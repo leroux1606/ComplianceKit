@@ -4,6 +4,10 @@ import { detectCookies } from "./cookie-detector";
 import { detectScripts } from "./script-detector";
 import { detectPrivacyPolicy } from "./policy-detector";
 import { detectCookieBanner, analyzeBannerCompliance } from "./banner-detector";
+import { detectUserRights, generateUserRightsFindings } from "./user-rights-detector";
+import { analyzePrivacyPolicyContent, generatePrivacyPolicyFindings } from "./privacy-policy-analyzer";
+import { analyzeConsentQuality, generateConsentQualityFindings } from "./consent-quality-analyzer";
+import { runAdditionalComplianceChecks, generateAdditionalComplianceFindings } from "./additional-compliance-detector";
 import { calculateComplianceScore } from "./compliance-score";
 
 const DEFAULT_TIMEOUT = 60000; // 60 seconds
@@ -68,11 +72,12 @@ export class Scanner {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Run all detectors in parallel
-      const [cookies, scripts, privacyPolicy, cookieBanner] = await Promise.all([
+      const [cookies, scripts, privacyPolicy, cookieBanner, userRights] = await Promise.all([
         detectCookies(page, this.options.url),
         detectScripts(page),
         detectPrivacyPolicy(page),
         detectCookieBanner(page),
+        detectUserRights(page),
       ]);
 
       // Collect findings
@@ -125,6 +130,33 @@ export class Scanner {
         });
       }
 
+      // Add user rights findings
+      const userRightsFindings = generateUserRightsFindings(userRights);
+      findings.push(...userRightsFindings);
+
+      // Analyze privacy policy content if found
+      let privacyPolicyScore: number | undefined;
+      if (privacyPolicy.found && privacyPolicy.url) {
+        const policyAnalysis = await analyzePrivacyPolicyContent(page, privacyPolicy.url);
+        privacyPolicyScore = policyAnalysis.completenessScore;
+        const policyFindings = generatePrivacyPolicyFindings(policyAnalysis, privacyPolicy.found);
+        findings.push(...policyFindings);
+      }
+
+      // Analyze consent banner quality if found
+      let consentQualityScore: number | undefined;
+      if (cookieBanner.found) {
+        const consentAnalysis = await analyzeConsentQuality(page, cookieBanner.found);
+        consentQualityScore = consentAnalysis.qualityScore;
+        const consentFindings = generateConsentQualityFindings(consentAnalysis, cookieBanner.found);
+        findings.push(...consentFindings);
+      }
+
+      // Run additional compliance checks
+      const additionalChecks = await runAdditionalComplianceChecks(page);
+      const additionalFindings = generateAdditionalComplianceFindings(additionalChecks);
+      findings.push(...additionalFindings);
+
       // Calculate compliance score
       const score = calculateComplianceScore({
         hasPrivacyPolicy: privacyPolicy.found,
@@ -132,6 +164,9 @@ export class Scanner {
         cookies,
         scripts,
         findings,
+        userRights,
+        privacyPolicyScore,
+        consentQualityScore,
       });
 
       const duration = Date.now() - startTime;
@@ -144,6 +179,9 @@ export class Scanner {
         findings,
         hasPrivacyPolicy: privacyPolicy.found,
         hasCookieBanner: cookieBanner.found,
+        userRights,
+        privacyPolicyScore,
+        consentQualityScore,
         score,
         scannedAt: new Date(),
         duration,

@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getWidgetCorsHeaders } from "@/lib/cors";
+import { withRateLimit, RateLimitPresets } from "@/lib/rate-limit";
+import { sanitizeInput } from "@/lib/sanitize";
 
-// CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+export async function OPTIONS(
+  request: NextRequest,
+  { params }: { params: Promise<{ embedCode: string }> }
+) {
+  const { embedCode } = await params;
 
-export async function OPTIONS() {
+  // Get website to validate origin
+  const website = await db.website.findFirst({
+    where: { embedCode },
+    select: { url: true },
+  });
+
+  const corsHeaders = getWidgetCorsHeaders(request, website?.url);
   return new NextResponse(null, { headers: corsHeaders });
 }
 
-export async function POST(
+export const POST = withRateLimit(async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ embedCode: string }> }
 ) {
@@ -21,6 +29,22 @@ export async function POST(
     const body = await request.json();
     const { visitorId, preferences } = body;
 
+    // Find website by embed code first (needed for CORS validation)
+    const website = await db.website.findFirst({
+      where: { embedCode },
+    });
+
+    if (!website) {
+      const corsHeaders = getWidgetCorsHeaders(request);
+      return NextResponse.json(
+        { error: "Website not found" },
+        { status: 404, headers: corsHeaders }
+      );
+    }
+
+    // Get CORS headers with website URL for validation
+    const corsHeaders = getWidgetCorsHeaders(request, website.url);
+
     if (!visitorId || !preferences) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -28,17 +52,8 @@ export async function POST(
       );
     }
 
-    // Find website by embed code
-    const website = await db.website.findFirst({
-      where: { embedCode },
-    });
-
-    if (!website) {
-      return NextResponse.json(
-        { error: "Website not found" },
-        { status: 404, headers: corsHeaders }
-      );
-    }
+    // Sanitize visitor ID
+    const sanitizedVisitorId = sanitizeInput(visitorId).substring(0, 100);
 
     // Get IP and User Agent
     const ipAddress =
@@ -51,7 +66,7 @@ export async function POST(
     const existingConsent = await db.consent.findFirst({
       where: {
         websiteId: website.id,
-        visitorId,
+        visitorId: sanitizedVisitorId,
       },
     });
 
@@ -68,7 +83,7 @@ export async function POST(
       await db.consent.create({
         data: {
           websiteId: website.id,
-          visitorId,
+          visitorId: sanitizedVisitorId,
           preferences,
           ipAddress,
           userAgent,
@@ -79,12 +94,13 @@ export async function POST(
     return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error) {
     console.error("Consent error:", error);
+    const corsHeaders = getWidgetCorsHeaders(request);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500, headers: corsHeaders }
     );
   }
-}
+}, RateLimitPresets.lenient);
 
 
 

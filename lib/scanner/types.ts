@@ -39,15 +39,32 @@ export interface Finding {
   recommendation?: string;
 }
 
-export type FindingType = 
+export type FindingType =
   | "cookie_banner"
   | "privacy_policy"
   | "tracking_script"
   | "third_party_cookie"
   | "secure_cookie"
-  | "consent_management";
+  | "consent_management"
+  | "user_profile_settings"
+  | "data_export"
+  | "account_deletion"
+  | "dsar_mechanism"
+  | "data_rectification";
 
 export type FindingSeverity = "info" | "warning" | "error";
+
+export interface UserRightsDetection {
+  hasProfileSettings: boolean;
+  hasDataExport: boolean;
+  hasAccountDeletion: boolean;
+  hasDsarMechanism: boolean;
+  profileSettingsUrl?: string;
+  dataExportUrl?: string;
+  accountDeletionUrl?: string;
+  dsarUrl?: string;
+  finding?: Finding;
+}
 
 export interface ScanResult {
   success: boolean;
@@ -57,6 +74,9 @@ export interface ScanResult {
   findings: Finding[];
   hasPrivacyPolicy: boolean;
   hasCookieBanner: boolean;
+  userRights?: UserRightsDetection;
+  privacyPolicyScore?: number; // 0-100 completeness score
+  consentQualityScore?: number; // 0-100 quality score
   score: number;
   error?: string;
   scannedAt: Date;

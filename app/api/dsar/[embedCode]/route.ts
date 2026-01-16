@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { dsarSubmissionSchema } from "@/lib/validations";
 import { calculateDueDate } from "@/lib/dsar/types";
+import { withRateLimit, RateLimitPresets } from "@/lib/rate-limit";
+import { sanitizeInput, sanitizeEmail } from "@/lib/sanitize";
 
 /**
  * POST /api/dsar/[embedCode] - Submit a new DSAR
  */
-export async function POST(
+export const POST = withRateLimit(async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ embedCode: string }> }
 ) {
@@ -36,19 +38,26 @@ export async function POST(
       );
     }
 
-    const { requestType, requesterEmail, requesterName, requesterPhone, description, additionalInfo } = 
+    const { requestType, requesterEmail, requesterName, requesterPhone, description, additionalInfo } =
       validatedFields.data;
+
+    // Sanitize inputs
+    const sanitizedEmail = sanitizeEmail(requesterEmail);
+    const sanitizedName = requesterName ? sanitizeInput(requesterName) : null;
+    const sanitizedPhone = requesterPhone ? sanitizeInput(requesterPhone) : null;
+    const sanitizedDescription = sanitizeInput(description);
+    const sanitizedAdditionalInfo = additionalInfo ? sanitizeInput(additionalInfo) : null;
 
     // Create DSAR
     const dsar = await db.dataSubjectRequest.create({
       data: {
         websiteId: website.id,
         requestType,
-        requesterEmail,
-        requesterName: requesterName || null,
-        requesterPhone: requesterPhone || null,
-        description,
-        additionalInfo: additionalInfo || null,
+        requesterEmail: sanitizedEmail,
+        requesterName: sanitizedName,
+        requesterPhone: sanitizedPhone,
+        description: sanitizedDescription,
+        additionalInfo: sanitizedAdditionalInfo,
         dueDate: calculateDueDate(),
         status: "pending",
         priority: "normal",
@@ -60,7 +69,7 @@ export async function POST(
       data: {
         dsarId: dsar.id,
         action: "created",
-        description: `DSAR submitted by ${requesterEmail}`,
+        description: `DSAR submitted by ${sanitizedEmail}`,
         performedBy: "requester",
         metadata: { requestType },
       },
@@ -78,7 +87,7 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+}, RateLimitPresets.publicForm);
 
 /**
  * GET /api/dsar/[embedCode] - Get DSAR form configuration

@@ -1,4 +1,4 @@
-import type { DetectedCookie, DetectedScript, Finding } from "./types";
+import type { DetectedCookie, DetectedScript, Finding, UserRightsDetection } from "./types";
 
 interface ScoreInput {
   hasPrivacyPolicy: boolean;
@@ -6,6 +6,9 @@ interface ScoreInput {
   cookies: DetectedCookie[];
   scripts: DetectedScript[];
   findings: Finding[];
+  userRights?: UserRightsDetection;
+  privacyPolicyScore?: number; // 0-100
+  consentQualityScore?: number; // 0-100
 }
 
 interface ScoreBreakdown {
@@ -14,6 +17,7 @@ interface ScoreBreakdown {
   cookieBanner: number;
   cookieCategories: number;
   trackingDisclosure: number;
+  userRights: number;
   penalties: number;
 }
 
@@ -33,32 +37,47 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
   let cookieBanner = 0;
   let cookieCategories = 0;
   let trackingDisclosure = 0;
+  let userRights = 0;
   let penalties = 0;
 
-  // Privacy Policy (25 points)
+  // Privacy Policy (20 points)
+  // Now includes quality score if available
   if (input.hasPrivacyPolicy) {
-    privacyPolicy = 25;
+    if (input.privacyPolicyScore !== undefined) {
+      // Use quality score: 0-100 becomes 0-20 points
+      privacyPolicy = Math.round((input.privacyPolicyScore / 100) * 20);
+    } else {
+      // If no quality analysis, give partial credit just for having one
+      privacyPolicy = 10;
+    }
   }
 
-  // Cookie Banner (25 points)
+  // Cookie Banner (20 points)
+  // Now includes quality score if available
   if (input.hasCookieBanner) {
-    cookieBanner = 25;
+    if (input.consentQualityScore !== undefined) {
+      // Use quality score: 0-100 becomes 0-20 points
+      cookieBanner = Math.round((input.consentQualityScore / 100) * 20);
+    } else {
+      // If no quality analysis, give partial credit just for having one
+      cookieBanner = 10;
+    }
   }
 
-  // Cookie Categorization (25 points)
+  // Cookie Categorization (20 points)
   // Score based on how many cookies are properly categorized
   if (input.cookies.length > 0) {
     const categorizedCookies = input.cookies.filter(
       (c) => c.category && c.category !== "unknown"
     );
     const categorizedPercentage = categorizedCookies.length / input.cookies.length;
-    cookieCategories = Math.round(25 * categorizedPercentage);
+    cookieCategories = Math.round(20 * categorizedPercentage);
   } else {
     // No cookies is actually good - full points
-    cookieCategories = 25;
+    cookieCategories = 20;
   }
 
-  // Tracking Script Disclosure (25 points)
+  // Tracking Script Disclosure (20 points)
   // If there are tracking scripts, they should be disclosed (banner + policy)
   const trackingScripts = input.scripts.filter(
     (s) => s.category === "analytics" || s.category === "marketing"
@@ -66,16 +85,33 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
 
   if (trackingScripts.length === 0) {
     // No tracking scripts - full points
-    trackingDisclosure = 25;
+    trackingDisclosure = 20;
   } else if (input.hasPrivacyPolicy && input.hasCookieBanner) {
     // Has both - assume proper disclosure
-    trackingDisclosure = 25;
+    trackingDisclosure = 20;
   } else if (input.hasPrivacyPolicy || input.hasCookieBanner) {
     // Has one - partial credit
-    trackingDisclosure = 15;
+    trackingDisclosure = 12;
   } else {
     // Has neither - minimal credit
-    trackingDisclosure = 5;
+    trackingDisclosure = 4;
+  }
+
+  // User Rights (20 points) - GDPR Articles 15, 16, 17, 20
+  // 5 points each for: profile settings, data export, account deletion, DSAR mechanism
+  if (input.userRights) {
+    if (input.userRights.hasProfileSettings) {
+      userRights += 5; // Article 16 - Right to Rectification
+    }
+    if (input.userRights.hasDataExport) {
+      userRights += 5; // Article 20 - Right to Data Portability
+    }
+    if (input.userRights.hasAccountDeletion) {
+      userRights += 5; // Article 17 - Right to Erasure
+    }
+    if (input.userRights.hasDsarMechanism) {
+      userRights += 5; // Article 15 - Right to Access
+    }
   }
 
   // Penalties for severe issues
@@ -86,7 +122,8 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
     privacyPolicy +
     cookieBanner +
     cookieCategories +
-    trackingDisclosure -
+    trackingDisclosure +
+    userRights -
     penalties;
 
   return {
@@ -95,6 +132,7 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
     cookieBanner,
     cookieCategories,
     trackingDisclosure,
+    userRights,
     penalties,
   };
 }
@@ -177,6 +215,33 @@ export function generateRecommendations(input: ScoreInput): string[] {
     recommendations.push(
       "Document all third-party cookies in your cookie policy with their purposes and retention periods."
     );
+  }
+
+  // User Rights recommendations
+  if (input.userRights) {
+    if (!input.userRights.hasProfileSettings) {
+      recommendations.push(
+        "Add user profile/account settings where users can view and update their personal information (GDPR Article 16 - Right to Rectification)."
+      );
+    }
+
+    if (!input.userRights.hasDataExport) {
+      recommendations.push(
+        "Implement a data export feature allowing users to download their personal data in a machine-readable format (GDPR Article 20 - Right to Data Portability)."
+      );
+    }
+
+    if (!input.userRights.hasAccountDeletion) {
+      recommendations.push(
+        "Add account deletion functionality so users can permanently delete their data (GDPR Article 17 - Right to Erasure)."
+      );
+    }
+
+    if (!input.userRights.hasDsarMechanism) {
+      recommendations.push(
+        "Provide a clear mechanism for users to submit Data Subject Access Requests (DSARs) such as a contact form or email address (GDPR Article 15 - Right to Access)."
+      );
+    }
   }
 
   return recommendations;

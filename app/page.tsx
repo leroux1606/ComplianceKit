@@ -404,14 +404,14 @@ export default function HomePage() {
               © {new Date().getFullYear()} ComplianceKit. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Terms of Service
               </Link>
-              <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Contact
+              <Link href="/cookie-policy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Cookie Policy
               </Link>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 
 import {
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 
 export function UserNav() {
   const { data: session } = useSession();
+  const router = useRouter();
   const user = session?.user;
 
   const initials = user?.name
@@ -44,11 +46,7 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
           <Settings className="mr-2 h-4 w-4" />
           Settings
         </DropdownMenuItem>

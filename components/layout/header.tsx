@@ -19,12 +19,13 @@ export function Header() {
 
       <div className="flex items-center gap-4">
         <LanguageSwitcher currentLocale={locale} variant="minimal" />
-        <Button variant="ghost" size="icon" className="relative">
+        {/* Notifications feature - TODO: Implement later */}
+        {/* <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
             2
           </span>
-        </Button>
+        </Button> */}
         <UserNav />
       </div>
     </header>
