@@ -101,7 +101,8 @@ export async function signUp(values: SignUpInput) {
 
 export async function signInWithCredentials(
   email: string,
-  password: string
+  password: string,
+  rememberMe: boolean = false
 ) {
   // Sanitize inputs
   const sanitizedEmail = sanitizeEmail(email);
@@ -135,6 +136,7 @@ export async function signInWithCredentials(
     await signIn("credentials", {
       email: sanitizedEmail,
       password,
+      rememberMe: rememberMe.toString(),
       redirectTo: "/dashboard",
     });
 
@@ -146,7 +148,8 @@ export async function signInWithCredentials(
       sanitizedEmail,
       ipAddress,
       userAgent,
-      true
+      true,
+      { rememberMe }
     );
 
     return { success: true };

@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -27,6 +28,7 @@ export function SignInForm() {
   const tCommon = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
@@ -42,7 +44,7 @@ export function SignInForm() {
     setIsLoading(true);
     setError(null);
 
-    const result = await signInWithCredentials(values.email, values.password);
+    const result = await signInWithCredentials(values.email, values.password, rememberMe);
 
     if (result?.error) {
       setError(result.error);
@@ -82,7 +84,15 @@ export function SignInForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("password")}</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>{t("password")}</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <FormControl>
                   <Input
                     type="password"
@@ -101,6 +111,21 @@ export function SignInForm() {
               {error}
             </div>
           )}
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              disabled={isLoading}
+            />
+            <label
+              htmlFor="remember"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Remember me for 30 days
+            </label>
+          </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -1,11 +1,19 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { Logo } from "@/components/icons/logo";
 import { Shield, Check, Sparkles } from "lucide-react";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
+  // Redirect authenticated users away from auth pages
+  if (session?.user) {
+    redirect("/dashboard");
+  }
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left side - Branding */}
