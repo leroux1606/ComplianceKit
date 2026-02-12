@@ -14,14 +14,19 @@ datasource db {
 // ============================================
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?   // For credentials auth
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  password       String?   // For credentials auth
+  image          String?
+  companyName    String?
+  companyAddress String?
+  companyEmail   String?
+  dpoName        String?   // Data Protection Officer
+  dpoEmail       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   accounts     Account[]
   sessions     Session[]

@@ -103,7 +103,7 @@ export default async function ScanResultsPage({
           </div>
         </div>
         <div className="flex gap-2">
-          <ExportReportButton website={website} scan={scan} />
+          <ExportReportButton scanId={scanId} websiteName={website.name} />
           <ScanButton websiteId={id} variant="outline" />
         </div>
       </div>

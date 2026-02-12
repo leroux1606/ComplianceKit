@@ -20,8 +20,9 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 30,
-    borderBottom: 2,
+    borderBottomWidth: 2,
     borderBottomColor: "#0f172a",
+    borderBottomStyle: "solid",
     paddingBottom: 15,
   },
   title: {
@@ -43,8 +44,9 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     marginBottom: 10,
     paddingBottom: 5,
-    borderBottom: 1,
+    borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
+    borderBottomStyle: "solid",
   },
   scoreContainer: {
     flexDirection: "row",
@@ -59,8 +61,9 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: "#ffffff",
-    border: 3,
+    borderWidth: 3,
     borderColor: "#0f172a",
+    borderStyle: "solid",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 20,
@@ -118,8 +121,9 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     padding: 8,
-    borderBottom: 1,
+    borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
+    borderBottomStyle: "solid",
   },
   tableCell: {
     flex: 1,
@@ -129,8 +133,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 12,
     backgroundColor: "#fef2f2",
-    borderLeft: 3,
+    borderLeftWidth: 3,
     borderLeftColor: "#ef4444",
+    borderLeftStyle: "solid",
     borderRadius: 4,
   },
   findingTitle: {
@@ -175,8 +180,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 8,
     color: "#64748b",
-    borderTop: 1,
+    borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
+    borderTopStyle: "solid",
     paddingTop: 10,
   },
 });

@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
 import { checkPlanLimit } from "@/lib/actions/subscription";
-import type { Website, Scan, Policy, BannerConfig } from "@prisma/client";
+import type { Website, Scan, Policy, BannerConfig, Cookie, Script, Finding } from "@prisma/client";
 
 // Types for website with relations
 export type WebsiteWithCounts = Website & {
@@ -16,8 +16,14 @@ export type WebsiteWithCounts = Website & {
   };
 };
 
+export type ScanWithRelations = Scan & {
+  cookies: Cookie[];
+  scripts: Script[];
+  findings: Finding[];
+};
+
 export type WebsiteWithDetails = Website & {
-  scans: Scan[];
+  scans: ScanWithRelations[];
   policies: Policy[];
   bannerConfig: BannerConfig | null;
   _count: {
@@ -63,6 +69,11 @@ export async function getWebsite(id: string): Promise<WebsiteWithDetails | null>
       scans: {
         orderBy: { createdAt: "desc" },
         take: 5,
+        include: {
+          cookies: true,
+          scripts: true,
+          findings: true,
+        },
       },
       policies: {
         where: { isActive: true },
