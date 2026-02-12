@@ -1,0 +1,9 @@
+This app was built primarily with Claude Opus 4.5 — preserve its code style, naming conventions, error handling patterns, and Supabase usage.
+
+ALWAYS follow these Supabase guidelines:
+- Handle Supabase auth securely: Never expose service_role or anon keys in client code; always validate sessions and use RLS.
+- Add logging/retries on Supabase calls: Wrap calls with try/except, add retries for transient errors (e.g., network timeouts), log errors meaningfully (e.g., with context like user ID or query details).
+- Prefer minimal changes to fix bugs without altering working logic.
+- For realtime: Use async subscriptions where appropriate and clean up on unmount.
+
+Security priorities: Enforce row-level security (RLS), validate all inputs, log compliance-relevant actions.

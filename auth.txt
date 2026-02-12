@@ -1,0 +1,5 @@
+client id:   88584204047-7khau7k9odjt5b3mgflbsuamttnpke3j.apps.googleusercontent.com
+
+
+
+client secret: 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

@@ -1,6 +1,7 @@
 import type { Page, Cookie as PuppeteerCookie } from "puppeteer";
 import type { DetectedCookie, CookieCategory } from "./types";
 import { COOKIE_PATTERNS } from "./types";
+import { getCookieInfo, generateGenericDescription, categorizeCookie as categorizeCookieByName } from "./cookie-database";
 
 /**
  * Detect and categorize cookies from a Puppeteer page
@@ -13,8 +14,30 @@ export async function detectCookies(
   const websiteDomain = new URL(websiteUrl).hostname;
 
   return puppeteerCookies.map((cookie) => {
-    const { category, description } = categorizeCookie(cookie.name, cookie.domain);
     const isThirdParty = !isFirstPartyCookie(cookie.domain, websiteDomain);
+    
+    // First, check our cookie database for known cookies
+    const cookieInfo = getCookieInfo(cookie.name);
+    
+    let category: CookieCategory;
+    let description: string | undefined;
+    
+    if (cookieInfo) {
+      // Use information from database
+      category = cookieInfo.category;
+      description = `${cookieInfo.purpose} (${cookieInfo.provider})`;
+    } else {
+      // Fall back to pattern matching
+      const fallback = categorizeCookie(cookie.name, cookie.domain);
+      category = fallback.category;
+      description = fallback.description || generateGenericDescription(cookie.name, cookie.domain);
+    }
+    
+    // Override unknown third-party cookies as marketing
+    if (isThirdParty && category === "unknown") {
+      category = "marketing";
+      description = `Third-party marketing cookie from ${cookie.domain}`;
+    }
 
     return {
       name: cookie.name,
@@ -26,8 +49,8 @@ export async function detectCookies(
       expires: cookie.expires && cookie.expires > 0 
         ? new Date(cookie.expires * 1000) 
         : undefined,
-      category: isThirdParty && category === "unknown" ? "marketing" : category,
-      description: description || (isThirdParty ? "Third-party cookie" : undefined),
+      category,
+      description,
     };
   });
 }

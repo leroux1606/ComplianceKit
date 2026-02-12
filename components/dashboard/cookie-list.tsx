@@ -119,19 +119,19 @@ export function CookieList({ cookies }: CookieListProps) {
           </TableHeader>
           <TableBody>
             {filteredCookies.map((cookie) => (
-              <TableRow key={cookie.id}>
+              <TableRow key={cookie.id} className="group hover:bg-muted/50">
                 <TableCell className="font-medium">
-                  <div>
-                    <p>{cookie.name}</p>
+                  <div className="space-y-1">
+                    <p className="font-mono text-sm">{cookie.name}</p>
                     {cookie.description && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
                         {cookie.description}
                       </p>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {cookie.domain}
+                  <span className="text-xs font-mono">{cookie.domain}</span>
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -142,18 +142,27 @@ export function CookieList({ cookies }: CookieListProps) {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {cookie.secure ? (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-600">
-                      Yes
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-600">
-                      No
-                    </Badge>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    {cookie.secure ? (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 w-fit">
+                        Secure
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-red-500/10 text-red-600 w-fit">
+                        Not Secure
+                      </Badge>
+                    )}
+                    {cookie.httpOnly && (
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-600 w-fit text-xs">
+                        HttpOnly
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {cookie.expires ? formatDate(cookie.expires) : "Session"}
+                  <div className="text-xs">
+                    {cookie.expires ? formatDate(cookie.expires) : "Session"}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

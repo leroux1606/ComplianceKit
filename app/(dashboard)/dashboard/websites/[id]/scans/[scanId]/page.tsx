@@ -25,7 +25,9 @@ import { ComplianceScore } from "@/components/dashboard/compliance-score";
 import { CookieList } from "@/components/dashboard/cookie-list";
 import { ScriptList } from "@/components/dashboard/script-list";
 import { FindingsList } from "@/components/dashboard/findings-list";
+import { ActionChecklist } from "@/components/dashboard/action-checklist";
 import { ScanButton } from "@/components/dashboard/scan-button";
+import { ExportReportButton } from "@/components/dashboard/export-report-button";
 import { getWebsite } from "@/lib/actions/website";
 import { getScan } from "@/lib/actions/scan";
 import { formatDateTime } from "@/lib/utils";
@@ -100,7 +102,10 @@ export default async function ScanResultsPage({
             </p>
           </div>
         </div>
-        <ScanButton websiteId={id} variant="outline" />
+        <div className="flex gap-2">
+          <ExportReportButton website={website} scan={scan} />
+          <ScanButton websiteId={id} variant="outline" />
+        </div>
       </div>
 
       {/* Score Overview */}
@@ -220,6 +225,11 @@ export default async function ScanResultsPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Action Checklist */}
+      {scan.findings.length > 0 && (
+        <ActionChecklist findings={scan.findings} />
+      )}
 
       {/* Detailed Results Tabs */}
       <Tabs defaultValue="findings" className="space-y-4">

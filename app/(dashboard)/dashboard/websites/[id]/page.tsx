@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScanButton } from "@/components/dashboard/scan-button";
+import { ScanHistory } from "@/components/dashboard/scan-history";
 import { getWebsite } from "@/lib/actions/website";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
@@ -236,15 +237,15 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
         </TabsContent>
 
         <TabsContent value="scans">
-          <Card>
-            <CardHeader>
-              <CardTitle>Scan History</CardTitle>
-              <CardDescription>
-                Previous compliance scans for this website
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {website.scans.length === 0 ? (
+          {website.scans.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Scan History</CardTitle>
+                <CardDescription>
+                  Previous compliance scans for this website
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="text-center py-8">
                   <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
                   <h3 className="mt-4 text-lg font-semibold">No scans yet</h3>
@@ -258,35 +259,11 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
                     </Link>
                   </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {website.scans.map((scan) => (
-                    <div
-                      key={scan.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          Scan from {formatDateTime(scan.createdAt)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Status: {scan.status}
-                          {scan.score !== null && ` • Score: ${scan.score}/100`}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link
-                          href={`/dashboard/websites/${website.id}/scans/${scan.id}`}
-                        >
-                          View Details
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <ScanHistory websiteId={website.id} scans={website.scans} />
+          )}
         </TabsContent>
 
         <TabsContent value="policies">
