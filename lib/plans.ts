@@ -107,7 +107,7 @@ export const FREE_TIER: PlanFeatures = {
   maxScansPerMonth: 3,
   cookieBanner: true,
   policyGenerator: false,
-  dsarManagement: false,
+  dsarManagement: true, // GDPR compliance requires handling data requests
   customBranding: false,
   prioritySupport: false,
   apiAccess: false,

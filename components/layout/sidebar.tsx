@@ -34,7 +34,7 @@ const navigationItems = [
     icon: BarChart3,
   },
   {
-    key: "dsar",
+    key: "dataRequests",
     href: "/dashboard/dsar",
     icon: Inbox,
   },
@@ -72,8 +72,11 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigationItems.map((item) => {
+          // Exact match for /dashboard, startsWith for others
           const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.key}

@@ -23,7 +23,7 @@ import { DsarTable } from "@/components/dsar/dsar-table";
 import { DSAR_STATUSES, DSAR_REQUEST_TYPES, isDsarOverdue } from "@/lib/dsar/types";
 
 export const metadata: Metadata = {
-  title: "DSAR Management | ComplianceKit",
+  title: "Data Requests | ComplianceKit",
   description: "Manage data subject access requests",
 };
 
@@ -38,9 +38,9 @@ export default async function DsarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">DSAR Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Data Requests</h1>
           <p className="text-muted-foreground">
-            Manage data subject access requests from your websites
+            Manage data subject access requests (DSAR) from your website visitors
           </p>
         </div>
       </div>
