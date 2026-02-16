@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,8 @@ export function ResetPasswordForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
@@ -154,12 +156,26 @@ export function ResetPasswordForm() {
             <FormItem>
               <FormLabel>New Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -173,12 +189,26 @@ export function ResetPasswordForm() {
             <FormItem>
               <FormLabel>Confirm New Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
