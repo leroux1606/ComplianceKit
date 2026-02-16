@@ -133,16 +133,35 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
   // Penalties for severe issues
   // Count ALL error-severity findings (including user rights if they have auth)
   const errorFindings = input.findings.filter((f) => f.severity === "error");
-  penalties = Math.min(errorFindings.length * 2, 20); // -2 points per error, max 20 points penalty
+  
+  // Harsher penalties for sites with tracking (they MUST be compliant)
+  const hasTracking = input.cookies.length > 0 || 
+    input.scripts.filter((s) => s.category === "analytics" || s.category === "marketing").length > 0;
+  
+  if (hasTracking) {
+    // Sites with tracking: -3 points per error, max 30 penalty
+    penalties = Math.min(errorFindings.length * 3, 30);
+  } else {
+    // Simple sites without tracking: -2 points per error, max 15 penalty
+    penalties = Math.min(errorFindings.length * 2, 15);
+  }
 
   // Calculate subtotal before applying penalties
   const subtotal = privacyPolicy + cookieBanner + cookieCategories + trackingDisclosure + userRights;
   
-  // Ensure a minimum score of 30 if the site has no cookies and no critical issues
-  // This prevents "clean" sites from getting 0
+  // Different minimum scores based on site complexity
   const hasNoCookiesOrTracking = input.cookies.length === 0 && 
     input.scripts.filter((s) => s.category === "analytics" || s.category === "marketing").length === 0;
-  const minScore = hasNoCookiesOrTracking && errorFindings.length === 0 ? 30 : 0;
+  
+  let minScore = 0;
+  if (hasNoCookiesOrTracking) {
+    // Simple sites with no tracking: higher floor (they're not actively harming users)
+    // But still penalize if they have errors (missing policies, etc.)
+    minScore = errorFindings.length === 0 ? 50 : 35;
+  } else {
+    // Sites WITH tracking: no minimum floor - they MUST have proper consent
+    minScore = 0;
+  }
 
   const total = Math.max(minScore, subtotal - penalties);
 
