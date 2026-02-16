@@ -101,13 +101,14 @@ export async function createWebsite(values: WebsiteInput) {
   }
 
   // Check plan limits
-  const limitCheck = await checkPlanLimit("websites");
-  if (!limitCheck.allowed) {
-    return { 
-      error: `You've reached your plan limit of ${limitCheck.limit} website${limitCheck.limit !== 1 ? 's' : ''}. Please upgrade to add more.`,
-      limitReached: true
-    };
-  }
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  // const limitCheck = await checkPlanLimit("websites");
+  // if (!limitCheck.allowed) {
+  //   return { 
+  //     error: `You've reached your plan limit of ${limitCheck.limit} website${limitCheck.limit !== 1 ? 's' : ''}. Please upgrade to add more.`,
+  //     limitReached: true
+  //   };
+  // }
 
   const validatedFields = websiteSchema.safeParse(values);
 

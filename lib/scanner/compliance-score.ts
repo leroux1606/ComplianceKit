@@ -133,7 +133,7 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
   // Penalties for severe issues
   // Count ALL error-severity findings (including user rights if they have auth)
   const errorFindings = input.findings.filter((f) => f.severity === "error");
-  penalties = errorFindings.length * 5; // -5 points per error
+  penalties = Math.min(errorFindings.length * 3, 30); // -3 points per error, max 30 points penalty
 
   // Calculate subtotal before applying penalties
   const subtotal = privacyPolicy + cookieBanner + cookieCategories + trackingDisclosure + userRights;
