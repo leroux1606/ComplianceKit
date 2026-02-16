@@ -24,13 +24,14 @@ export async function triggerScan(websiteId: string) {
   }
 
   // Check plan limits
-  const limitCheck = await checkPlanLimit("scans");
-  if (!limitCheck.allowed) {
-    return { 
-      error: `You've reached your monthly scan limit of ${limitCheck.limit}. Please upgrade to run more scans.`,
-      limitReached: true
-    };
-  }
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  // const limitCheck = await checkPlanLimit("scans");
+  // if (!limitCheck.allowed) {
+  //   return { 
+  //     error: `You've reached your monthly scan limit of ${limitCheck.limit}. Please upgrade to run more scans.`,
+  //     limitReached: true
+  //   };
+  // }
 
   // Verify ownership
   const website = await db.website.findFirst({
@@ -69,11 +70,26 @@ export async function triggerScan(websiteId: string) {
     });
 
     // Run the scan
+    console.log('[SCAN START]', { websiteId, url: website.url });
     const scanner = new Scanner({ url: website.url });
     const result = await scanner.scan();
+    console.log('[SCAN COMPLETE]', { 
+      websiteId, 
+      url: website.url, 
+      success: result.success,
+      score: result.score,
+      duration: result.duration,
+    });
 
     if (!result.success) {
       // Scan failed
+      console.error('[SCAN FAILED]', {
+        websiteId,
+        url: website.url,
+        error: result.error,
+        duration: result.duration,
+      });
+      
       await db.scan.update({
         where: { id: scan.id },
         data: {
@@ -167,7 +183,12 @@ export async function triggerScan(websiteId: string) {
 
     return { success: true, scanId: scan.id, score: result.score };
   } catch (error) {
-    console.error("Scan error:", error);
+    console.error("[SCAN EXCEPTION]", {
+      websiteId,
+      url: website.url,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     // Update scan as failed
     await db.scan.update({

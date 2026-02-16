@@ -10,7 +10,7 @@ import { analyzeConsentQuality, generateConsentQualityFindings } from "./consent
 import { runAdditionalComplianceChecks, generateAdditionalComplianceFindings } from "./additional-compliance-detector";
 import { calculateComplianceScore } from "./compliance-score";
 
-const DEFAULT_TIMEOUT = 60000; // 60 seconds
+const DEFAULT_TIMEOUT = 120000; // 120 seconds (2 minutes)
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -61,15 +61,15 @@ export class Scanner {
       page.setDefaultNavigationTimeout(this.options.timeout);
 
       // Navigate to URL
+      // Use 'domcontentloaded' for faster loading on heavy sites
       await page.goto(this.options.url, {
-        waitUntil: this.options.waitForNetworkIdle
-          ? "networkidle2"
-          : "domcontentloaded",
+        waitUntil: "domcontentloaded",
         timeout: this.options.timeout,
       });
 
       // Wait a bit for any delayed scripts/banners
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Increased wait time for heavy sites
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
       // Run all detectors in parallel
       const [cookies, scripts, privacyPolicy, cookieBanner, userRights] = await Promise.all([
