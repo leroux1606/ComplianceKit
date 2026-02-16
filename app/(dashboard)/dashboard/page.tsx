@@ -22,13 +22,21 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {session?.user?.name?.split(" ")[0] || "there"}!
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Here&apos;s an overview of your GDPR compliance status.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome back, {session?.user?.name?.split(" ")[0] || "there"}!
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Here&apos;s an overview of your GDPR compliance status.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/websites/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Website
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -97,9 +105,17 @@ export default async function DashboardPage() {
                 Your most recently added websites
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/websites">View All</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard/websites/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard/websites">View All</Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {recentWebsites.length === 0 ? (
