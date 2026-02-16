@@ -92,6 +92,24 @@ const DSAR_PATTERNS = [
 ];
 
 /**
+ * Patterns to detect login/signup/register functionality (multi-language)
+ * These indicate the site likely has user accounts
+ */
+const AUTH_PATTERNS = [
+  // English
+  /\bsign\s*in\b/i, /\blog\s*in\b/i, /\blogin\b/i, /\bsign\s*up\b/i, /\bregister\b/i,
+  /\bcreate.*account\b/i, /\bjoin\b/i, /\bmember.*login\b/i, /\buser.*login\b/i,
+  // German
+  /\banmelden\b/i, /\beinloggen\b/i, /\bregistrieren\b/i, /\bkonto.*erstellen\b/i,
+  // French
+  /\bse\s*connecter\b/i, /\bconnexion\b/i, /\bs'inscrire\b/i, /\bcréer.*compte\b/i,
+  // Spanish
+  /\biniciar.*sesión\b/i, /\bacceder\b/i, /\bregistrarse\b/i, /\bcrear.*cuenta\b/i,
+  // Dutch
+  /\binloggen\b/i, /\baanmelden\b/i, /\bregistreren\b/i, /\baccount.*aanmaken\b/i,
+];
+
+/**
  * Detect user rights features on the page
  */
 export async function detectUserRights(page: Page): Promise<UserRightsDetection> {
@@ -135,6 +153,7 @@ export async function detectUserRights(page: Page): Promise<UserRightsDetection>
       hasDataExport: false,
       hasAccountDeletion: false,
       hasDsarMechanism: false,
+      hasAuthOrRegistration: false, // NEW: Track if site has login/signup
     };
 
     // Check for profile/settings
@@ -164,6 +183,11 @@ export async function detectUserRights(page: Page): Promise<UserRightsDetection>
         detection.hasDsarMechanism = true;
         detection.dsarUrl = link.href;
       }
+
+      // Check for login/signup/register (indicates user accounts)
+      if (AUTH_PATTERNS.some((pattern) => pattern.test(combinedText))) {
+        detection.hasAuthOrRegistration = true;
+      }
     }
 
     // Check buttons and forms as well
@@ -184,6 +208,11 @@ export async function detectUserRights(page: Page): Promise<UserRightsDetection>
       detection.hasDsarMechanism = true;
     }
 
+    // Check for auth patterns in buttons/forms too
+    if (!detection.hasAuthOrRegistration && AUTH_PATTERNS.some((pattern) => pattern.test(allText))) {
+      detection.hasAuthOrRegistration = true;
+    }
+
     return detection;
   } catch (error) {
     console.error("User rights detection error:", error);
@@ -192,6 +221,7 @@ export async function detectUserRights(page: Page): Promise<UserRightsDetection>
       hasDataExport: false,
       hasAccountDeletion: false,
       hasDsarMechanism: false,
+      hasAuthOrRegistration: false,
     };
   }
 }
@@ -207,12 +237,13 @@ export function generateUserRightsFindings(detection: UserRightsDetection): Find
   const findings: Finding[] = [];
 
   // Check if the site appears to have user account functionality
-  // If it has ANY user rights features, it likely has user accounts
+  // Either: (1) Has ANY user rights features, OR (2) Has login/signup/register
   const hasUserAccountFeatures = 
     detection.hasProfileSettings || 
     detection.hasDataExport || 
     detection.hasAccountDeletion ||
-    detection.hasDsarMechanism;
+    detection.hasDsarMechanism ||
+    detection.hasAuthOrRegistration; // NEW: Also check for login/signup
 
   // Check if user rights features are missing
   const missingRights: string[] = [];
@@ -235,8 +266,14 @@ export function generateUserRightsFindings(detection: UserRightsDetection): Find
 
   // If the site appears to have user accounts but is missing rights features, warn them
   if (hasUserAccountFeatures && missingRights.length > 0) {
-    // Only use "error" severity if the site clearly has user accounts but is missing critical features
-    const severity = missingRights.length >= 3 ? "warning" : "info";
+    // Use "error" severity if site has auth (login/signup) and is missing most/all features
+    // Use "warning" if missing some features
+    // Use "info" if missing only 1-2 features
+    const hasAuth = detection.hasAuthOrRegistration;
+    const severity = 
+      (hasAuth && missingRights.length === 4) ? "error" : // Has login but missing ALL 4 rights
+      (missingRights.length >= 3) ? "warning" : // Missing 3+ features
+      "info"; // Missing 1-2 features
 
     findings.push({
       type: "data_rectification",
@@ -249,9 +286,10 @@ export function generateUserRightsFindings(detection: UserRightsDetection): Find
 
     // Add specific findings only for sites with user accounts
     if (!detection.hasProfileSettings && !detection.hasDataExport) {
+      const specificSeverity = hasAuth ? "error" : "warning";
       findings.push({
         type: "user_profile_settings",
-        severity: "warning",
+        severity: specificSeverity,
         title: "No User Profile or Data Management Found",
         description:
           "Your website does not appear to have user profile settings or data management features. If you collect personal data, GDPR Article 16 requires that users can rectify (update) their personal data.",
@@ -261,9 +299,10 @@ export function generateUserRightsFindings(detection: UserRightsDetection): Find
     }
 
     if (!detection.hasAccountDeletion) {
+      const specificSeverity = hasAuth ? "error" : "warning";
       findings.push({
         type: "account_deletion",
-        severity: "warning",
+        severity: specificSeverity,
         title: "No Account Deletion Feature Found",
         description:
           "Your website does not appear to offer account deletion functionality. If you have user accounts, GDPR Article 17 grants users the 'Right to Erasure' (also known as 'Right to be Forgotten').",

@@ -59,6 +59,7 @@ export interface UserRightsDetection {
   hasDataExport: boolean;
   hasAccountDeletion: boolean;
   hasDsarMechanism: boolean;
+  hasAuthOrRegistration?: boolean; // NEW: Indicates site has login/signup
   profileSettingsUrl?: string;
   dataExportUrl?: string;
   accountDeletionUrl?: string;
