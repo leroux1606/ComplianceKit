@@ -159,8 +159,10 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
     // But still penalize if they have errors (missing policies, etc.)
     minScore = errorFindings.length === 0 ? 50 : 35;
   } else {
-    // Sites WITH tracking: no minimum floor - they MUST have proper consent
-    minScore = 0;
+    // Sites WITH tracking: very low floor (5-10) to show "needs urgent work"
+    // Only give 0 if they have absolutely nothing (no policy, no banner, many errors)
+    const hasAnyComplianceEffort = input.hasPrivacyPolicy || input.hasCookieBanner;
+    minScore = hasAnyComplianceEffort ? 5 : 0;
   }
 
   const total = Math.max(minScore, subtotal - penalties);
