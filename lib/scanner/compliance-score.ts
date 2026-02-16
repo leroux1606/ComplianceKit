@@ -26,6 +26,19 @@ interface ScoreBreakdown {
  */
 export function calculateComplianceScore(input: ScoreInput): number {
   const breakdown = getScoreBreakdown(input);
+  
+  // Debug logging
+  console.log('[Compliance Score Debug]', {
+    hasPrivacyPolicy: input.hasPrivacyPolicy,
+    hasCookieBanner: input.hasCookieBanner,
+    cookiesCount: input.cookies.length,
+    scriptsCount: input.scripts.length,
+    findingsCount: input.findings.length,
+    errorFindings: input.findings.filter(f => f.severity === 'error').length,
+    breakdown,
+    finalScore: breakdown.total,
+  });
+  
   return Math.max(0, Math.min(100, breakdown.total));
 }
 
