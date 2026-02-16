@@ -31,10 +31,13 @@ export function calculateComplianceScore(input: ScoreInput): number {
   console.log('[Compliance Score Debug]', {
     hasPrivacyPolicy: input.hasPrivacyPolicy,
     hasCookieBanner: input.hasCookieBanner,
+    privacyPolicyScore: input.privacyPolicyScore,
+    consentQualityScore: input.consentQualityScore,
     cookiesCount: input.cookies.length,
     scriptsCount: input.scripts.length,
     findingsCount: input.findings.length,
     errorFindings: input.findings.filter(f => f.severity === 'error').length,
+    findings: input.findings.map(f => ({ type: f.type, severity: f.severity, title: f.title })),
     breakdown,
     finalScore: breakdown.total,
   });
