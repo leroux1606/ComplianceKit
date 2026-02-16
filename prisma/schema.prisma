@@ -27,7 +27,12 @@ model User {
   dpoEmail       String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-
+  
+  // GDPR Compliance: Account Deletion & Anonymization
+  deletedAt      DateTime? // Soft delete timestamp (30-day grace period)
+  anonymizedAt   DateTime? // When PII was anonymized (for legal retention)
+  deletionReason String?   // User-provided reason for deletion
+  
   accounts     Account[]
   sessions     Session[]
   websites     Website[]

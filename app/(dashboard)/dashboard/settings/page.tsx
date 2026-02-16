@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompanyDetailsForm } from "@/components/dashboard/company-details-form";
 import { getUserCompanyDetails } from "@/lib/actions/user";
+import { AccountDeletionSection } from "@/components/dashboard/account-deletion-section";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Settings | ComplianceKit",
@@ -9,6 +12,12 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   const companyDetails = await getUserCompanyDetails();
 
   return (
@@ -57,6 +66,9 @@ export default async function SettingsPage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Account Deletion Section */}
+      <AccountDeletionSection userEmail={session.user.email!} />
     </div>
   );
 }

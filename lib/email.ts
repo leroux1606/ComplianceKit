@@ -134,3 +134,113 @@ This email was sent by ComplianceKit
     text,
   });
 }
+
+/**
+ * Send account deletion confirmation email
+ */
+export async function sendAccountDeletionEmail(email: string, userName?: string | null) {
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@compliancekit.app';
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>⚠️ Account Deletion Requested</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${userName || 'there'},</p>
+            <p>Your ComplianceKit account has been scheduled for deletion as requested.</p>
+            
+            <div class="info-box">
+              <strong>🕐 30-Day Grace Period</strong>
+              <p style="margin: 10px 0 0 0;">You have <strong>30 days</strong> to change your mind. If you want to cancel this deletion request, please contact our support team at <a href="mailto:${supportEmail}">${supportEmail}</a> within the next 30 days.</p>
+            </div>
+
+            <h3>What happens next:</h3>
+            <ul>
+              <li><strong>Immediate:</strong> Your account is deactivated and you cannot log in</li>
+              <li><strong>Immediate:</strong> Any active subscription has been cancelled</li>
+              <li><strong>After 30 days:</strong> Your personal data will be permanently deleted</li>
+              <li><strong>Legal retention:</strong> Some data (invoices, tax records) will be anonymized and retained for legal compliance (7 years)</li>
+            </ul>
+
+            <h3>Data Deletion Details (GDPR Article 17):</h3>
+            <p>After the 30-day grace period, we will:</p>
+            <ul>
+              <li>Delete all your personal information (name, email, profile data)</li>
+              <li>Delete all your websites, scans, and generated policies</li>
+              <li>Delete all cookie consent records</li>
+              <li>Anonymize billing records (required by tax law - 7 years retention)</li>
+            </ul>
+
+            <div class="info-box">
+              <strong>💾 Data Export</strong>
+              <p style="margin: 10px 0 0 0;">Before your account was marked for deletion, we recommend exporting your data. If you need a copy of your data, please contact support immediately.</p>
+            </div>
+
+            <p>If you did not request this deletion, please contact us immediately at <a href="mailto:${supportEmail}">${supportEmail}</a>.</p>
+          </div>
+          <div class="footer">
+            <p>This email was sent by ComplianceKit</p>
+            <p>Privacy inquiries: ${process.env.NEXT_PUBLIC_PRIVACY_EMAIL || 'privacy@compliancekit.app'}</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Account Deletion Requested
+
+Hi ${userName || 'there'},
+
+Your ComplianceKit account has been scheduled for deletion as requested.
+
+30-DAY GRACE PERIOD
+You have 30 days to change your mind. If you want to cancel this deletion request, 
+please contact our support team at ${supportEmail} within the next 30 days.
+
+WHAT HAPPENS NEXT:
+- Immediate: Your account is deactivated and you cannot log in
+- Immediate: Any active subscription has been cancelled
+- After 30 days: Your personal data will be permanently deleted
+- Legal retention: Some data (invoices, tax records) will be anonymized and 
+  retained for legal compliance (7 years)
+
+DATA DELETION DETAILS (GDPR Article 17):
+After the 30-day grace period, we will:
+- Delete all your personal information (name, email, profile data)
+- Delete all your websites, scans, and generated policies
+- Delete all cookie consent records
+- Anonymize billing records (required by tax law - 7 years retention)
+
+DATA EXPORT:
+Before your account was marked for deletion, we recommend exporting your data. 
+If you need a copy of your data, please contact support immediately.
+
+If you did not request this deletion, please contact us immediately at ${supportEmail}.
+
+---
+This email was sent by ComplianceKit
+Privacy inquiries: ${process.env.NEXT_PUBLIC_PRIVACY_EMAIL || 'privacy@compliancekit.app'}
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: '⚠️ Account Deletion Scheduled - ComplianceKit',
+    html,
+    text,
+  });
+}
