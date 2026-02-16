@@ -24,14 +24,13 @@ export async function triggerScan(websiteId: string) {
   }
 
   // Check plan limits
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  // const limitCheck = await checkPlanLimit("scans");
-  // if (!limitCheck.allowed) {
-  //   return { 
-  //     error: `You've reached your monthly scan limit of ${limitCheck.limit}. Please upgrade to run more scans.`,
-  //     limitReached: true
-  //   };
-  // }
+  const limitCheck = await checkPlanLimit("scans");
+  if (!limitCheck.allowed) {
+    return { 
+      error: `You've reached your monthly scan limit of ${limitCheck.limit}. Please upgrade to run more scans.`,
+      limitReached: true
+    };
+  }
 
   // Verify ownership
   const website = await db.website.findFirst({
