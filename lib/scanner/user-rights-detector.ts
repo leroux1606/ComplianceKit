@@ -198,9 +198,21 @@ export async function detectUserRights(page: Page): Promise<UserRightsDetection>
 
 /**
  * Generate findings for missing user rights
+ * 
+ * NOTE: User rights requirements only apply to websites that collect/process personal data
+ * through user accounts. For sites without user accounts (e.g., informational sites, 
+ * marketplaces), these are recommendations, not requirements.
  */
 export function generateUserRightsFindings(detection: UserRightsDetection): Finding[] {
   const findings: Finding[] = [];
+
+  // Check if the site appears to have user account functionality
+  // If it has ANY user rights features, it likely has user accounts
+  const hasUserAccountFeatures = 
+    detection.hasProfileSettings || 
+    detection.hasDataExport || 
+    detection.hasAccountDeletion ||
+    detection.hasDsarMechanism;
 
   // Check if user rights features are missing
   const missingRights: string[] = [];
@@ -221,42 +233,57 @@ export function generateUserRightsFindings(detection: UserRightsDetection): Find
     missingRights.push("DSAR Request Form");
   }
 
-  // If any are missing, create a finding
-  if (missingRights.length > 0) {
-    const severity = missingRights.length >= 3 ? "error" : "warning";
+  // If the site appears to have user accounts but is missing rights features, warn them
+  if (hasUserAccountFeatures && missingRights.length > 0) {
+    // Only use "error" severity if the site clearly has user accounts but is missing critical features
+    const severity = missingRights.length >= 3 ? "warning" : "info";
 
     findings.push({
       type: "data_rectification",
       severity,
       title: "Missing GDPR User Rights Features",
-      description: `Your website appears to be missing ${missingRights.length} of 4 essential GDPR user rights features: ${missingRights.join(", ")}. GDPR requires websites to provide users with the ability to access, rectify, and erase their personal data (Articles 15, 16, 17).`,
+      description: `Your website appears to be missing ${missingRights.length} of 4 recommended GDPR user rights features: ${missingRights.join(", ")}. If your website collects personal data through user accounts, GDPR requires providing users with the ability to access, rectify, and erase their personal data (Articles 15, 16, 17).`,
       recommendation:
-        "Implement user account features that allow users to: (1) View and update their profile information (Article 16 - Right to Rectification), (2) Export their personal data in a machine-readable format (Article 20 - Right to Data Portability), (3) Delete their account and data (Article 17 - Right to Erasure), and (4) Submit data subject access requests (DSAR) for privacy inquiries.",
+        "If your website has user accounts, implement features that allow users to: (1) View and update their profile information (Article 16 - Right to Rectification), (2) Export their personal data in a machine-readable format (Article 20 - Right to Data Portability), (3) Delete their account and data (Article 17 - Right to Erasure), and (4) Submit data subject access requests (DSAR) for privacy inquiries.",
     });
+
+    // Add specific findings only for sites with user accounts
+    if (!detection.hasProfileSettings && !detection.hasDataExport) {
+      findings.push({
+        type: "user_profile_settings",
+        severity: "warning",
+        title: "No User Profile or Data Management Found",
+        description:
+          "Your website does not appear to have user profile settings or data management features. If you collect personal data, GDPR Article 16 requires that users can rectify (update) their personal data.",
+        recommendation:
+          "Add a user profile/account settings page where users can view and update their personal information (name, email, preferences, etc.).",
+      });
+    }
+
+    if (!detection.hasAccountDeletion) {
+      findings.push({
+        type: "account_deletion",
+        severity: "warning",
+        title: "No Account Deletion Feature Found",
+        description:
+          "Your website does not appear to offer account deletion functionality. If you have user accounts, GDPR Article 17 grants users the 'Right to Erasure' (also known as 'Right to be Forgotten').",
+        recommendation:
+          "Implement an account deletion feature that allows users to permanently delete their account and associated personal data. Include a confirmation step to prevent accidental deletion.",
+      });
+    }
   }
 
-  // Add specific findings for critical missing features
-  if (!detection.hasProfileSettings && !detection.hasDataExport) {
+  // For sites WITHOUT apparent user account features, only add an informational note
+  // Don't penalize them - these requirements don't apply if they don't have user accounts
+  if (!hasUserAccountFeatures && missingRights.length === 4) {
     findings.push({
-      type: "user_profile_settings",
-      severity: "error",
-      title: "No User Profile or Data Management Found",
+      type: "user_rights_info",
+      severity: "info",
+      title: "User Rights Features Not Detected",
       description:
-        "Your website does not appear to have user profile settings or data management features. GDPR Article 16 requires that users can rectify (update) their personal data.",
+        "No user account or data management features were detected on your website. If your website collects personal data through user accounts (e.g., registration, login), you should implement GDPR user rights features.",
       recommendation:
-        "Add a user profile/account settings page where users can view and update their personal information (name, email, preferences, etc.).",
-    });
-  }
-
-  if (!detection.hasAccountDeletion) {
-    findings.push({
-      type: "account_deletion",
-      severity: "error",
-      title: "No Account Deletion Feature Found",
-      description:
-        "Your website does not appear to offer account deletion functionality. GDPR Article 17 grants users the 'Right to Erasure' (also known as 'Right to be Forgotten').",
-      recommendation:
-        "Implement an account deletion feature that allows users to permanently delete their account and associated personal data. Include a confirmation step to prevent accidental deletion.",
+        "If your website has user registration or collects personal data, ensure you provide: profile management, data export, account deletion, and a way to submit data access requests.",
     });
   }
 

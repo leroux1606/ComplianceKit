@@ -115,16 +115,24 @@ export function getScoreBreakdown(input: ScoreInput): ScoreBreakdown {
   }
 
   // Penalties for severe issues
-  const errorFindings = input.findings.filter((f) => f.severity === "error");
+  // Only count truly critical errors (not user rights warnings for sites without accounts)
+  const errorFindings = input.findings.filter(
+    (f) => f.severity === "error" && 
+    // Exclude user rights findings as they may not apply to all sites
+    !["data_rectification", "user_profile_settings", "account_deletion", "user_rights_info"].includes(f.type)
+  );
   penalties = errorFindings.length * 5; // -5 points per error
 
-  const total =
-    privacyPolicy +
-    cookieBanner +
-    cookieCategories +
-    trackingDisclosure +
-    userRights -
-    penalties;
+  // Calculate subtotal before applying penalties
+  const subtotal = privacyPolicy + cookieBanner + cookieCategories + trackingDisclosure + userRights;
+  
+  // Ensure a minimum score of 20 if the site has no cookies and no critical issues
+  // This prevents "clean" sites from getting 0
+  const hasNoCookiesOrTracking = input.cookies.length === 0 && 
+    input.scripts.filter((s) => s.category === "analytics" || s.category === "marketing").length === 0;
+  const minScore = hasNoCookiesOrTracking && errorFindings.length === 0 ? 40 : 0;
+
+  const total = Math.max(minScore, subtotal - penalties);
 
   return {
     total: Math.max(0, Math.min(100, total)),
