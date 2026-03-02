@@ -24,16 +24,19 @@ export function GeneratePolicyButton({
     setIsGenerating(true);
 
     try {
-      const policy = await generatePolicy(websiteId, type);
+      const result = await generatePolicy(websiteId, type);
+
+      if (!result.success) {
+        alert(result.error || "Failed to generate policy");
+        setIsGenerating(false);
+        return;
+      }
+
       router.refresh();
-      
-      // Optionally redirect to the new policy
-      router.push(`/dashboard/websites/${websiteId}/policies/${policy.id}`);
+      router.push(`/dashboard/websites/${websiteId}/policies/${result.policy.id}`);
     } catch (error) {
       console.error("Failed to generate policy:", error);
-      alert(
-        `Failed to generate policy: ${(error as Error).message}`
-      );
+      alert(`Failed to generate policy: ${(error as Error).message}`);
       setIsGenerating(false);
     }
   }

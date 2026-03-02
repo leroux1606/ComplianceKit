@@ -1,27 +1,25 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Download, Eye, Code, Trash2 } from "lucide-react";
+import { ChevronLeft, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { getWebsite } from "@/lib/actions/website";
 import { getPolicy } from "@/lib/actions/policy";
 import { DeletePolicyButton } from "@/components/dashboard/delete-policy-button";
 import { DownloadPolicyButton } from "@/components/dashboard/download-policy-button";
 import { CopyPolicyButton } from "@/components/dashboard/copy-policy-button";
-import { PrintPolicyButton } from "@/components/dashboard/print-policy-button";
+import { PolicyEditor } from "@/components/dashboard/policy-editor";
 import { formatDateTime } from "@/lib/utils";
 
 interface PolicyPageProps {
   params: Promise<{ id: string; policyId: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: PolicyPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PolicyPageProps): Promise<Metadata> {
   const { id, policyId } = await params;
   const website = await getWebsite(id);
   const policy = await getPolicy(policyId);
@@ -31,10 +29,8 @@ export async function generateMetadata({
   }
 
   const policyType = policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy";
-
   return {
     title: `${policyType} v${policy.version} - ${website.name} | ComplianceKit`,
-    description: `View ${policyType} for ${website.url}`,
   };
 }
 
@@ -48,6 +44,7 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   }
 
   const policyType = policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy";
+  const encodedHtml = Buffer.from(policy.htmlContent || "").toString("base64");
 
   return (
     <div className="space-y-6">
@@ -71,15 +68,25 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
               )}
             </div>
             <p className="text-muted-foreground">
-              {website.name} • Generated {formatDateTime(policy.generatedAt)}
+              {website.name} · Generated {formatDateTime(policy.generatedAt)}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <CopyPolicyButton content={policy.content} />
-          <PrintPolicyButton />
           <DownloadPolicyButton policy={policy} websiteName={website.name} />
           <DeletePolicyButton policyId={policy.id} websiteId={id} />
+        </div>
+      </div>
+
+      {/* Info Banner */}
+      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-500/10 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+        <Info className="h-4 w-4 mt-0.5 shrink-0" />
+        <div>
+          <strong>How this policy was generated:</strong> Content is based on your website scan results
+          (cookies, tracking scripts, company details from Settings). Each website gets a unique policy
+          reflecting its specific data practices. You can edit the content below to customise it before
+          publishing. Always have policies reviewed by legal counsel.
         </div>
       </div>
 
@@ -88,79 +95,40 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
         <CardHeader>
           <CardTitle>Policy Content</CardTitle>
           <CardDescription>
-            Review and download this policy for publication on your website
+            Preview, edit, or download your policy
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="preview">
-            <TabsList>
-              <TabsTrigger value="preview">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </TabsTrigger>
-              <TabsTrigger value="markdown">
-                <Code className="mr-2 h-4 w-4" />
-                Markdown
-              </TabsTrigger>
-              <TabsTrigger value="html">
-                <Code className="mr-2 h-4 w-4" />
-                HTML
-              </TabsTrigger>
+          <Tabs defaultValue="preview" className="w-full">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+              <TabsTrigger value="html">HTML Source</TabsTrigger>
             </TabsList>
 
+            {/* Preview Tab - iframe for correct HTML rendering */}
             <TabsContent value="preview" className="mt-4">
-              <div
-                className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground"
-                dangerouslySetInnerHTML={{ __html: policy.htmlContent || "" }}
+              <iframe
+                srcDoc={policy.htmlContent || ""}
+                className="w-full rounded-lg border bg-white"
+                style={{ height: "600px" }}
+                sandbox="allow-same-origin"
+                title={`${policyType} Preview`}
               />
             </TabsContent>
 
-            <TabsContent value="markdown" className="mt-4">
-              <div className="bg-muted rounded-lg p-4">
-                <pre className="text-sm whitespace-pre-wrap font-mono">
-                  {policy.content}
-                </pre>
-              </div>
+            {/* Edit Tab */}
+            <TabsContent value="edit" className="mt-4">
+              <PolicyEditor policyId={policy.id} content={policy.content} />
             </TabsContent>
 
+            {/* HTML Source Tab */}
             <TabsContent value="html" className="mt-4">
-              <div className="bg-muted rounded-lg p-4">
-                <pre className="text-sm whitespace-pre-wrap font-mono">
-                  {policy.htmlContent}
-                </pre>
-              </div>
+              <pre className="w-full overflow-x-auto rounded-lg border bg-muted p-4 text-xs font-mono whitespace-pre-wrap">
+                {policy.htmlContent}
+              </pre>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Usage Instructions */}
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle className="text-base">How to Use This Policy</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-3">
-          <div>
-            <p className="font-medium text-foreground mb-1">1. Review the Content</p>
-            <p>Carefully review the generated policy to ensure it accurately reflects your data practices.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-1">2. Customize as Needed</p>
-            <p>Download the policy and customize it to match your specific requirements. Add your company details and legal disclaimers.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-1">3. Legal Review</p>
-            <p>Have the policy reviewed by legal counsel before publishing it on your website.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-1">4. Publish on Your Website</p>
-            <p>Add the policy to your website and link to it from your footer and cookie banner.</p>
-          </div>
-          <div className="pt-2 border-t">
-            <p className="text-xs">
-              <strong>Important:</strong> This is a generated template based on automated scans. It should be reviewed by qualified legal professionals before use.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

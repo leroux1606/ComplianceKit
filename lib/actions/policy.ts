@@ -163,6 +163,81 @@ export async function getPolicies(websiteId: string): Promise<Policy[]> {
 }
 
 /**
+ * Update policy content (user customization)
+ */
+export async function updatePolicy(
+  policyId: string,
+  content: string
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const policy = await db.policy.findFirst({
+    where: {
+      id: policyId,
+      website: { userId: session.user.id },
+    },
+  });
+
+  if (!policy) {
+    return { success: false, error: "Policy not found" };
+  }
+
+  // Convert markdown to HTML
+  const htmlContent = markdownToHtml(content, policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy");
+
+  await db.policy.update({
+    where: { id: policyId },
+    data: { content, htmlContent },
+  });
+
+  revalidatePath(`/dashboard/websites/${policy.websiteId}/policies/${policyId}`);
+  return { success: true };
+}
+
+/**
+ * Simple markdown to HTML converter
+ */
+function markdownToHtml(markdown: string, title: string): string {
+  let html = markdown
+    .split("\n")
+    .map((line) => {
+      if (line.startsWith("# ")) return `<h1>${line.substring(2)}</h1>`;
+      if (line.startsWith("## ")) return `<h2>${line.substring(3)}</h2>`;
+      if (line.startsWith("### ")) return `<h3>${line.substring(4)}</h3>`;
+      if (line.startsWith("- ")) return `<li>${line.substring(2).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</li>`;
+      if (line.startsWith("---")) return `<hr>`;
+      if (line.trim() === "") return `<br>`;
+      return `<p>${line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\*(.*?)\*/g, "<em>$1</em>")}</p>`;
+    })
+    .join("\n");
+
+  html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+    h1 { font-size: 2em; border-bottom: 2px solid #0f172a; padding-bottom: 0.3em; }
+    h2 { font-size: 1.5em; margin-top: 1.5em; color: #0f172a; }
+    h3 { font-size: 1.2em; margin-top: 1em; color: #475569; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 0.5em; }
+    strong { color: #0f172a; }
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
+  </style>
+</head>
+<body>${html}</body>
+</html>`;
+}
+
+/**
  * Get a single policy
  */
 export async function getPolicy(policyId: string): Promise<Policy | null> {
