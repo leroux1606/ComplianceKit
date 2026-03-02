@@ -50,7 +50,8 @@ export type FindingType =
   | "data_export"
   | "account_deletion"
   | "dsar_mechanism"
-  | "data_rectification";
+  | "data_rectification"
+  | "user_rights_info";
 
 export type FindingSeverity = "info" | "warning" | "error";
 

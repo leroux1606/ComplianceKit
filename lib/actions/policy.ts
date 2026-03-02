@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Policy } from "@prisma/client";
+import type { CompanyInfoInput } from "@/lib/validations";
 
 export type PolicyType = "privacy_policy" | "cookie_policy";
 
@@ -655,4 +656,42 @@ function buildPolicyHtml(title: string, bodyHtml: string): string {
 ${bodyHtml}
 </body>
 </html>`;
+}
+
+/**
+ * Update company information for a website.
+ * Used by the company info form; the data feeds into policy generation.
+ */
+export async function updateCompanyInfo(
+  websiteId: string,
+  data: CompanyInfoInput
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const website = await db.website.findFirst({
+    where: { id: websiteId, userId: session.user.id },
+    select: { id: true },
+  });
+
+  if (!website) {
+    return { success: false, error: "Website not found" };
+  }
+
+  await db.website.update({
+    where: { id: websiteId },
+    data: {
+      companyName: data.companyName,
+      companyAddress: data.companyAddress,
+      companyEmail: data.companyEmail,
+      dpoName: data.dpoName || null,
+      dpoEmail: data.dpoEmail || null,
+    },
+  });
+
+  revalidatePath(`/dashboard/websites/${websiteId}`);
+  return { success: true };
 }
