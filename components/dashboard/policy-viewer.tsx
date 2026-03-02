@@ -55,8 +55,8 @@ export function PolicyViewer({ policy, websiteUrl }: PolicyViewerProps) {
     try {
       const result = await deletePolicy(policy.id);
 
-      if (result.error) {
-        toast.error(result.error);
+      if (!result.success) {
+        toast.error(result.error || "Failed to delete policy");
         return;
       }
 

@@ -53,8 +53,8 @@ export function PolicyGenerator({
     try {
       const result = await generatePolicy(websiteId, type);
 
-      if (result.error) {
-        toast.error(result.error);
+      if (!result.success) {
+        toast.error(result.error || "Failed to generate policy");
         return;
       }
 

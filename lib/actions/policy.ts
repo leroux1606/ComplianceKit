@@ -5,17 +5,19 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Policy } from "@prisma/client";
 
+export type PolicyType = "privacy_policy" | "cookie_policy";
+
 /**
  * Generate a policy for a website based on scan results
  */
 export async function generatePolicy(
   websiteId: string,
-  type: "privacy_policy" | "cookie_policy"
-) {
+  type: PolicyType
+): Promise<{ success: true; policy: Policy } | { success: false; error: string }> {
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+    return { success: false, error: "Unauthorized" };
   }
 
   // Get user's company details
@@ -49,12 +51,12 @@ export async function generatePolicy(
   });
 
   if (!website) {
-    throw new Error("Website not found");
+    return { success: false, error: "Website not found" };
   }
 
   const latestScan = website.scans[0];
   if (!latestScan) {
-    throw new Error("No scan found. Please run a scan first.");
+    return { success: false, error: "No scan found. Please run a scan first before generating a policy." };
   }
 
   // Deactivate previous versions of this policy type
@@ -104,7 +106,37 @@ export async function generatePolicy(
   });
 
   revalidatePath(`/dashboard/websites/${websiteId}`);
-  return policy;
+  revalidatePath(`/dashboard/policies`);
+  return { success: true, policy };
+}
+
+/**
+ * Get all policies across all websites for the current user
+ */
+export async function getAllPolicies() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const websites = await db.website.findMany({
+    where: { userId: session.user.id },
+    include: {
+      policies: {
+        where: { isActive: true },
+        orderBy: { generatedAt: "desc" },
+      },
+      scans: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { id: true, status: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return websites;
 }
 
 /**
@@ -155,11 +187,11 @@ export async function getPolicy(policyId: string): Promise<Policy | null> {
 /**
  * Delete a policy
  */
-export async function deletePolicy(policyId: string) {
+export async function deletePolicy(policyId: string): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+    return { success: false, error: "Unauthorized" };
   }
 
   const policy = await db.policy.findFirst({
@@ -172,7 +204,7 @@ export async function deletePolicy(policyId: string) {
   });
 
   if (!policy) {
-    throw new Error("Policy not found");
+    return { success: false, error: "Policy not found" };
   }
 
   await db.policy.delete({
@@ -180,6 +212,8 @@ export async function deletePolicy(policyId: string) {
   });
 
   revalidatePath(`/dashboard/websites/${policy.websiteId}`);
+  revalidatePath(`/dashboard/policies`);
+  return { success: true };
 }
 
 /**
