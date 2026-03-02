@@ -16,7 +16,7 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Policies | ComplianceKit",
-  description: "Manage your legal policies and documents",
+  description: "Manage your privacy and cookie policies",
 };
 
 export default async function PoliciesPage() {
@@ -31,9 +31,9 @@ export default async function PoliciesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Legal Policies</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Policies</h1>
           <p className="text-muted-foreground">
-            Generate and manage privacy policies and cookie policies for your websites
+            Generate and manage Privacy Policies and Cookie Policies for your websites
           </p>
         </div>
       </div>

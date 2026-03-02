@@ -56,8 +56,17 @@ export default async function WebsitePoliciesPage({
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Policy Management</h1>
-            <p className="text-muted-foreground">{website.name}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <Link href="/dashboard/websites" className="hover:text-foreground transition-colors">Websites</Link>
+              <span>/</span>
+              <Link href={`/dashboard/websites/${id}`} className="hover:text-foreground transition-colors">{website.name}</Link>
+              <span>/</span>
+              <span className="text-foreground">Policies</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Policy Management — {website.name}
+            </h1>
+            <p className="text-muted-foreground">{website.url.replace(/^https?:\/\//, "")}</p>
           </div>
         </div>
       </div>

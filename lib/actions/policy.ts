@@ -424,6 +424,9 @@ function generateCookiePolicyContent(
   const analyticsCookies = cookies.filter((c: any) => c.category === "analytics");
   const marketingCookies = cookies.filter((c: any) => c.category === "marketing");
   const functionalCookies = cookies.filter((c: any) => c.category === "functional");
+  const otherCookies = cookies.filter((c: any) =>
+    !["necessary", "analytics", "marketing", "functional"].includes(c.category)
+  );
 
   const companyName = website.companyName || website.name;
 
@@ -481,6 +484,17 @@ ${functionalCookies.slice(0, 10).map((c: any) => `- **${c.name}** (${c.domain})
   - Expires: ${c.expires ? new Date(c.expires).toLocaleDateString() : "Session"}
   - Secure: ${c.secure ? "Yes" : "No"}`).join("\n\n")}
 ` : ""}
+
+${otherCookies.length > 0 ? `### 5. Other Cookies (${otherCookies.length})
+These cookies were detected on the website and require further classification.
+
+${otherCookies.slice(0, 10).map((c: any) => `- **${c.name}** (${c.domain})
+  - Purpose: Under review — please update your cookie policy accordingly
+  - Expires: ${c.expires ? new Date(c.expires).toLocaleDateString() : "Session"}
+  - Secure: ${c.secure ? "Yes" : "No"}`).join("\n\n")}
+` : ""}
+
+${cookies.length === 0 ? `*No cookies were detected during the scan. If your website uses cookies, please run a new scan or add cookie details manually.*` : ""}
 
 ## Managing Cookies
 

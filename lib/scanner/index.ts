@@ -67,9 +67,15 @@ export class Scanner {
         timeout: this.options.timeout,
       });
 
-      // Wait a bit for any delayed scripts/banners
-      // Increased wait time for heavy sites
+      // Wait for delayed scripts and cookie banners to appear
       await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      // Try to accept cookie consent to capture all cookies that would be set after consent.
+      // Many sites block cookies behind a CMP until the user clicks "Accept".
+      await tryAcceptCookieConsent(page);
+
+      // Wait for cookies to be set after consent acceptance
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Run all detectors in parallel
       const [cookies, scripts, privacyPolicy, cookieBanner, userRights] = await Promise.all([
@@ -209,6 +215,118 @@ export class Scanner {
         await browser.close();
       }
     }
+  }
+}
+
+/**
+ * Attempt to click "Accept All" / "Accept" cookie consent buttons so the scanner
+ * can observe all cookies that are set after consent is granted.
+ * Tries common button texts, aria-labels and ids used by popular CMPs.
+ * Failures are silently ignored — this is best-effort only.
+ */
+async function tryAcceptCookieConsent(page: Page): Promise<void> {
+  // Common accept-button selectors used by OneTrust, CookieBot, CookieYes,
+  // Quantcast, Didomi, Osano, Cookiehub and bespoke implementations.
+  const selectors = [
+    // OneTrust
+    "#onetrust-accept-btn-handler",
+    ".onetrust-accept-btn-handler",
+    // CookieBot
+    "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
+    "#CybotCookiebotDialogBodyButtonAccept",
+    // CookieYes / CookieLaw
+    ".cky-btn-accept",
+    ".cookieyes-accept",
+    // Quantcast Choice
+    ".qc-cmp2-summary-buttons button:first-child",
+    // Didomi
+    "#didomi-notice-agree-button",
+    // Osano
+    ".osano-cm-accept-all",
+    // Cookiehub
+    ".ch2-allow-all-btn",
+    // Generic patterns
+    "[id*='accept'][id*='cookie']",
+    "[id*='cookie'][id*='accept']",
+    "[class*='accept-all']",
+    "[class*='acceptAll']",
+    "[class*='accept_all']",
+    "[data-testid*='accept']",
+  ];
+
+  // Also try matching by visible button text
+  const acceptTexts = [
+    "Accept All",
+    "Accept all",
+    "Accept all cookies",
+    "Allow All",
+    "Allow all cookies",
+    "I Accept",
+    "Agree",
+    "Agree and close",
+    "OK",
+    "Got it",
+    "I understand",
+    "Accept",
+  ];
+
+  try {
+    // Try selector-based matching first
+    for (const selector of selectors) {
+      try {
+        const el = await page.$(selector);
+        if (el) {
+          const isVisible = await el.isVisible().catch(() => false);
+          if (isVisible) {
+            await el.click();
+            return;
+          }
+        }
+      } catch {
+        // ignore individual selector failures
+      }
+    }
+
+    // Fallback: search all buttons/links for accept text
+    const clicked = await page.evaluate((texts: string[]) => {
+      const candidates = Array.from(
+        document.querySelectorAll("button, a, [role='button']")
+      ) as HTMLElement[];
+      for (const el of candidates) {
+        const text = (el.innerText || el.textContent || "").trim();
+        if (texts.some((t) => text.toLowerCase() === t.toLowerCase())) {
+          const rect = el.getBoundingClientRect();
+          // Only click visible elements
+          if (rect.width > 0 && rect.height > 0) {
+            el.click();
+            return true;
+          }
+        }
+      }
+      return false;
+    }, acceptTexts);
+
+    if (!clicked) {
+      // Last resort: try partial text match
+      await page.evaluate((texts: string[]) => {
+        const candidates = Array.from(
+          document.querySelectorAll("button, a, [role='button']")
+        ) as HTMLElement[];
+        for (const el of candidates) {
+          const text = (el.innerText || el.textContent || "").trim().toLowerCase();
+          if (texts.some((t) => text.includes(t.toLowerCase()))) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              el.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      }, ["accept", "agree", "allow", "consent"]);
+    }
+  } catch {
+    // Never let consent-click failures abort the scan
   }
 }
 

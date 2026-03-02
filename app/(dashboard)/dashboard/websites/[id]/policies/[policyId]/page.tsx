@@ -56,18 +56,30 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
             </Link>
           </Button>
           <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <Link href="/dashboard/websites" className="hover:text-foreground transition-colors">Websites</Link>
+              <span>/</span>
+              <Link href={`/dashboard/websites/${id}`} className="hover:text-foreground transition-colors">{website.name}</Link>
+              <span>/</span>
+              <Link href={`/dashboard/websites/${id}/policies`} className="hover:text-foreground transition-colors">Policies</Link>
+              <span>/</span>
+              <span className="text-foreground">{policyType}</span>
+            </div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">
-                {policyType} v{policy.version}
+                {website.name} — {policyType}
               </h1>
               {policy.isActive && (
                 <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
                   Active
                 </Badge>
               )}
+              <Badge variant="outline" className="text-muted-foreground">
+                v{policy.version}
+              </Badge>
             </div>
             <p className="text-muted-foreground">
-              {website.name} · Generated {formatDateTime(policy.generatedAt)}
+              Generated {formatDateTime(policy.generatedAt)}
             </p>
           </div>
         </div>
