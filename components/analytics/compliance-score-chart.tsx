@@ -89,10 +89,10 @@ export function ComplianceScoreChart({
                   type="monotone"
                   dataKey="score"
                   name="Score"
-                  stroke="hsl(var(--primary))"
+                  stroke="#3b82f6"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: "#3b82f6", r: 4, strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: "#3b82f6" }}
                 />
               </LineChart>
             </ResponsiveContainer>
