@@ -61,16 +61,19 @@ export function Sidebar() {
   const tBilling = useTranslations("billing");
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card">
+    <div className="flex h-full w-64 flex-col border-r bg-card" role="complementary">
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard">
+        <Link href="/dashboard" aria-label="ComplianceKit — go to dashboard home">
           <Logo />
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav
+        aria-label="Main navigation"
+        className="flex-1 space-y-1 px-3 py-4"
+      >
         {navigationItems.map((item) => {
           // Exact match for /dashboard, startsWith for others
           const isActive =
@@ -81,25 +84,29 @@ export function Sidebar() {
             <Link
               key={item.key}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               {t(item.key)}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Plan / Upgrade Footer */}
       <div className="border-t p-4">
-        <div className="rounded-lg bg-muted p-4">
+        <div className="rounded-lg bg-muted p-4" aria-label="Current plan: Free">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
+              aria-hidden="true"
+            >
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
@@ -109,7 +116,7 @@ export function Sidebar() {
           </div>
           <Link
             href="/dashboard/billing"
-            className="mt-3 block text-center text-sm font-medium text-primary hover:underline"
+            className="mt-3 block text-center text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-sm"
           >
             {tBilling("upgrade")}
           </Link>

@@ -1,6 +1,16 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Globe, FileText, Shield, ArrowRight, Plus, Users } from "lucide-react";
+import {
+  Globe,
+  FileText,
+  Shield,
+  ArrowRight,
+  Plus,
+  Users,
+  CheckCircle2,
+  Circle,
+  BarChart3,
+} from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { getWebsiteStats, getWebsites } from "@/lib/actions/website";
@@ -40,54 +50,62 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-4" role="list" aria-label="Compliance summary metrics">
+        <Card role="listitem">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Websites</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Websites</CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10" aria-hidden="true">
+              <Globe className="h-4 w-4 text-blue-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.websiteCount}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats.websiteCount === 0 ? "Add your first website" : "websites tracked"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="listitem">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Scans</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Scans</CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10" aria-hidden="true">
+              <Shield className="h-4 w-4 text-violet-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.scanCount}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats.scanCount === 0 ? "Run your first scan" : "compliance scans"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="listitem">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Policies</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Policies</CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10" aria-hidden="true">
+              <FileText className="h-4 w-4 text-emerald-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.policyCount}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats.policyCount === 0 ? "Generate your first policy" : "policies generated"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="listitem">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Consents</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Consents</CardTitle>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10" aria-hidden="true">
+              <Users className="h-4 w-4 text-amber-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.consentCount}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats.consentCount === 0 ? "No consents yet" : "visitor consents"}
             </p>
           </CardContent>
@@ -167,58 +185,100 @@ export default async function DashboardPage() {
               Complete these steps to achieve GDPR compliance
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className={`flex items-center gap-4 rounded-lg border p-4 ${stats.websiteCount > 0 ? 'opacity-60' : ''}`}>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${stats.websiteCount > 0 ? 'bg-green-500/10 text-green-600' : 'bg-primary text-primary-foreground'}`}>
-                {stats.websiteCount > 0 ? '✓' : '1'}
+          <CardContent className="space-y-3">
+            {/* Step 1 */}
+            <div
+              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.websiteCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-primary/30 bg-primary/5'}`}
+              aria-label={`Step 1: Add your website — ${stats.websiteCount > 0 ? 'completed' : 'pending'}`}
+            >
+              <div className="shrink-0" aria-hidden="true">
+                {stats.websiteCount > 0 ? (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary bg-primary text-[11px] font-bold text-primary-foreground">
+                    1
+                  </div>
+                )}
               </div>
-              <div className="flex-1">
-                <p className="font-medium">Add your website</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium text-sm ${stats.websiteCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
+                  Add your website
+                </p>
+                <p className="text-xs text-muted-foreground">
                   Enter your website URL to get started
                 </p>
               </div>
               {stats.websiteCount === 0 && (
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="shrink-0">
                   <Link href="/dashboard/websites/new">
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="h-4 w-4" aria-hidden="true" />
                     Add
                   </Link>
                 </Button>
               )}
             </div>
 
-            <div className={`flex items-center gap-4 rounded-lg border p-4 ${stats.scanCount > 0 ? 'opacity-60' : ''}`}>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${stats.scanCount > 0 ? 'bg-green-500/10 text-green-600' : 'bg-muted'}`}>
-                {stats.scanCount > 0 ? '✓' : '2'}
+            {/* Step 2 */}
+            <div
+              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.scanCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-border'}`}
+              aria-label={`Step 2: Scan for cookies — ${stats.scanCount > 0 ? 'completed' : 'pending'}`}
+            >
+              <div className="shrink-0" aria-hidden="true">
+                {stats.scanCount > 0 ? (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
+                    2
+                  </div>
+                )}
               </div>
-              <div className="flex-1">
-                <p className="font-medium">Scan for cookies</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium text-sm ${stats.scanCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
+                  Scan for cookies
+                </p>
+                <p className="text-xs text-muted-foreground">
                   We&apos;ll detect all cookies and trackers
                 </p>
               </div>
             </div>
 
-            <div className={`flex items-center gap-4 rounded-lg border p-4 ${stats.policyCount > 0 ? 'opacity-60' : ''}`}>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${stats.policyCount > 0 ? 'bg-green-500/10 text-green-600' : 'bg-muted'}`}>
-                {stats.policyCount > 0 ? '✓' : '3'}
+            {/* Step 3 */}
+            <div
+              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.policyCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-border'}`}
+              aria-label={`Step 3: Generate policies — ${stats.policyCount > 0 ? 'completed' : 'pending'}`}
+            >
+              <div className="shrink-0" aria-hidden="true">
+                {stats.policyCount > 0 ? (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
+                    3
+                  </div>
+                )}
               </div>
-              <div className="flex-1">
-                <p className="font-medium">Generate policies</p>
-                <p className="text-sm text-muted-foreground">
-                  Create compliant privacy & cookie policies
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium text-sm ${stats.policyCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
+                  Generate policies
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Create compliant privacy &amp; cookie policies
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 rounded-lg border p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                4
+            {/* Step 4 */}
+            <div
+              className="flex items-center gap-4 rounded-lg border p-4"
+              aria-label="Step 4: Deploy cookie banner — pending"
+            >
+              <div className="shrink-0" aria-hidden="true">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
+                  4
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="font-medium">Deploy cookie banner</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">Deploy cookie banner</p>
+                <p className="text-xs text-muted-foreground">
                   Add consent banner to your website
                 </p>
               </div>

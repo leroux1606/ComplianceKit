@@ -29,14 +29,14 @@ export function ExportReportButton({
       setIsExporting(true);
       const report = await exportAnalyticsReport(dateRange);
 
-      // Download as text file
-      const blob = new Blob([report], { type: "text/plain" });
+      // Download as markdown report
+      const blob = new Blob([report], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `compliancekit-report-${dateRange}-${
         new Date().toISOString().split("T")[0]
-      }.txt`;
+      }.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -121,7 +121,7 @@ export function ExportReportButton({
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleExportText}>
           <FileText className="h-4 w-4 mr-2" />
-          Export as Text Report
+          Export as Markdown Report
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleExportCSV}>
           <Table className="h-4 w-4 mr-2" />

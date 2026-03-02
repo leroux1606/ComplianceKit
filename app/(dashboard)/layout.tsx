@@ -30,7 +30,11 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto bg-muted/30 p-6 focus:outline-none"
+        >
           {children}
         </main>
       </div>
