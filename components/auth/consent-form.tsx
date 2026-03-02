@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { acceptOAuthConsent } from "@/lib/actions/consent-gate";
+import { cn } from "@/lib/utils";
 
 export function ConsentForm({ userEmail }: { userEmail: string }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -60,57 +61,78 @@ export function ConsentForm({ userEmail }: { userEmail: string }) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Age verification — GDPR Art. 8 */}
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="age"
-            checked={ageConfirmation}
-            onCheckedChange={(v) => setAgeConfirmation(v === true)}
-            disabled={isLoading}
-            className="mt-0.5 shrink-0"
-          />
-          <Label
-            htmlFor="age"
-            className="cursor-pointer text-sm font-normal leading-relaxed"
-          >
-            I confirm that I am{" "}
-            <span className="font-semibold">16 years of age or older</span>
-          </Label>
+        <div
+          className={cn(
+            "rounded-lg border p-4 transition-colors",
+            ageConfirmation
+              ? "border-primary/60 bg-primary/5"
+              : "border-border hover:border-border/80 hover:bg-muted/30",
+            isLoading && "pointer-events-none opacity-60"
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="age"
+              checked={ageConfirmation}
+              onCheckedChange={(v) => setAgeConfirmation(v === true)}
+              disabled={isLoading}
+              className="mt-0.5 h-5 w-5 shrink-0 rounded"
+            />
+            <Label
+              htmlFor="age"
+              className="cursor-pointer text-sm font-normal leading-relaxed"
+            >
+              I confirm that I am{" "}
+              <span className="font-semibold">16 years of age or older</span>
+            </Label>
+          </div>
         </div>
 
         {/* Terms & Privacy consent — GDPR Art. 7 */}
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="terms"
-            checked={acceptTerms}
-            onCheckedChange={(v) => setAcceptTerms(v === true)}
-            disabled={isLoading}
-            className="mt-0.5 shrink-0"
-          />
-          <Label
-            htmlFor="terms"
-            className="cursor-pointer text-sm font-normal leading-relaxed"
-          >
-            I agree to the{" "}
-            <Link
-              href="/terms"
-              target="_blank"
-              className="text-primary underline underline-offset-2 hover:no-underline"
+        <div
+          className={cn(
+            "rounded-lg border p-4 transition-colors",
+            acceptTerms
+              ? "border-primary/60 bg-primary/5"
+              : "border-border hover:border-border/80 hover:bg-muted/30",
+            isLoading && "pointer-events-none opacity-60"
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="terms"
+              checked={acceptTerms}
+              onCheckedChange={(v) => setAcceptTerms(v === true)}
+              disabled={isLoading}
+              className="mt-0.5 h-5 w-5 shrink-0 rounded"
+            />
+            <Label
+              htmlFor="terms"
+              className="cursor-pointer text-sm font-normal leading-relaxed"
             >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              target="_blank"
-              className="text-primary underline underline-offset-2 hover:no-underline"
-            >
-              Privacy Policy
-            </Link>
-            , including the processing of my personal data as described
-            therein.
-          </Label>
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary underline underline-offset-2 hover:no-underline"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary underline underline-offset-2 hover:no-underline"
+              >
+                Privacy Policy
+              </Link>
+              , including the processing of my personal data as described therein.
+            </Label>
+          </div>
         </div>
 
         {errors.length > 0 && (
