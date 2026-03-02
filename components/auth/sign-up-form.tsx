@@ -8,6 +8,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -33,6 +34,8 @@ export function SignUpForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      acceptTerms: undefined,
+      ageConfirmation: undefined,
     },
   });
 
@@ -153,6 +156,59 @@ export function SignUpForm() {
                   </div>
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* GDPR Art. 8 — Age verification */}
+          <FormField
+            control={form.control}
+            name="ageConfirmation"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal text-sm">
+                    I confirm that I am 16 years of age or older
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          {/* GDPR Art. 7 — Affirmative consent */}
+          <FormField
+            control={form.control}
+            name="acceptTerms"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal text-sm">
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-primary underline hover:no-underline" target="_blank">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="text-primary underline hover:no-underline" target="_blank">
+                      Privacy Policy
+                    </Link>
+                  </FormLabel>
+                  <FormMessage />
+                </div>
               </FormItem>
             )}
           />

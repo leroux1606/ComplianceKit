@@ -7,7 +7,7 @@ export async function GET(
   const { embedCode } = await params;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://compliancekit.com";
 
-  // The widget loader script
+  // The widget loader script — injected values are resolved server-side at request time
   const script = `
 (function() {
   'use strict';
@@ -67,13 +67,13 @@ export async function GET(
     .then(function(res) { return res.json(); })
     .then(function(data) {
       if (data.error) return;
-      createBanner(data.config, data.websiteId);
+      createBanner(data.config, data.websiteId, data.privacyPolicyUrl, data.cookiePolicyUrl);
     })
     .catch(function(err) {
       console.error('ComplianceKit: Failed to load config', err);
     });
   
-  function createBanner(config, websiteId) {
+  function createBanner(config, websiteId, privacyPolicyUrl, cookiePolicyUrl) {
     // Inject styles
     var style = document.createElement('style');
     style.textContent = getBannerStyles(config);
@@ -83,7 +83,7 @@ export async function GET(
     var banner = document.createElement('div');
     banner.id = 'ck-cookie-banner';
     banner.className = 'ck-banner ck-banner--' + config.position + ' ck-banner--' + config.animation;
-    banner.innerHTML = getBannerHTML(config);
+    banner.innerHTML = getBannerHTML(config, privacyPolicyUrl, cookiePolicyUrl);
     document.body.appendChild(banner);
     
     // Show banner with animation
@@ -211,18 +211,23 @@ export async function GET(
     \`;
   }
   
-  function getBannerHTML(config) {
+  function getBannerHTML(config, privacyPolicyUrl, cookiePolicyUrl) {
+    // GDPR fix #3: neutral description (not implied consent by browsing)
+    // GDPR fix #6: disclose IP address collection for consent records
+    // GDPR fix #9: use configurable policy links, fallback to relative paths
+    var privacyLink = privacyPolicyUrl || '/privacy-policy';
+    var cookieLink  = cookiePolicyUrl  || '/cookie-policy';
     return \`
       <div class="ck-banner__content">
         <div class="ck-main">
-          <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
+          <p>We use cookies to improve your experience. Please choose your preferences below. Your consent choice is recorded along with your anonymised visitor ID and IP address for compliance purposes.</p>
           <div class="ck-banner__buttons">
             <button class="ck-accept-all">Accept All</button>
             <button class="ck-reject-all">Reject All</button>
             <button class="ck-customize">Customize</button>
           </div>
           <div class="ck-banner__links">
-            <a href="/privacy-policy">Privacy Policy</a> • <a href="/cookie-policy">Cookie Policy</a>
+            <a href="\${privacyLink}">Privacy Policy</a> • <a href="\${cookieLink}">Cookie Policy</a>
           </div>
         </div>
         <div class="ck-settings">

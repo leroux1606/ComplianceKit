@@ -35,6 +35,7 @@ export async function signUp(values: SignUpInput) {
   }
 
   const { name, email, password } = validatedFields.data;
+  const now = new Date();
 
   // Sanitize inputs
   const sanitizedEmail = sanitizeEmail(email);
@@ -64,12 +65,14 @@ export async function signUp(values: SignUpInput) {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user
+  // Create user — record GDPR consent and age verification timestamps (Art. 7 & 8)
   await db.user.create({
     data: {
       name: sanitizedName,
       email: sanitizedEmail,
       password: hashedPassword,
+      consentedAt: now,
+      ageVerifiedAt: now,
     },
   });
 
@@ -111,11 +114,10 @@ export async function signInWithCredentials(
   const ipAddress = await getClientIp();
   const userAgent = await getUserAgent();
 
-  // Import here to avoid circular dependencies
   const { isAccountLocked, recordFailedAttempt, recordSuccessfulLogin } = await import("@/lib/auth-security");
 
   // Check if account is locked
-  const lockStatus = isAccountLocked(sanitizedEmail, ipAddress);
+  const lockStatus = await isAccountLocked(sanitizedEmail, ipAddress);
 
   if (lockStatus.locked) {
     logAuthEvent(
@@ -140,8 +142,7 @@ export async function signInWithCredentials(
       redirectTo: "/dashboard",
     });
 
-    // Record successful login
-    recordSuccessfulLogin(sanitizedEmail, ipAddress);
+    await recordSuccessfulLogin(sanitizedEmail, ipAddress);
 
     logAuthEvent(
       SecurityEventType.LOGIN_SUCCESS,
@@ -154,8 +155,7 @@ export async function signInWithCredentials(
 
     return { success: true };
   } catch (error) {
-    // Record failed attempt
-    const failureStatus = recordFailedAttempt(sanitizedEmail, ipAddress);
+    const failureStatus = await recordFailedAttempt(sanitizedEmail, ipAddress);
 
     logAuthEvent(
       SecurityEventType.LOGIN_FAILED,

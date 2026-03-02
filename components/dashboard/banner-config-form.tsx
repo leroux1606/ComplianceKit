@@ -50,6 +50,8 @@ export function BannerConfigForm({
     buttonStyle: "rounded",
     animation: "slide",
     customCss: "",
+    privacyPolicyUrl: "",
+    cookiePolicyUrl: "",
   };
 
   const form = useForm<BannerConfigInput>({
@@ -248,6 +250,51 @@ export function BannerConfigForm({
                   </Select>
                   <FormDescription>
                     How the banner appears on the page
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* GDPR Issue #9 — configurable policy page links */}
+            <FormField
+              control={form.control}
+              name="privacyPolicyUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Privacy Policy URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/privacy-policy"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Full URL to your Privacy Policy page shown in the consent banner
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cookiePolicyUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cookie Policy URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/cookie-policy"
+                      disabled={isLoading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Full URL to your Cookie Policy page shown in the consent banner
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

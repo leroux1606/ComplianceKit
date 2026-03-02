@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Download, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteAccountDialog } from "./delete-account-dialog";
 import { ExportDataButton } from "./export-data-button";
+import { RightsRequestForm } from "./rights-request-form";
 
 interface AccountDeletionSectionProps {
   userEmail: string;
@@ -34,6 +35,24 @@ export function AccountDeletionSection({ userEmail }: AccountDeletionSectionProp
             </p>
             <ExportDataButton />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* GDPR Art. 18 & 21 — Right to Restriction and Right to Object */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Exercise Your Rights</CardTitle>
+          <CardDescription>
+            GDPR Article 18 (Right to Restriction) & Article 21 (Right to Object)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            You have the right to object to how we process your data, or to request that we
+            restrict processing to storage only. Submit your request below and we will respond
+            within 30 days as required by GDPR Article 12.
+          </p>
+          <RightsRequestForm />
         </CardContent>
       </Card>
 

@@ -28,6 +28,10 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   
+  // GDPR Compliance: Consent & Age Verification (Art. 7 & 8)
+  consentedAt    DateTime? // When user accepted Terms & Privacy Policy
+  ageVerifiedAt  DateTime? // When user confirmed age >= 16
+
   // GDPR Compliance: Account Deletion & Anonymization
   deletedAt      DateTime? // Soft delete timestamp (30-day grace period)
   anonymizedAt   DateTime? // When PII was anonymized (for legal retention)
@@ -205,7 +209,10 @@ model BannerConfig {
   textColor    String   @default("#ffffff")
   buttonStyle  String   @default("rounded") // rounded, square, pill
   animation    String   @default("slide") // slide, fade, none
-  customCss    String?  @db.Text
+  customCss       String?  @db.Text
+  // GDPR: Configurable policy links for consent banner (Issue #9)
+  privacyPolicyUrl  String?
+  cookiePolicyUrl   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -408,4 +415,33 @@ model DsarAttachment {
 
   @@index([dsarId])
   @@map("dsar_attachments")
+}
+
+// ============================================
+// PHASE 8: Security — DB-backed rate limiting & brute-force (Issue #4)
+// Replaces in-memory Maps so protection works across serverless instances.
+// ============================================
+
+model RateLimitRecord {
+  id       String   @id @default(cuid())
+  key      String   @unique // "<ip>:<path>"
+  count    Int      @default(1)
+  resetAt  DateTime
+
+  @@index([key])
+  @@index([resetAt])
+  @@map("rate_limit_records")
+}
+
+model LoginAttemptRecord {
+  id           String    @id @default(cuid())
+  identifier   String    @unique // "<email>:<ip>"
+  count        Int       @default(0)
+  firstAttempt DateTime
+  lastAttempt  DateTime
+  lockedUntil  DateTime?
+
+  @@index([identifier])
+  @@index([lockedUntil])
+  @@map("login_attempt_records")
 }

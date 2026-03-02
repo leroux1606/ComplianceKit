@@ -1,131 +1,95 @@
 /**
- * Rate Limiting Utility
- * Protects API routes from abuse and DDoS attacks
+ * Rate Limiting Utility — database-backed
+ * Uses PostgreSQL via Prisma so limits are enforced across all serverless instances.
+ * Previously in-memory Maps were silently bypassed on Vercel (each invocation = fresh state).
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 interface RateLimitConfig {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Max requests per window
+  windowMs: number;
+  maxRequests: number;
 }
 
-// In-memory store for rate limiting (use Redis in production for multiple servers)
-const rateLimitStore = new Map<
-  string,
-  { count: number; resetTime: number }
->();
-
-// Cleanup old entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of rateLimitStore.entries()) {
-    if (now > value.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
-
-/**
- * Get identifier for rate limiting (IP address)
- */
 function getIdentifier(request: NextRequest): string {
-  // Try to get real IP from headers (for proxies/load balancers)
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
-  const ip = forwardedFor?.split(",")[0] || realIp || "unknown";
-
-  return ip;
+  return forwardedFor?.split(",")[0] || realIp || "unknown";
 }
 
-/**
- * Rate limit middleware
- * @param config Rate limit configuration
- * @returns Middleware function
- */
 export function rateLimit(config: RateLimitConfig) {
   return async (request: NextRequest): Promise<NextResponse | null> => {
     const identifier = getIdentifier(request);
     const key = `${identifier}:${request.nextUrl.pathname}`;
-    const now = Date.now();
+    const now = new Date();
+    const resetAt = new Date(now.getTime() + config.windowMs);
 
-    let record = rateLimitStore.get(key);
-
-    // Create new record if doesn't exist or expired
-    if (!record || now > record.resetTime) {
-      record = {
-        count: 1,
-        resetTime: now + config.windowMs,
-      };
-      rateLimitStore.set(key, record);
-      return null; // Allow request
-    }
-
-    // Increment count
-    record.count++;
-
-    // Check if exceeded limit
-    if (record.count > config.maxRequests) {
-      const resetIn = Math.ceil((record.resetTime - now) / 1000);
-
-      return NextResponse.json(
-        {
-          error: "Too many requests",
-          message: `Rate limit exceeded. Please try again in ${resetIn} seconds.`,
-          retryAfter: resetIn,
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": resetIn.toString(),
-            "X-RateLimit-Limit": config.maxRequests.toString(),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": new Date(record.resetTime).toISOString(),
+    try {
+      // Upsert: create or increment atomically
+      const record = await db.rateLimitRecord.upsert({
+        where: { key },
+        create: { key, count: 1, resetAt },
+        update: {
+          count: {
+            // Reset counter if the existing window has expired
+            increment: 1,
           },
-        }
-      );
-    }
+        },
+      });
 
-    // Update store
-    rateLimitStore.set(key, record);
-    return null; // Allow request
+      // If the window has expired, reset the record
+      if (record.resetAt < now) {
+        await db.rateLimitRecord.update({
+          where: { key },
+          data: { count: 1, resetAt },
+        });
+        return null;
+      }
+
+      if (record.count > config.maxRequests) {
+        const resetIn = Math.ceil((record.resetAt.getTime() - now.getTime()) / 1000);
+        return NextResponse.json(
+          {
+            error: "Too many requests",
+            message: `Rate limit exceeded. Please try again in ${resetIn} seconds.`,
+            retryAfter: resetIn,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": resetIn.toString(),
+              "X-RateLimit-Limit": config.maxRequests.toString(),
+              "X-RateLimit-Remaining": "0",
+              "X-RateLimit-Reset": record.resetAt.toISOString(),
+            },
+          }
+        );
+      }
+
+      return null;
+    } catch (err) {
+      // Fail open — don't block requests if the rate limit table is unavailable
+      console.error("Rate limit DB error:", err);
+      return null;
+    }
   };
 }
 
-/**
- * Predefined rate limit configurations
- */
 export const RateLimitPresets = {
-  // Strict: For sensitive operations (login, registration)
-  strict: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // 5 requests per 15 minutes
-
-  // Standard: For regular API endpoints
-  standard: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 requests per minute
-
-  // Lenient: For public endpoints
-  lenient: { windowMs: 60 * 1000, maxRequests: 100 }, // 100 requests per minute
-
-  // Public forms: For DSAR, consent submissions
-  publicForm: { windowMs: 5 * 60 * 1000, maxRequests: 10 }, // 10 requests per 5 minutes
+  strict:     { windowMs: 15 * 60 * 1000, maxRequests: 5 },
+  standard:   { windowMs: 60 * 1000,      maxRequests: 30 },
+  lenient:    { windowMs: 60 * 1000,      maxRequests: 100 },
+  publicForm: { windowMs: 5 * 60 * 1000,  maxRequests: 10 },
 };
 
-/**
- * Apply rate limiting to API route handler
- * @param handler Original route handler
- * @param config Rate limit configuration
- * @returns Protected route handler
- */
-export function withRateLimit<T extends any[]>(
+export function withRateLimit<T extends unknown[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>,
   config: RateLimitConfig = RateLimitPresets.standard
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     const rateLimitResponse = await rateLimit(config)(request);
-
-    if (rateLimitResponse) {
-      return rateLimitResponse; // Rate limit exceeded
-    }
-
+    if (rateLimitResponse) return rateLimitResponse;
     return handler(request, ...args);
   };
 }

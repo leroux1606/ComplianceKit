@@ -21,6 +21,14 @@ export const signUpSchema = z
         "Password must contain at least one uppercase letter, one lowercase letter, and one number"
       ),
     confirmPassword: z.string(),
+    // GDPR Art. 7 — affirmative consent required
+    acceptTerms: z.literal(true, {
+      message: "You must accept the Terms of Service and Privacy Policy",
+    }),
+    // GDPR Art. 8 — age verification
+    ageConfirmation: z.literal(true, {
+      message: "You must confirm you are 16 years of age or older",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -90,6 +98,9 @@ export const bannerConfigSchema = z.object({
   buttonStyle: z.enum(["rounded", "square", "pill"]),
   animation: z.enum(["slide", "fade", "none"]),
   customCss: z.string().max(5000, "Custom CSS must be less than 5000 characters").optional(),
+  // GDPR Issue #9 — configurable policy page links
+  privacyPolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/privacy)").optional().or(z.literal("")),
+  cookiePolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/cookies)").optional().or(z.literal("")),
 });
 
 export type BannerConfigInput = z.infer<typeof bannerConfigSchema>;

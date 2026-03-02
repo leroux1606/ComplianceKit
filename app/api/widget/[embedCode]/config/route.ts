@@ -41,11 +41,16 @@ export async function GET(
       buttonStyle: "rounded",
       animation: "slide",
       customCss: null,
+      privacyPolicyUrl: null,
+      cookiePolicyUrl: null,
     };
 
     return NextResponse.json(
       {
         websiteId: website.id,
+        // GDPR Issue #9 — expose configurable policy page URLs to the widget
+        privacyPolicyUrl: config.privacyPolicyUrl ?? null,
+        cookiePolicyUrl: config.cookiePolicyUrl ?? null,
         config: {
           theme: config.theme,
           position: config.position,

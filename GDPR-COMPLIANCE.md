@@ -334,7 +334,7 @@ If you believe your GDPR rights have been violated, you have the right to lodge 
 This document certifies that ComplianceKit has implemented all necessary technical and organizational measures to ensure GDPR compliance as of the date above.
 
 **Approved by:**
-[Your Name], Data Protection Officer
+[**ACTION REQUIRED** — Replace this line with the full name of your designated Data Protection Officer before publishing. The DPO must be an identified, reachable individual per GDPR Art. 37–39.]
 ComplianceKit
 
 ---

