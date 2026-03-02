@@ -44,7 +44,6 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   }
 
   const policyType = policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy";
-  const encodedHtml = Buffer.from(policy.htmlContent || "").toString("base64");
 
   return (
     <div className="space-y-6">
@@ -80,13 +79,13 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
       </div>
 
       {/* Info Banner */}
-      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-500/10 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
-        <Info className="h-4 w-4 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-3 rounded-lg border bg-muted px-4 py-3 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 mt-0.5 shrink-0 text-foreground" />
         <div>
-          <strong>How this policy was generated:</strong> Content is based on your website scan results
-          (cookies, tracking scripts, company details from Settings). Each website gets a unique policy
-          reflecting its specific data practices. You can edit the content below to customise it before
-          publishing. Always have policies reviewed by legal counsel.
+          <span className="font-medium text-foreground">How this policy was generated: </span>
+          Content is based on your website scan results (cookies, tracking scripts) and your company
+          details from Settings. Each website gets a unique policy. Use the <strong className="text-foreground">Edit</strong> tab
+          to customise before publishing. Always have policies reviewed by legal counsel.
         </div>
       </div>
 

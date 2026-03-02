@@ -210,31 +210,14 @@ function markdownToHtml(markdown: string, title: string): string {
       if (line.startsWith("### ")) return `<h3>${line.substring(4)}</h3>`;
       if (line.startsWith("- ")) return `<li>${line.substring(2).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</li>`;
       if (line.startsWith("---")) return `<hr>`;
-      if (line.trim() === "") return `<br>`;
+      if (line.trim() === "") return ``;
       return `<p>${line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\*(.*?)\*/g, "<em>$1</em>")}</p>`;
     })
     .join("\n");
 
   html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
 
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${title}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
-    h1 { font-size: 2em; border-bottom: 2px solid #0f172a; padding-bottom: 0.3em; }
-    h2 { font-size: 1.5em; margin-top: 1.5em; color: #0f172a; }
-    h3 { font-size: 1.2em; margin-top: 1em; color: #475569; }
-    ul { padding-left: 20px; }
-    li { margin-bottom: 0.5em; }
-    strong { color: #0f172a; }
-    hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
-  </style>
-</head>
-<body>${html}</body>
-</html>`;
+  return buildPolicyHtml(title, html);
 }
 
 /**
@@ -552,52 +535,110 @@ Email: ${website.companyEmail || website.dpoEmail || "contact@example.com"}
  */
 function generatePolicyHTML(type: string, website: any, scan: any): string {
   const content = generatePolicyContent(type, website, scan);
-  
-  // Convert markdown to basic HTML
+  const title = `${type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy"} — ${website.name}`;
+
   let html = content
     .split("\n")
     .map((line) => {
-      if (line.startsWith("# ")) {
-        return `<h1>${line.substring(2)}</h1>`;
-      } else if (line.startsWith("## ")) {
-        return `<h2>${line.substring(3)}</h2>`;
-      } else if (line.startsWith("### ")) {
-        return `<h3>${line.substring(4)}</h3>`;
-      } else if (line.startsWith("**") && line.endsWith("**")) {
-        return `<p><strong>${line.substring(2, line.length - 2)}</strong></p>`;
-      } else if (line.startsWith("- ")) {
-        return `<li>${line.substring(2)}</li>`;
-      } else if (line.trim() === "") {
-        return "<br>";
-      } else if (line.startsWith("*") && line.endsWith("*")) {
-        return `<p class="text-muted"><em>${line.substring(1, line.length - 1)}</em></p>`;
-      } else {
-        return `<p>${line}</p>`;
-      }
+      if (line.startsWith("# ")) return `<h1>${line.substring(2)}</h1>`;
+      if (line.startsWith("## ")) return `<h2>${line.substring(3)}</h2>`;
+      if (line.startsWith("### ")) return `<h3>${line.substring(4)}</h3>`;
+      if (line.startsWith("**") && line.endsWith("**")) return `<p><strong>${line.substring(2, line.length - 2)}</strong></p>`;
+      if (line.startsWith("- ")) return `<li>${line.substring(2).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</li>`;
+      if (line.startsWith("*") && line.endsWith("*")) return `<p class="note"><em>${line.substring(1, line.length - 1)}</em></p>`;
+      if (line.trim() === "") return ``;
+      return `<p>${line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</p>`;
     })
     .join("\n");
 
-  // Wrap lists
   html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
 
+  return buildPolicyHtml(title, html);
+}
+
+/**
+ * Shared professional HTML template for all policies
+ */
+function buildPolicyHtml(title: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy"} - ${website.name}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
-    h1 { font-size: 2em; margin-bottom: 0.5em; border-bottom: 2px solid #0f172a; padding-bottom: 0.3em; }
-    h2 { font-size: 1.5em; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; }
-    h3 { font-size: 1.2em; margin-top: 1em; color: #475569; }
-    ul { padding-left: 20px; }
-    li { margin-bottom: 0.5em; }
-    strong { color: #0f172a; }
-    .text-muted { color: #64748b; font-size: 0.9em; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #1a1a1a;
+      background: #ffffff;
+      padding: 48px 40px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-top: 32px;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      border-left: 3px solid #6366f1;
+    }
+    h3 {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+    p {
+      margin-bottom: 12px;
+      color: #374151;
+    }
+    ul {
+      margin: 8px 0 16px 20px;
+    }
+    li {
+      margin-bottom: 6px;
+      color: #374151;
+    }
+    strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 32px 0;
+    }
+    .note {
+      font-size: 13px;
+      color: #6b7280;
+      font-style: italic;
+      margin-top: 32px;
+      padding: 12px 16px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
   </style>
 </head>
 <body>
-${html}
+${bodyHtml}
 </body>
 </html>`;
 }
