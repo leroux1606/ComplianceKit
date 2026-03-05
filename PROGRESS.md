@@ -20,7 +20,7 @@ At the start of each session:
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
 **P1 items completed:** 9 / 19
-**P2 items completed:** 3 / 6
+**P2 items completed:** 4 / 6
 
 ---
 
@@ -70,7 +70,7 @@ At the start of each session:
 | C1 | Async job queue for scans | COMPLETE | Fire-and-forget run route + status polling; zero new deps |
 | C2 | Widget JS on CDN | COMPLETE | `public/widget.js` static file; legacy route is a zero-DB bootstrap shim |
 | C3 | Database connection pooling | COMPLETE | `max:1` on Pool + `directUrl` in schema + `.env.example` docs |
-| C4 | Consent table archival | NOT STARTED | |
+| C4 | Consent table archival | COMPLETE | Composite index + daily cron + vercel.json |
 | D6 | Public JS API for banner | NOT STARTED | |
 | E4 | Live banner preview in config | NOT STARTED | |
 
@@ -161,6 +161,15 @@ Start here if no specific instruction given:
   - 10 MB hard cap (`MAX_ATTACHMENT_BYTES`)
   - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
 - Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
+- TypeScript clean
+
+---
+
+### 2026-03-05 — C4: Consent table archival
+- **Schema:** Added `@@index([websiteId, consentedAt])` composite index to `Consent` model — needed for efficient archival deletes and date-range exports (A9). Applied to DB via `prisma db push` (used `DIRECT_URL` automatically).
+- **`prisma.config.ts` fix:** C3's `directUrl` support was incorrectly placed in `schema.prisma` (Prisma 7 removed that). Moved to `prisma.config.ts` with conditional spread so `DIRECT_URL` is optional (safe for local dev without it set).
+- **`app/api/cron/archive-consent/route.ts`:** Daily cron that deletes expired consent records per user's plan retention period (Free: 7d, Starter: 30d, Professional: 90d, Enterprise: 365d). Follows same auth pattern as `process-account-deletions` cron (`CRON_SECRET` bearer token). Logs deleted count per user.
+- **`vercel.json`:** Created with both cron jobs scheduled — account deletions at 02:00 UTC, consent archival at 03:00 UTC.
 - TypeScript clean
 
 ---

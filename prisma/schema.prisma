@@ -6,14 +6,10 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // DATABASE_URL should point to the PgBouncer pooled endpoint (Neon/Supabase).
-  // DIRECT_URL should point to the direct (non-pooled) PostgreSQL connection.
-  // Prisma uses directUrl for migrations and schema introspection only — these
-  // operations require a persistent connection that PgBouncer can't provide.
-  // If DIRECT_URL is not set, DATABASE_URL is used for both (fine for local dev).
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  // Connection URLs are configured in prisma.config.ts (Prisma 7+).
+  // DATABASE_URL  → pooled PgBouncer endpoint (runtime queries)
+  // DIRECT_URL    → direct connection (migrations only — see prisma.config.ts)
 }
 
 // ============================================
@@ -252,6 +248,8 @@ model Consent {
 
   @@index([websiteId])
   @@index([visitorId])
+  // Composite index for archival deletes and date-range exports (A9 / C4)
+  @@index([websiteId, consentedAt])
   @@map("consents")
 }
 

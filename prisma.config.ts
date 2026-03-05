@@ -9,6 +9,10 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
+    // DATABASE_URL  → pooled PgBouncer endpoint (Supabase port 6543) — used for runtime queries
+    // DIRECT_URL    → direct connection (Supabase port 5432) — used for migrations only
+    // If DIRECT_URL is not set, DATABASE_URL is used for both (fine for local dev with local Postgres)
     url: env("DATABASE_URL"),
+    ...(process.env.DIRECT_URL ? { directUrl: process.env.DIRECT_URL } : {}),
   },
 });
