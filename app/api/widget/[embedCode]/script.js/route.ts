@@ -1,10 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+
+/**
+ * Safely embeds a string value into a JavaScript source literal.
+ * JSON.stringify produces a properly-escaped double-quoted JS string.
+ * The extra replacements handle U+2028/U+2029 (line terminators in JS
+ * but valid in JSON — older parsers would treat them as line breaks).
+ */
+function safeJsString(value: string): string {
+  return JSON.stringify(value)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ embedCode: string }> }
 ) {
   const { embedCode } = await params;
+
+  // Validate the embedCode exists in the DB before generating any script.
+  // This prevents serving (and injecting values into) scripts for arbitrary
+  // or malicious embedCode values supplied in the URL.
+  const website = await db.website.findFirst({
+    where: { embedCode },
+    select: { id: true },
+  });
+
+  if (!website) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://compliancekit.com";
 
   // The widget loader script — injected values are resolved server-side at request time
@@ -12,8 +38,8 @@ export async function GET(
 (function() {
   'use strict';
 
-  var CK_EMBED_CODE = '${embedCode}';
-  var CK_API_URL = '${appUrl}/api/widget/' + CK_EMBED_CODE;
+  var CK_EMBED_CODE = ${safeJsString(embedCode)};
+  var CK_API_URL = ${safeJsString(appUrl + "/api/widget/")} + CK_EMBED_CODE;
   var CK_STORAGE_KEY = 'ck_consent_' + CK_EMBED_CODE;
   var CK_VISITOR_KEY = 'ck_visitor_id';
 

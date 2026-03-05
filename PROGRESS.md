@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 5 / 19
+**P1 items completed:** 6 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -46,7 +46,7 @@ At the start of each session:
 | A7 | Fix age verification approach | COMPLETE | Removed checkbox; ToS s.3.1 (18+ required) is the legal basis |
 | A8 | Compliance score disclaimer | COMPLETE | Disclaimer in scan results CardFooter + ComplianceGauge |
 | A9 | Consent record CSV export | COMPLETE | GET `/api/websites/[id]/consent-export` + `ConsentExportButton` in website Quick Actions |
-| B2 | Widget template injection audit | NOT STARTED | |
+| B2 | Widget template injection audit | COMPLETE | `safeJsString()` + DB validation in script.js route |
 | B3 | Rate limit fail-open alerting | NOT STARTED | |
 | B4 | DSAR file attachment security audit | NOT STARTED | |
 | B5 | Paystack webhook signature audit | NOT STARTED | |
@@ -151,6 +151,15 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — B2: Widget script template injection fix
+- **Vulnerability:** `embedCode` (URL path parameter — attacker-controlled) was interpolated directly into a JS string literal with single quotes: `var CK_EMBED_CODE = '${embedCode}'`. A payload like `'+alert(document.domain)+'` would break out and execute on any site embedding the widget.
+- **Fix 1:** Added `safeJsString()` helper using `JSON.stringify()` + manual U+2028/U+2029 escaping. `JSON.stringify` produces a properly double-quoted, escape-safe JS string literal for any input.
+- **Fix 2:** Added DB lookup at the start of the route — `embedCode` is validated against the `Website` table before any script is generated. Unknown/malicious codes now receive a 404 instead of a rendered script template.
+- Changed two interpolation points: `CK_EMBED_CODE` and `CK_API_URL` base URL
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — A9: Consent record CSV export
 - Created `app/api/websites/[id]/consent-export/route.ts` — authenticated GET endpoint
