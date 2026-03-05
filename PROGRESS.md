@@ -20,7 +20,7 @@ At the start of each session:
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
 **P1 items completed:** 9 / 19
-**P2 items completed:** 2 / 6
+**P2 items completed:** 3 / 6
 
 ---
 
@@ -69,7 +69,7 @@ At the start of each session:
 |----|-------|--------|-------|
 | C1 | Async job queue for scans | COMPLETE | Fire-and-forget run route + status polling; zero new deps |
 | C2 | Widget JS on CDN | COMPLETE | `public/widget.js` static file; legacy route is a zero-DB bootstrap shim |
-| C3 | Database connection pooling | NOT STARTED | Config change |
+| C3 | Database connection pooling | COMPLETE | `max:1` on Pool + `directUrl` in schema + `.env.example` docs |
 | C4 | Consent table archival | NOT STARTED | |
 | D6 | Public JS API for banner | NOT STARTED | |
 | E4 | Live banner preview in config | NOT STARTED | |
@@ -161,6 +161,16 @@ Start here if no specific instruction given:
   - 10 MB hard cap (`MAX_ATTACHMENT_BYTES`)
   - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
 - Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
+- TypeScript clean
+
+---
+
+### 2026-03-05 — C3: Database connection pooling
+- **Problem:** `pg.Pool` default size is 10. With 50 concurrent Vercel serverless cold starts each opening a pool, that's 500 connections — well above typical PostgreSQL limits (100 default).
+- **Code fix 1 — `lib/db.ts`:** Added `max: 1` to `Pool` config. Each serverless instance handles one request at a time, so a pool larger than 1 only wastes connections. PgBouncer then multiplexes these single connections across all instances.
+- **Code fix 2 — `prisma/schema.prisma`:** Added `directUrl = env("DIRECT_URL")`. Prisma uses `DIRECT_URL` for migrations (`prisma db push` / `migrate deploy`) and `DATABASE_URL` for runtime queries. Needed because PgBouncer runs in transaction mode and can't handle the persistent connections that migrations require.
+- **Code fix 3 — `.env.example`:** Documented both URLs with step-by-step instructions for Neon and Supabase (which dashboard tab, which port).
+- **Infrastructure action required (not in code):** Point `DATABASE_URL` to the PgBouncer pooled endpoint in your Neon or Supabase project settings. Set `DIRECT_URL` to the direct connection string. This is a Vercel env var update — no redeployment needed.
 - TypeScript clean
 
 ---
