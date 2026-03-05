@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 3 / 19
+**P1 items completed:** 4 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -44,7 +44,7 @@ At the start of each session:
 | A5 | Legal disclaimer on generated policies | COMPLETE | Inline-styled amber warning box at top of both policy templates |
 | A6 | Data Processing Agreement (DPA) | COMPLETE | `/dpa` public page + `dpaAcceptedAt` on User model + signup checkbox |
 | A7 | Fix age verification approach | COMPLETE | Removed checkbox; ToS s.3.1 (18+ required) is the legal basis |
-| A8 | Compliance score disclaimer | NOT STARTED | |
+| A8 | Compliance score disclaimer | COMPLETE | Disclaimer in scan results CardFooter + ComplianceGauge |
 | A9 | Consent record CSV export | NOT STARTED | |
 | B2 | Widget template injection audit | NOT STARTED | |
 | B3 | Rate limit fail-open alerting | NOT STARTED | |
@@ -151,6 +151,13 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — A8: Compliance score disclaimer
+- Added disclaimer to scan results page (`/dashboard/websites/[id]/scans/[scanId]/page.tsx`): CardFooter below `ComplianceScore` with "Technical indicators only. Does not constitute legal advice — a high score does not guarantee regulatory compliance."
+- Added disclaimer to `ComplianceGauge` component (analytics page): small text below the score label
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — A7: Fix age verification approach
 - Removed the "I confirm I am 16 or older" checkbox from the signup form (a checkbox is legally meaningless as age verification)

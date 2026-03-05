@@ -105,6 +105,9 @@ export function ComplianceGauge({
             {getScoreLabel(score)}
           </span>
         </div>
+        <p className="mt-4 text-xs text-center text-muted-foreground">
+          Technical indicators only. Does not constitute legal advice.
+        </p>
       </CardContent>
     </Card>
   );

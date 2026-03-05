@@ -16,6 +16,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -117,6 +118,11 @@ export default async function ScanResultsPage({
           <CardContent className="flex justify-center">
             <ComplianceScore score={scan.score || 0} size="lg" />
           </CardContent>
+          <CardFooter>
+            <p className="text-xs text-muted-foreground">
+              Technical indicators only. Does not constitute legal advice — a high score does not guarantee regulatory compliance.
+            </p>
+          </CardFooter>
         </Card>
 
         <Card className="md:col-span-2">
