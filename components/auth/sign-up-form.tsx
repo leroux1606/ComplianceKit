@@ -35,7 +35,6 @@ export function SignUpForm() {
       password: "",
       confirmPassword: "",
       acceptTerms: undefined,
-      ageConfirmation: undefined,
       acceptDpa: undefined,
     },
   });
@@ -157,29 +156,6 @@ export function SignUpForm() {
                   </div>
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* GDPR Art. 8 — Age verification */}
-          <FormField
-            control={form.control}
-            name="ageConfirmation"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value === true}
-                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="font-normal text-sm">
-                    I confirm that I am 16 years of age or older
-                  </FormLabel>
-                  <FormMessage />
-                </div>
               </FormItem>
             )}
           />

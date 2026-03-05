@@ -25,10 +25,6 @@ export const signUpSchema = z
     acceptTerms: z.literal(true, {
       message: "You must accept the Terms of Service and Privacy Policy",
     }),
-    // GDPR Art. 8 — age verification
-    ageConfirmation: z.literal(true, {
-      message: "You must confirm you are 16 years of age or older",
-    }),
     // GDPR Art. 28 — Data Processing Agreement acceptance
     acceptDpa: z.literal(true, {
       message: "You must accept the Data Processing Agreement",

@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 2 / 19
+**P1 items completed:** 3 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -43,7 +43,7 @@ At the start of each session:
 |----|-------|--------|-------|
 | A5 | Legal disclaimer on generated policies | COMPLETE | Inline-styled amber warning box at top of both policy templates |
 | A6 | Data Processing Agreement (DPA) | COMPLETE | `/dpa` public page + `dpaAcceptedAt` on User model + signup checkbox |
-| A7 | Fix age verification approach | NOT STARTED | |
+| A7 | Fix age verification approach | COMPLETE | Removed checkbox; ToS s.3.1 (18+ required) is the legal basis |
 | A8 | Compliance score disclaimer | NOT STARTED | |
 | A9 | Consent record CSV export | NOT STARTED | |
 | B2 | Widget template injection audit | NOT STARTED | |
@@ -151,6 +151,16 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — A7: Fix age verification approach
+- Removed the "I confirm I am 16 or older" checkbox from the signup form (a checkbox is legally meaningless as age verification)
+- Removed `ageConfirmation` field from `signUpSchema` in `lib/validations.ts`
+- Removed `ageVerifiedAt: now` from `lib/auth-actions.ts` — field remains nullable in DB for existing records
+- Age eligibility is now enforced by Terms of Service section 3.1: "You must be at least 18 years old and legally capable of entering into binding contracts"
+- This is the correct approach for B2B SaaS: the ToS contract itself establishes eligibility; a checkbox adds no legal protection
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — A6: Data Processing Agreement (GDPR Article 28)
 - Added `dpaAcceptedAt DateTime?` to `User` model in Prisma schema + `prisma db push` applied + client regenerated
