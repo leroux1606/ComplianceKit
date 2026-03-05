@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 7 / 19
+**P1 items completed:** 8 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -48,7 +48,7 @@ At the start of each session:
 | A9 | Consent record CSV export | COMPLETE | GET `/api/websites/[id]/consent-export` + `ConsentExportButton` in website Quick Actions |
 | B2 | Widget template injection audit | COMPLETE | `safeJsString()` + DB validation in script.js route |
 | B3 | Rate limit fail-open alerting | COMPLETE | In-memory fallback + `RATE_LIMIT_DB_ERROR` security alert |
-| B4 | DSAR file attachment security audit | NOT STARTED | |
+| B4 | DSAR file attachment security audit | COMPLETE | Feature unimplemented (no risk); validator + schema guards created |
 | B5 | Paystack webhook signature audit | NOT STARTED | |
 | D2 | Demo mode + setup wizard | NOT STARTED | |
 | D3 | WordPress plugin | NOT STARTED | |
@@ -151,6 +151,19 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — B4: DSAR file attachment security audit
+- **Audit finding:** `DsarAttachment` schema model exists but zero upload implementation — no API route, no storage integration, no component. No active vulnerability.
+- Created `lib/dsar/attachment-validator.ts` — security-first validator ready for when storage is integrated:
+  - `validateAttachment(buffer, filename, declaredMime)` — enforces all four required controls
+  - MIME allowlist (PDF, JPEG, PNG, WebP, GIF, plain text, DOC, DOCX)
+  - Magic-number byte inspection — validates actual file bytes, not just Content-Type header
+  - 10 MB hard cap (`MAX_ATTACHMENT_BYTES`)
+  - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
+- Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — B3: Rate limit fail-open alerting + in-memory fallback
 - Added `RATE_LIMIT_DB_ERROR` to `SecurityEventType` enum in `lib/security-log.ts`

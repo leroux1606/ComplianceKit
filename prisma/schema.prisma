@@ -411,13 +411,19 @@ model DsarActivity {
   @@map("dsar_activities")
 }
 
+// B4: File upload not yet implemented. When building this feature:
+//   - Validate MIME type against magic numbers (see lib/dsar/attachment-validator.ts)
+//   - Enforce 10 MB size limit before writing to storage
+//   - Store in a PRIVATE bucket (Supabase Storage / S3) — never a public URL
+//   - Serve via short-lived signed URLs, not direct fileUrl
+//   - Sanitize filename before storing (strip path traversal, control chars)
 model DsarAttachment {
   id          String   @id @default(cuid())
   dsarId      String
-  filename    String
-  fileUrl     String
-  fileSize    Int
-  mimeType    String
+  filename    String   // sanitized filename — see sanitizeFilename() in attachment-validator.ts
+  fileUrl     String   // signed URL or private storage path — MUST NOT be a public URL
+  fileSize    Int      // bytes — validated <= 10 MB before upload
+  mimeType    String   // server-validated MIME type — not the client Content-Type header
   uploadedBy  String   // User ID or "requester"
   createdAt   DateTime @default(now())
 
