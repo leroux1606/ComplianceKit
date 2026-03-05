@@ -31,6 +31,8 @@ model User {
   // GDPR Compliance: Consent & Age Verification (Art. 7 & 8)
   consentedAt    DateTime? // When user accepted Terms & Privacy Policy
   ageVerifiedAt  DateTime? // When user confirmed age >= 16
+  // GDPR Art. 28 — Data Processing Agreement acceptance
+  dpaAcceptedAt  DateTime? // When user accepted the Data Processing Agreement
 
   // GDPR Compliance: Account Deletion & Anonymization
   deletedAt      DateTime? // Soft delete timestamp (30-day grace period)

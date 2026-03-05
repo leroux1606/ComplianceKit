@@ -65,7 +65,7 @@ export async function signUp(values: SignUpInput) {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user — record GDPR consent and age verification timestamps (Art. 7 & 8)
+  // Create user — record GDPR consent, age verification, and DPA acceptance timestamps (Art. 7, 8, 28)
   await db.user.create({
     data: {
       name: sanitizedName,
@@ -73,6 +73,7 @@ export async function signUp(values: SignUpInput) {
       password: hashedPassword,
       consentedAt: now,
       ageVerifiedAt: now,
+      dpaAcceptedAt: now,
     },
   });
 

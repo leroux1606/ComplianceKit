@@ -36,6 +36,7 @@ export function SignUpForm() {
       confirmPassword: "",
       acceptTerms: undefined,
       ageConfirmation: undefined,
+      acceptDpa: undefined,
     },
   });
 
@@ -206,6 +207,33 @@ export function SignUpForm() {
                     <Link href="/privacy" className="text-primary underline hover:no-underline" target="_blank">
                       Privacy Policy
                     </Link>
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          {/* GDPR Art. 28 — Data Processing Agreement */}
+          <FormField
+            control={form.control}
+            name="acceptDpa"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal text-sm">
+                    I accept the{" "}
+                    <Link href="/dpa" className="text-primary underline hover:no-underline" target="_blank">
+                      Data Processing Agreement
+                    </Link>{" "}
+                    (required under GDPR Article 28)
                   </FormLabel>
                   <FormMessage />
                 </div>

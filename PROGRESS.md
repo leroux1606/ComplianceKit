@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 1 / 19
+**P1 items completed:** 2 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -42,7 +42,7 @@ At the start of each session:
 | ID | Issue | Status | Notes |
 |----|-------|--------|-------|
 | A5 | Legal disclaimer on generated policies | COMPLETE | Inline-styled amber warning box at top of both policy templates |
-| A6 | Data Processing Agreement (DPA) | NOT STARTED | |
+| A6 | Data Processing Agreement (DPA) | COMPLETE | `/dpa` public page + `dpaAcceptedAt` on User model + signup checkbox |
 | A7 | Fix age verification approach | NOT STARTED | |
 | A8 | Compliance score disclaimer | NOT STARTED | |
 | A9 | Consent record CSV export | NOT STARTED | |
@@ -151,6 +151,17 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — A6: Data Processing Agreement (GDPR Article 28)
+- Added `dpaAcceptedAt DateTime?` to `User` model in Prisma schema + `prisma db push` applied + client regenerated
+- Created `app/(marketing)/dpa/page.tsx` — full GDPR Article 28 compliant DPA public page (same styling as `/terms`)
+  - Covers: definitions, parties, subject matter, nature/purpose of processing, types of personal data, data subject categories, processor obligations (Art. 32 security, sub-processors, data subject rights, breach notification), controller obligations, sub-processors table (Supabase, Resend, Vercel), international transfers (SCCs), data retention periods, liability, governing law
+- Updated `signUpSchema` in `lib/validations.ts` — added `acceptDpa: z.literal(true)` field
+- Updated `components/auth/sign-up-form.tsx` — added DPA checkbox with link to `/dpa`, opens in new tab
+- Updated `lib/auth-actions.ts` — stores `dpaAcceptedAt: now` on user creation alongside `consentedAt` and `ageVerifiedAt`
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — A5: Legal disclaimer on generated policies
 - Added inline-styled amber warning box to both policy templates before the `<h1>` heading

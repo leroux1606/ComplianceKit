@@ -29,6 +29,10 @@ export const signUpSchema = z
     ageConfirmation: z.literal(true, {
       message: "You must confirm you are 16 years of age or older",
     }),
+    // GDPR Art. 28 — Data Processing Agreement acceptance
+    acceptDpa: z.literal(true, {
+      message: "You must accept the Data Processing Agreement",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
