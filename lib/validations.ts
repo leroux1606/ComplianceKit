@@ -101,6 +101,10 @@ export const bannerConfigSchema = z.object({
   // GDPR Issue #9 — configurable policy page links
   privacyPolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/privacy)").optional().or(z.literal("")),
   cookiePolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/cookies)").optional().or(z.literal("")),
+  // D1 — Google Consent Mode v2
+  consentModeV2: z.boolean(),
+  // A4 — withdrawal button position
+  withdrawalButtonPosition: z.enum(["bottom-right", "bottom-left"]),
 });
 
 export type BannerConfigInput = z.infer<typeof bannerConfigSchema>;

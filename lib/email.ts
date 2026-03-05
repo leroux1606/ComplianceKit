@@ -136,6 +136,195 @@ This email was sent by ComplianceKit
 }
 
 /**
+ * Send DSAR confirmation email to the requester (A1)
+ */
+export async function sendDsarConfirmationEmail(params: {
+  to: string;
+  requesterName: string | null;
+  requestTypeLabel: string;
+  referenceId: string;
+  dueDate: Date;
+  websiteName: string;
+  companyName: string | null;
+}) {
+  const { to, requesterName, requestTypeLabel, referenceId, dueDate, websiteName, companyName } = params;
+  const displayName = requesterName || 'there';
+  const displayCompany = companyName || websiteName;
+  const shortRef = referenceId.slice(0, 8).toUpperCase();
+  const dueDateStr = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@compliancekit.app';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .ref-box { background: #e0f2fe; border-left: 4px solid #0284c7; padding: 15px; margin: 20px 0; font-family: monospace; font-size: 18px; letter-spacing: 2px; }
+          .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Your Request Has Been Received</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${displayName},</p>
+            <p>We have received your data rights request and it has been forwarded to <strong>${displayCompany}</strong> for processing.</p>
+
+            <p><strong>Your reference number:</strong></p>
+            <div class="ref-box">${shortRef}</div>
+            <p style="font-size:13px;color:#64748b;">Please quote this reference in any follow-up correspondence.</p>
+
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;">Request type</td><td style="padding:8px 0;font-weight:bold;">${requestTypeLabel}</td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;">Submitted to</td><td style="padding:8px 0;">${displayCompany}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b;">Response due by</td><td style="padding:8px 0;font-weight:bold;">${dueDateStr}</td></tr>
+            </table>
+
+            <p>Under GDPR, ${displayCompany} must respond to your request within <strong>30 days</strong>. If you do not hear back by ${dueDateStr}, you have the right to lodge a complaint with your local data protection authority.</p>
+
+            <p>If you have any questions about your request, please contact ${displayCompany} directly and quote your reference number <strong>${shortRef}</strong>.</p>
+          </div>
+          <div class="footer">
+            <p>This confirmation was sent by ComplianceKit on behalf of ${displayCompany}</p>
+            <p>Questions about this service? <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Your Data Request Has Been Received — Reference: ${shortRef}
+
+Hi ${displayName},
+
+We have received your ${requestTypeLabel} request and forwarded it to ${displayCompany} for processing.
+
+Reference number: ${shortRef}
+Request type:     ${requestTypeLabel}
+Submitted to:     ${displayCompany}
+Response due by:  ${dueDateStr}
+
+Under GDPR, ${displayCompany} must respond within 30 days. If you do not hear back by ${dueDateStr}, you may lodge a complaint with your local data protection authority.
+
+Please quote reference ${shortRef} in any follow-up correspondence.
+
+---
+This confirmation was sent by ComplianceKit on behalf of ${displayCompany}
+  `.trim();
+
+  return sendEmail({
+    to,
+    subject: `Your data request has been received — Ref: ${shortRef}`,
+    html,
+    text,
+  });
+}
+
+/**
+ * Send DSAR notification email to the website owner (A2)
+ */
+export async function sendDsarOwnerNotificationEmail(params: {
+  to: string;
+  requesterName: string | null;
+  requesterEmail: string;
+  requestTypeLabel: string;
+  referenceId: string;
+  dueDate: Date;
+  websiteName: string;
+  dashboardUrl: string;
+}) {
+  const { to, requesterName, requesterEmail, requestTypeLabel, referenceId, dueDate, websiteName, dashboardUrl } = params;
+  const shortRef = referenceId.slice(0, 8).toUpperCase();
+  const dueDateStr = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const displayRequester = requesterName ? `${requesterName} (${requesterEmail})` : requesterEmail;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .alert { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+          .button { display: inline-block; background: #0f172a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>New Data Subject Request</h1>
+            <p style="margin:0;opacity:0.85;">Action required — respond within 30 days</p>
+          </div>
+          <div class="content">
+            <p>A new data subject request has been submitted through your <strong>${websiteName}</strong> DSAR form.</p>
+
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;width:140px;">Reference</td><td style="padding:8px 0;font-family:monospace;font-weight:bold;">${shortRef}</td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;">Request type</td><td style="padding:8px 0;font-weight:bold;">${requestTypeLabel}</td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;">From</td><td style="padding:8px 0;">${displayRequester}</td></tr>
+              <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 0;color:#64748b;">Website</td><td style="padding:8px 0;">${websiteName}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b;">Due by</td><td style="padding:8px 0;font-weight:bold;color:#dc2626;">${dueDateStr}</td></tr>
+            </table>
+
+            <div class="alert">
+              <strong>GDPR Article 12 — Action Required</strong><br>
+              You must respond to this request by <strong>${dueDateStr}</strong> (30 days from submission). Failure to respond is a breach of GDPR and may result in regulatory action.
+            </div>
+
+            <p style="text-align:center;">
+              <a href="${dashboardUrl}" class="button">View Request in Dashboard</a>
+            </p>
+
+            <p>You can manage this request, add notes, and record your response in your ComplianceKit dashboard.</p>
+          </div>
+          <div class="footer">
+            <p>This notification was sent by ComplianceKit</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+New Data Subject Request — Action Required
+
+A new ${requestTypeLabel} request has been submitted via ${websiteName}.
+
+Reference:    ${shortRef}
+Request type: ${requestTypeLabel}
+From:         ${displayRequester}
+Website:      ${websiteName}
+Due by:       ${dueDateStr}
+
+GDPR REQUIREMENT: You must respond by ${dueDateStr} (30 days from submission).
+
+Manage this request in your dashboard:
+${dashboardUrl}
+
+---
+This notification was sent by ComplianceKit
+  `.trim();
+
+  return sendEmail({
+    to,
+    subject: `Action required: New ${requestTypeLabel} request — ${websiteName} (Ref: ${shortRef})`,
+    html,
+    text,
+  });
+}
+
+/**
  * Send account deletion confirmation email
  */
 export async function sendAccountDeletionEmail(email: string, userName?: string | null) {

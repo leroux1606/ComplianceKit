@@ -213,6 +213,10 @@ model BannerConfig {
   // GDPR: Configurable policy links for consent banner (Issue #9)
   privacyPolicyUrl  String?
   cookiePolicyUrl   String?
+  // D1: Google Consent Mode v2
+  consentModeV2              Boolean  @default(true)
+  // A4: persistent withdrawal button position (GDPR Article 7(3))
+  withdrawalButtonPosition   String   @default("bottom-right")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -228,6 +232,10 @@ model Consent {
   preferences Json     // { necessary: true, analytics: false, marketing: false, functional: true }
   ipAddress   String?
   userAgent   String?
+  // A3: GDPR Recital 42 + Article 7 — proof that consent was specific and informed
+  consentMethod       String   @default("unknown") // accept_all | reject_all | custom
+  bannerConfigVersion String?  // BannerConfig.updatedAt ISO string at time of consent
+  policyVersion       Int?     // Active privacy policy version at time of consent
   consentedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

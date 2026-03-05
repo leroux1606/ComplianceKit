@@ -55,6 +55,8 @@ export default async function BannerPage({ params }: BannerPageProps) {
         buttonStyle: bannerConfig.buttonStyle as "rounded" | "square" | "pill",
         animation: bannerConfig.animation as "slide" | "fade" | "none",
         customCss: bannerConfig.customCss || "",
+        consentModeV2: bannerConfig.consentModeV2,
+        withdrawalButtonPosition: bannerConfig.withdrawalButtonPosition as "bottom-right" | "bottom-left",
       }
     : defaultConfig;
 

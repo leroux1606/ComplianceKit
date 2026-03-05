@@ -27,7 +27,7 @@ export const POST = withRateLimit(async function POST(
   try {
     const { embedCode } = await params;
     const body = await request.json();
-    const { visitorId, preferences } = body;
+    const { visitorId, preferences, consentMethod } = body;
 
     // Find website by embed code first (needed for CORS validation)
     const website = await db.website.findFirst({
@@ -55,12 +55,33 @@ export const POST = withRateLimit(async function POST(
     // Sanitize visitor ID
     const sanitizedVisitorId = sanitizeInput(visitorId).substring(0, 100);
 
+    // Validate consentMethod — only accept known values
+    const validMethods = ["accept_all", "reject_all", "custom"] as const;
+    type ConsentMethod = typeof validMethods[number];
+    const sanitizedMethod: ConsentMethod | "unknown" =
+      validMethods.includes(consentMethod) ? consentMethod : "unknown";
+
     // Get IP and User Agent
     const ipAddress =
       request.headers.get("x-forwarded-for")?.split(",")[0] ||
       request.headers.get("x-real-ip") ||
       "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";
+
+    // Resolve banner config version and active policy version for audit trail (A3)
+    const [bannerConfig, activePolicy] = await Promise.all([
+      db.bannerConfig.findUnique({
+        where: { websiteId: website.id },
+        select: { updatedAt: true },
+      }),
+      db.policy.findFirst({
+        where: { websiteId: website.id, isActive: true, type: "privacy_policy" },
+        select: { version: true },
+        orderBy: { generatedAt: "desc" },
+      }),
+    ]);
+    const bannerConfigVersion = bannerConfig?.updatedAt.toISOString() ?? null;
+    const policyVersion = activePolicy?.version ?? null;
 
     // Upsert consent
     const existingConsent = await db.consent.findFirst({
@@ -77,6 +98,9 @@ export const POST = withRateLimit(async function POST(
           preferences,
           ipAddress,
           userAgent,
+          consentMethod: sanitizedMethod,
+          bannerConfigVersion,
+          policyVersion,
         },
       });
     } else {
@@ -87,6 +111,9 @@ export const POST = withRateLimit(async function POST(
           preferences,
           ipAddress,
           userAgent,
+          consentMethod: sanitizedMethod,
+          bannerConfigVersion,
+          policyVersion,
         },
       });
     }

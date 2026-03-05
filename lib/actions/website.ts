@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
+import { validateScanUrl } from "@/lib/ssrf-check";
 import { checkPlanLimit } from "@/lib/actions/subscription";
 import type { Website, Scan, Policy, BannerConfig, Cookie, Script, Finding } from "@prisma/client";
 
@@ -118,6 +119,12 @@ export async function createWebsite(values: WebsiteInput) {
   const { name, url, description } = validatedFields.data;
   const normalizedUrl = normalizeUrl(url);
 
+  // Reject private/internal network addresses
+  const ssrfCheck = await validateScanUrl(normalizedUrl);
+  if (!ssrfCheck.safe) {
+    return { error: `Invalid URL: ${ssrfCheck.reason}` };
+  }
+
   // Check if website with same URL already exists for this user
   const existingWebsite = await db.website.findFirst({
     where: {
@@ -177,7 +184,12 @@ export async function updateWebsite(id: string, values: Partial<WebsiteInput>) {
   }
 
   if (values.url !== undefined) {
-    updateData.url = normalizeUrl(values.url);
+    const normalizedUrl = normalizeUrl(values.url);
+    const ssrfCheck = await validateScanUrl(normalizedUrl);
+    if (!ssrfCheck.safe) {
+      return { error: `Invalid URL: ${ssrfCheck.reason}` };
+    }
+    updateData.url = normalizedUrl;
   }
 
   if (values.description !== undefined) {

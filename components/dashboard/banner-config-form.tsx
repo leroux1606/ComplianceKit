@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
@@ -52,6 +53,8 @@ export function BannerConfigForm({
     customCss: "",
     privacyPolicyUrl: "",
     cookiePolicyUrl: "",
+    consentModeV2: true,
+    withdrawalButtonPosition: "bottom-right",
   };
 
   const form = useForm<BannerConfigInput>({
@@ -319,6 +322,57 @@ export function BannerConfigForm({
                     Add custom CSS to further customize the banner
                   </FormDescription>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="withdrawalButtonPosition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cookie Preferences Button Position</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                      <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Where the persistent &ldquo;Cookie Preferences&rdquo; button appears after consent is given. Required by GDPR Article 7(3) — withdrawal must be as easy as giving consent.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="consentModeV2"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Google Consent Mode v2</FormLabel>
+                    <FormDescription>
+                      Sends <code>gtag&apos;consent&apos;</code> signals to Google Analytics and Google Ads when visitors make a consent choice. Required for Google Ads conversion tracking since March 2024. Safe to leave on — has no effect on sites without Google products.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

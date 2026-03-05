@@ -43,14 +43,17 @@ export async function GET(
       customCss: null,
       privacyPolicyUrl: null,
       cookiePolicyUrl: null,
+      consentModeV2: true,
+      withdrawalButtonPosition: "bottom-right",
     };
 
     return NextResponse.json(
       {
         websiteId: website.id,
-        // GDPR Issue #9 — expose configurable policy page URLs to the widget
         privacyPolicyUrl: config.privacyPolicyUrl ?? null,
         cookiePolicyUrl: config.cookiePolicyUrl ?? null,
+        // D1 — Google Consent Mode v2 flag
+        consentModeV2: config.consentModeV2 ?? true,
         config: {
           theme: config.theme,
           position: config.position,
@@ -59,6 +62,8 @@ export async function GET(
           buttonStyle: config.buttonStyle,
           animation: config.animation,
           customCss: config.customCss,
+          // A4 — withdrawal button position
+          withdrawalButtonPosition: config.withdrawalButtonPosition ?? "bottom-right",
         },
       },
       { headers: corsHeaders }

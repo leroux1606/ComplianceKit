@@ -107,6 +107,8 @@ export async function getDefaultBannerConfig(): Promise<BannerConfigInput> {
     buttonStyle: "rounded",
     animation: "slide",
     customCss: "",
+    consentModeV2: true,
+    withdrawalButtonPosition: "bottom-right" as const,
   };
 }
 

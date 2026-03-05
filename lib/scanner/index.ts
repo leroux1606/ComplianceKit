@@ -1,5 +1,6 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import type { ScanOptions, ScanResult, Finding } from "./types";
+import { validateScanUrl } from "@/lib/ssrf-check";
 import { detectCookies } from "./cookie-detector";
 import { detectScripts } from "./script-detector";
 import { detectPrivacyPolicy } from "./policy-detector";
@@ -37,6 +38,24 @@ export class Scanner {
     let browser: Browser | null = null;
 
     try {
+      // Validate URL before passing to Puppeteer — prevents SSRF attacks
+      const ssrfCheck = await validateScanUrl(this.options.url);
+      if (!ssrfCheck.safe) {
+        return {
+          success: false,
+          url: this.options.url,
+          cookies: [],
+          scripts: [],
+          findings: [],
+          hasPrivacyPolicy: false,
+          hasCookieBanner: false,
+          score: 0,
+          error: ssrfCheck.reason,
+          scannedAt: new Date(),
+          duration: Date.now() - startTime,
+        };
+      }
+
       // Launch browser
       browser = await puppeteer.launch({
         headless: true,

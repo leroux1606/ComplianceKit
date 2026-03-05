@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { dsarSubmissionSchema } from "@/lib/validations";
-import { calculateDueDate } from "@/lib/dsar/types";
+import { calculateDueDate, DSAR_REQUEST_TYPES } from "@/lib/dsar/types";
 import { withRateLimit, RateLimitPresets } from "@/lib/rate-limit";
 import { sanitizeInput, sanitizeEmail } from "@/lib/sanitize";
+import { sendDsarConfirmationEmail, sendDsarOwnerNotificationEmail } from "@/lib/email";
 
 /**
  * POST /api/dsar/[embedCode] - Submit a new DSAR
@@ -26,9 +27,12 @@ export const POST = withRateLimit(async function POST(
       );
     }
 
-    // Find website by embed code
+    // Find website by embed code (include owner email for notifications)
     const website = await db.website.findUnique({
       where: { embedCode },
+      include: {
+        user: { select: { email: true } },
+      },
     });
 
     if (!website) {
@@ -73,6 +77,48 @@ export const POST = withRateLimit(async function POST(
         performedBy: "requester",
         metadata: { requestType },
       },
+    });
+
+    // Send emails (A1 + A2) — failures are logged but do not fail the submission
+    const requestTypeLabel = DSAR_REQUEST_TYPES[requestType]?.label ?? requestType;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.compliancekit.app';
+    const dashboardUrl = `${appUrl}/dashboard/dsar/${dsar.id}`;
+
+    const emailPromises: Promise<unknown>[] = [
+      // A1 — confirmation to requester
+      sendDsarConfirmationEmail({
+        to: sanitizedEmail,
+        requesterName: sanitizedName,
+        requestTypeLabel,
+        referenceId: dsar.id,
+        dueDate: dsar.dueDate,
+        websiteName: website.name,
+        companyName: website.companyName ?? null,
+      }),
+    ];
+
+    // A2 — notification to website owner
+    if (website.user.email) {
+      emailPromises.push(
+        sendDsarOwnerNotificationEmail({
+          to: website.user.email,
+          requesterName: sanitizedName,
+          requesterEmail: sanitizedEmail,
+          requestTypeLabel,
+          referenceId: dsar.id,
+          dueDate: dsar.dueDate,
+          websiteName: website.name,
+          dashboardUrl,
+        })
+      );
+    }
+
+    await Promise.allSettled(emailPromises).then((results) => {
+      results.forEach((result, i) => {
+        if (result.status === 'rejected') {
+          console.error(`[DSAR] Email ${i === 0 ? 'confirmation' : 'owner notification'} failed for DSAR ${dsar.id}:`, result.reason);
+        }
+      });
     });
 
     return NextResponse.json({
