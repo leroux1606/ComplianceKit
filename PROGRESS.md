@@ -20,7 +20,7 @@ At the start of each session:
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
 **P1 items completed:** 9 / 19
-**P2 items completed:** 0 / 6
+**P2 items completed:** 1 / 6
 
 ---
 
@@ -67,7 +67,7 @@ At the start of each session:
 
 | ID | Issue | Status | Notes |
 |----|-------|--------|-------|
-| C1 | Async job queue for scans | NOT STARTED | Major architectural change |
+| C1 | Async job queue for scans | COMPLETE | Fire-and-forget run route + status polling; zero new deps |
 | C2 | Widget JS on CDN | NOT STARTED | Major delivery change |
 | C3 | Database connection pooling | NOT STARTED | Config change |
 | C4 | Consent table archival | NOT STARTED | |
@@ -162,6 +162,20 @@ Start here if no specific instruction given:
   - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
 - Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
 - TypeScript clean
+
+---
+
+### 2026-03-05 — C1: Async job queue for scans
+- **Problem:** `triggerScan()` was a server action that blocked for up to 120s while Puppeteer ran, causing UI hangs and Vercel 60s timeout kills.
+- **Solution:** Zero-dependency fire-and-forget + polling architecture:
+  - `triggerScan()` (server action) — now only creates a `queued` scan record and returns `{scanId}` in <100ms
+  - `lib/scan-runner.ts` — extracted full scan execution logic (Puppeteer + DB writes), shared module callable from server
+  - `POST /api/scans/[id]/run` — authenticated route that runs the actual scan; client calls this fire-and-forget (does not await response)
+  - `GET /api/scans/[id]/status` — lightweight poll endpoint returning `{status, score, error}`; auto-recovers stale "running" scans after 5 minutes (serverless timeout detection)
+  - `ScanButton` — fully rewritten: queues scan, fires run endpoint without awaiting, polls status every 3s, shows "Queued…" → "Scanning…" states, navigates to results on completion, shows error toast on failure
+- Scan status values: `queued` → `running` → `completed` / `failed` (no schema change — string field)
+- TypeScript clean
+- **Upgrade path:** To migrate to Inngest/Trigger.dev, replace the `fetch(/api/scans/${scanId}/run)` call in ScanButton with `inngest.send('scan/requested', { scanId })` — no other changes needed
 
 ---
 
