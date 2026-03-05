@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 0 / 19
+**P1 items completed:** 1 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -41,7 +41,7 @@ At the start of each session:
 
 | ID | Issue | Status | Notes |
 |----|-------|--------|-------|
-| A5 | Legal disclaimer on generated policies | NOT STARTED | |
+| A5 | Legal disclaimer on generated policies | COMPLETE | Inline-styled amber warning box at top of both policy templates |
 | A6 | Data Processing Agreement (DPA) | NOT STARTED | |
 | A7 | Fix age verification approach | NOT STARTED | |
 | A8 | Compliance score disclaimer | NOT STARTED | |
@@ -151,6 +151,15 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — A5: Legal disclaimer on generated policies
+- Added inline-styled amber warning box to both policy templates before the `<h1>` heading
+- `lib/generators/templates/privacy-policy.ts` — disclaimer before `<h1>Privacy Policy</h1>`
+- `lib/generators/templates/cookie-policy.ts` — disclaimer before `<h1>Cookie Policy</h1>`
+- Uses inline CSS (amber background, dark amber border/text) — renders in all contexts: dashboard iframe preview, public `/api/policy/[embedCode]` endpoint, downloaded HTML
+- TypeScript clean
+
+---
 
 ### 2026-03-03 — Initial audit and roadmap creation
 - Performed full codebase analysis
