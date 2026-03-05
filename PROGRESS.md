@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 4 / 19
+**P1 items completed:** 5 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -45,7 +45,7 @@ At the start of each session:
 | A6 | Data Processing Agreement (DPA) | COMPLETE | `/dpa` public page + `dpaAcceptedAt` on User model + signup checkbox |
 | A7 | Fix age verification approach | COMPLETE | Removed checkbox; ToS s.3.1 (18+ required) is the legal basis |
 | A8 | Compliance score disclaimer | COMPLETE | Disclaimer in scan results CardFooter + ComplianceGauge |
-| A9 | Consent record CSV export | NOT STARTED | |
+| A9 | Consent record CSV export | COMPLETE | GET `/api/websites/[id]/consent-export` + `ConsentExportButton` in website Quick Actions |
 | B2 | Widget template injection audit | NOT STARTED | |
 | B3 | Rate limit fail-open alerting | NOT STARTED | |
 | B4 | DSAR file attachment security audit | NOT STARTED | |
@@ -151,6 +151,21 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — A9: Consent record CSV export
+- Created `app/api/websites/[id]/consent-export/route.ts` — authenticated GET endpoint
+  - Verifies website ownership (userId match) before querying
+  - Exports all consent records as RFC-compliant CSV (double-quote escaped)
+  - Columns: visitor_id, consented_at, updated_at, consent_method, policy_version, banner_version, necessary, analytics, marketing, functional, ip_address, user_agent
+  - Supports optional `?from=` / `?to=` date filter query params
+  - Filename: `consent-log-[website-name]-[date].csv`
+- Created `components/dashboard/consent-export-button.tsx` — client component
+  - Fetches the export route, creates a Blob URL, triggers browser download
+  - Shows loading spinner while downloading, toast on success/error
+- Added `ConsentExportButton` to website detail page Quick Actions — only visible when `_count.consents > 0`
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — A8: Compliance score disclaimer
 - Added disclaimer to scan results page (`/dashboard/websites/[id]/scans/[scanId]/page.tsx`): CardFooter below `ComplianceScore` with "Technical indicators only. Does not constitute legal advice — a high score does not guarantee regulatory compliance."
