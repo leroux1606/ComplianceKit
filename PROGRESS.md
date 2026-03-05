@@ -17,7 +17,7 @@ At the start of each session:
 
 ## CURRENT STATUS
 
-**Phase:** Pre-launch (P0 items in progress)
+**Phase:** Pre-launch (P1 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
 **P1 items completed:** 9 / 19
 **P2 items completed:** 4 / 6
@@ -78,13 +78,27 @@ At the start of each session:
 
 ## RECOMMENDED NEXT SESSION ORDER
 
-Start here if no specific instruction given:
+All P0 and most security P1 items are done. Remaining P1 items ordered by impact:
 
-1. **B1** — SSRF protection (security risk, fast to fix, unblocks safe testing)
-2. **A1 + A2** — DSAR emails (legal requirement, Resend already wired)
-3. **D1** — Google Consent Mode v2 (biggest revenue impact)
-4. **A4** — Consent withdrawal mechanism
-5. **A3** — Consent record versioning (DB migration)
+### Quick wins (under 1 day each)
+1. **D4** — USD pricing on marketing page (directly affects sales conversion, 1 day)
+2. **F2** — Security event alerting via email (Resend already wired, 1 day)
+3. **F1** — Sentry error tracking (1 day, Next.js wizard install)
+4. **E3** — Installation verification tool (helps customers succeed, 1-2 days)
+5. **F3** — Uptime monitoring (external service only, 2 hours — UptimeRobot/Better Uptime)
+
+### Medium effort (2-4 days each)
+6. **E1** — Onboarding checklist in dashboard (reduces activation drop-off)
+7. **D5** — Onboarding email sequence (reduces churn, Resend already wired)
+8. **E2** — Actionable compliance score UI
+
+### Large features (1 week each)
+9. **D2** — Demo mode + setup wizard
+10. **D3** — WordPress plugin (PHP, separate project)
+
+### P2 remaining
+11. **D6** — Public JS API for banner (`window.ComplianceKit.*`)
+12. **E4** — Live banner preview in config UI
 
 ---
 
