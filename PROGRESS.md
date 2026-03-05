@@ -20,7 +20,7 @@ At the start of each session:
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
 **P1 items completed:** 9 / 19
-**P2 items completed:** 1 / 6
+**P2 items completed:** 2 / 6
 
 ---
 
@@ -68,7 +68,7 @@ At the start of each session:
 | ID | Issue | Status | Notes |
 |----|-------|--------|-------|
 | C1 | Async job queue for scans | COMPLETE | Fire-and-forget run route + status polling; zero new deps |
-| C2 | Widget JS on CDN | NOT STARTED | Major delivery change |
+| C2 | Widget JS on CDN | COMPLETE | `public/widget.js` static file; legacy route is a zero-DB bootstrap shim |
 | C3 | Database connection pooling | NOT STARTED | Config change |
 | C4 | Consent table archival | NOT STARTED | |
 | D6 | Public JS API for banner | NOT STARTED | |
@@ -161,6 +161,26 @@ Start here if no specific instruction given:
   - 10 MB hard cap (`MAX_ATTACHMENT_BYTES`)
   - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
 - Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
+- TypeScript clean
+
+---
+
+### 2026-03-05 — C2: Widget JS served as static file (CDN-ready)
+- **Problem:** Every page load on every customer site hit `/api/widget/[embedCode]/script.js` — a serverless function with a DB lookup. 100 customers × 1,000 visitors/day = 100,000 serverless invocations/day from the widget script alone.
+- **Solution:** Widget JS is now a single universal static file at `public/widget.js`, served by Next.js with zero serverless cost. Any CDN (Cloudflare, CloudFront) can cache it globally.
+- Key changes to the JS:
+  - `CK_EMBED_CODE` is read at runtime from `document.currentScript.getAttribute('data-embed-code')` (primary)
+  - Fallback: parses embedCode from the script src URL (legacy `/api/widget/[embedCode]/script.js` format)
+  - `CK_API_URL` is derived from `new URL(document.currentScript.src).origin` — works in dev and production without hardcoding
+  - `document.currentScript` is captured synchronously at IIFE entry before any async code can null it
+  - All banner/withdrawal/consent/GCM v2 logic is identical to the old template
+- `script.js/route.ts` — replaced DB-querying route with a zero-DB bootstrap shim:
+  - Validates embedCode format with regex (no DB needed)
+  - Returns a 3-line JS snippet that injects `<script src="/widget.js" data-embed-code="...">` — backward compat for old embed snippets
+  - `Cache-Control: public, max-age=86400, stale-while-revalidate=604800` — CDN caches it for 24h
+- New embed format: `<script src="/widget.js" data-embed-code="ABC123" defer></script>`
+- `EmbedCodeDisplay` updated to show new format with updated description copy
+- **CDN upgrade path:** Upload `public/widget.js` to Cloudflare R2 / S3+CloudFront, update `NEXT_PUBLIC_APP_URL` or the embed snippet URL. No code changes required.
 - TypeScript clean
 
 ---

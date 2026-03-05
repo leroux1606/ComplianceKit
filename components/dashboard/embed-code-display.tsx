@@ -14,7 +14,7 @@ interface EmbedCodeDisplayProps {
 export function EmbedCodeDisplay({ embedCode, appUrl }: EmbedCodeDisplayProps) {
   const [copied, setCopied] = useState(false);
 
-  const scriptCode = `<script src="${appUrl}/api/widget/${embedCode}/script.js" async></script>`;
+  const scriptCode = `<script src="${appUrl}/widget.js" data-embed-code="${embedCode}" defer></script>`;
 
   async function handleCopy() {
     try {
@@ -64,8 +64,9 @@ export function EmbedCodeDisplay({ embedCode, appUrl }: EmbedCodeDisplayProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        This code will load the cookie consent banner asynchronously without
-        affecting your page load speed.
+        Paste this into the{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">&lt;head&gt;</code>{" "}
+        of every page. The script is served as a static file — no serverless cost per visitor.
       </p>
     </div>
   );
