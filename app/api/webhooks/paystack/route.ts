@@ -13,7 +13,13 @@ function verifySignature(payload: string, signature: string): boolean {
     .createHmac("sha512", PAYSTACK_SECRET_KEY)
     .update(payload)
     .digest("hex");
-  return hash === signature;
+  try {
+    // Use timing-safe comparison to prevent HMAC oracle timing attacks
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+  } catch {
+    // timingSafeEqual throws if buffers differ in length (malformed signature)
+    return false;
+  }
 }
 
 /**

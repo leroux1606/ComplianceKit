@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 8 / 19
+**P1 items completed:** 9 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -49,7 +49,7 @@ At the start of each session:
 | B2 | Widget template injection audit | COMPLETE | `safeJsString()` + DB validation in script.js route |
 | B3 | Rate limit fail-open alerting | COMPLETE | In-memory fallback + `RATE_LIMIT_DB_ERROR` security alert |
 | B4 | DSAR file attachment security audit | COMPLETE | Feature unimplemented (no risk); validator + schema guards created |
-| B5 | Paystack webhook signature audit | NOT STARTED | |
+| B5 | Paystack webhook signature audit | COMPLETE | HMAC-SHA512 correct; fixed non-timing-safe comparison → `crypto.timingSafeEqual()` |
 | D2 | Demo mode + setup wizard | NOT STARTED | |
 | D3 | WordPress plugin | NOT STARTED | |
 | D4 | USD pricing on marketing page | NOT STARTED | |
@@ -162,6 +162,14 @@ Start here if no specific instruction given:
   - `sanitizeFilename()` — strips path separators, double-dot traversal, control chars, leading dots
 - Added security requirement comments to `DsarAttachment` model in `prisma/schema.prisma` documenting: private bucket requirement, signed-URL-only serving, size/MIME/filename rules
 - TypeScript clean
+
+---
+
+### 2026-03-05 — B5: Paystack webhook signature audit
+- **Audit finding:** HMAC-SHA512 verification was already implemented and correctly structured — raw body read with `request.text()` before JSON parsing, `x-paystack-signature` header checked before any business logic, 401 returned on failure.
+- **Issue found:** `hash === signature` string equality is not timing-safe. An attacker with precise network timing could potentially reconstruct the expected HMAC byte by byte via repeated requests.
+- **Fix:** Replaced `hash === signature` with `crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature))` wrapped in try/catch (timingSafeEqual throws if buffer lengths differ — catches malformed signatures).
+- TypeScript clean (no new types introduced).
 
 ---
 
