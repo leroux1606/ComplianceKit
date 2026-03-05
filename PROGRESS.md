@@ -19,7 +19,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P0 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 6 / 19
+**P1 items completed:** 7 / 19
 **P2 items completed:** 0 / 6
 
 ---
@@ -47,7 +47,7 @@ At the start of each session:
 | A8 | Compliance score disclaimer | COMPLETE | Disclaimer in scan results CardFooter + ComplianceGauge |
 | A9 | Consent record CSV export | COMPLETE | GET `/api/websites/[id]/consent-export` + `ConsentExportButton` in website Quick Actions |
 | B2 | Widget template injection audit | COMPLETE | `safeJsString()` + DB validation in script.js route |
-| B3 | Rate limit fail-open alerting | NOT STARTED | |
+| B3 | Rate limit fail-open alerting | COMPLETE | In-memory fallback + `RATE_LIMIT_DB_ERROR` security alert |
 | B4 | DSAR file attachment security audit | NOT STARTED | |
 | B5 | Paystack webhook signature audit | NOT STARTED | |
 | D2 | Demo mode + setup wizard | NOT STARTED | |
@@ -151,6 +151,18 @@ Start here if no specific instruction given:
 - Defense in depth: validation runs in scanner (before `page.goto`) AND in website create/update actions
 - TypeScript clean (`tsc --noEmit` passes)
 - **Next:** A1 + A2 (DSAR emails)
+
+### 2026-03-05 — B3: Rate limit fail-open alerting + in-memory fallback
+- Added `RATE_LIMIT_DB_ERROR` to `SecurityEventType` enum in `lib/security-log.ts`
+- Added it to `shouldAlert()` — triggers a `[SECURITY ALERT]` console error (and future email/Slack once F2 is implemented)
+- Added `checkMemoryFallback()` in `lib/rate-limit.ts`:
+  - Per-instance Map-based sliding window: 20 req/min per IP+path key
+  - Probabilistic cleanup when Map exceeds 500 entries to bound memory
+- Updated catch block: now logs `RATE_LIMIT_DB_ERROR` event AND applies in-memory fallback instead of silently allowing all requests
+- Result: during DB outage, each serverless instance independently enforces 20 req/min (down from unlimited); alerts fire so the outage is visible
+- TypeScript clean
+
+---
 
 ### 2026-03-05 — B2: Widget script template injection fix
 - **Vulnerability:** `embedCode` (URL path parameter — attacker-controlled) was interpolated directly into a JS string literal with single quotes: `var CK_EMBED_CODE = '${embedCode}'`. A payload like `'+alert(document.domain)+'` would break out and execute on any site embedding the widget.

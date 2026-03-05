@@ -1,11 +1,42 @@
 /**
- * Rate Limiting Utility — database-backed
- * Uses PostgreSQL via Prisma so limits are enforced across all serverless instances.
- * Previously in-memory Maps were silently bypassed on Vercel (each invocation = fresh state).
+ * Rate Limiting Utility — database-backed with in-memory fallback
+ * Primary: PostgreSQL via Prisma, enforced across all serverless instances.
+ * Fallback: per-instance in-memory window used when the DB is unavailable.
+ *   Each serverless instance enforces its own conservative limit independently.
+ *   This caps blast radius during DB outages without requiring shared state.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { logSecurityEvent, SecurityEventType } from "@/lib/security-log";
+
+// ── In-memory fallback ──────────────────────────────────────────────────────
+// Conservative limits: lower than normal presets so the fallback is tight.
+const FALLBACK_WINDOW_MS = 60_000;  // 1 minute
+const FALLBACK_MAX_REQUESTS = 20;   // per instance per key
+
+const memoryFallback = new Map<string, { count: number; resetAt: number }>();
+
+function checkMemoryFallback(key: string): boolean {
+  const now = Date.now();
+
+  // Probabilistic cleanup to prevent unbounded memory growth on long-lived instances
+  if (memoryFallback.size > 500) {
+    for (const [k, v] of memoryFallback) {
+      if (v.resetAt < now) memoryFallback.delete(k);
+    }
+  }
+
+  const entry = memoryFallback.get(key);
+  if (!entry || entry.resetAt < now) {
+    memoryFallback.set(key, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
+    return true;
+  }
+
+  entry.count += 1;
+  return entry.count <= FALLBACK_MAX_REQUESTS;
+}
+// ───────────────────────────────────────────────────────────────────────────
 
 interface RateLimitConfig {
   windowMs: number;
@@ -69,8 +100,27 @@ export function rateLimit(config: RateLimitConfig) {
 
       return null;
     } catch (err) {
-      // Fail open — don't block requests if the rate limit table is unavailable
-      console.error("Rate limit DB error:", err);
+      // DB unavailable — log a critical security alert and apply in-memory fallback.
+      // The fallback is intentionally conservative (20 req/min per instance) to cap
+      // blast radius without requiring shared state.
+      console.error("Rate limit DB error (switched to in-memory fallback):", err);
+
+      logSecurityEvent({
+        type: SecurityEventType.RATE_LIMIT_DB_ERROR,
+        ipAddress: identifier,
+        resource: request.nextUrl.pathname,
+        success: false,
+        message: "Rate limit DB unavailable — in-memory fallback active",
+        metadata: { error: (err as Error).message },
+      });
+
+      const allowed = checkMemoryFallback(key);
+      if (!allowed) {
+        return NextResponse.json(
+          { error: "Too many requests", message: "Rate limit exceeded." },
+          { status: 429 }
+        );
+      }
       return null;
     }
   };

@@ -18,6 +18,7 @@ export enum SecurityEventType {
 
   // Rate Limiting
   RATE_LIMIT_EXCEEDED = "rate_limit_exceeded",
+  RATE_LIMIT_DB_ERROR = "rate_limit_db_error",
 
   // Suspicious Activity
   INVALID_TOKEN = "invalid_token",
@@ -85,6 +86,7 @@ function shouldAlert(type: SecurityEventType): boolean {
     SecurityEventType.SQL_INJECTION_ATTEMPT,
     SecurityEventType.XSS_ATTEMPT,
     SecurityEventType.UNAUTHORIZED_ACCESS,
+    SecurityEventType.RATE_LIMIT_DB_ERROR,
   ];
 
   return alertTypes.includes(type);
