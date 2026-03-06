@@ -8,6 +8,7 @@ import { signUpSchema, type SignUpInput } from "@/lib/validations";
 import { sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { logAuthEvent, SecurityEventType } from "@/lib/security-log";
 import { AuthError } from "next-auth";
+import { sendWelcomeEmail } from "@/lib/email";
 
 /**
  * Get client IP address from headers
@@ -85,6 +86,9 @@ export async function signUp(values: SignUpInput) {
     userAgent,
     true
   );
+
+  // Send Day 0 welcome email — fire-and-forget, never blocks signup
+  sendWelcomeEmail({ to: sanitizedEmail, name: sanitizedName }).catch(() => {});
 
   // Sign in the user
   try {

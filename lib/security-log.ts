@@ -2,6 +2,7 @@
  * Security Event Logging
  * Logs security-related events for monitoring and audit
  */
+import { sendSecurityAlertEmail } from "@/lib/email";
 
 export enum SecurityEventType {
   // Authentication
@@ -69,10 +70,20 @@ export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void 
   // Example: sendToDatadog(fullEvent);
   // Example: sendToSentry(fullEvent);
 
-  // For now, just log critical events
+  // Alert on critical events
   if (!event.success && shouldAlert(event.type)) {
     console.error("[SECURITY ALERT]", JSON.stringify(fullEvent, null, 2));
-    // TODO: Send alert notification (email, Slack, PagerDuty)
+    // Fire-and-forget — do not await, do not let email failure break the request
+    sendSecurityAlertEmail({
+      eventType: fullEvent.type,
+      message: fullEvent.message,
+      ipAddress: fullEvent.ipAddress,
+      userId: fullEvent.userId,
+      email: fullEvent.email,
+      resource: fullEvent.resource,
+      metadata: fullEvent.metadata,
+      timestamp: fullEvent.timestamp,
+    }).catch(() => {/* already logged inside sendSecurityAlertEmail */});
   }
 }
 

@@ -21,7 +21,8 @@ export interface Plan {
   name: string;
   slug: string;
   description: string;
-  price: number; // in ZAR
+  price: number; // in ZAR (used for Paystack billing)
+  priceUsd: number; // approximate USD display price
   currency: string;
   interval: "monthly" | "yearly";
   paystackPlanCode: string;
@@ -36,6 +37,7 @@ export const PLANS: Plan[] = [
     slug: "starter",
     description: "Perfect for small websites and blogs",
     price: 299,
+    priceUsd: 16,
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_STARTER_PLAN_CODE || "PLN_starter",
@@ -58,6 +60,7 @@ export const PLANS: Plan[] = [
     slug: "professional",
     description: "For growing businesses with multiple websites",
     price: 799,
+    priceUsd: 43,
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_PROFESSIONAL_PLAN_CODE || "PLN_professional",
@@ -81,6 +84,7 @@ export const PLANS: Plan[] = [
     slug: "enterprise",
     description: "For large organizations with advanced needs",
     price: 1999,
+    priceUsd: 109,
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_ENTERPRISE_PLAN_CODE || "PLN_enterprise",

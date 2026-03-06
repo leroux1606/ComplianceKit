@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Globe,
@@ -8,8 +9,9 @@ import {
   Plus,
   Users,
   CheckCircle2,
-  Circle,
-  BarChart3,
+  Scan,
+  Code,
+  Download,
 } from "lucide-react";
 
 import { auth } from "@/lib/auth";
@@ -17,6 +19,56 @@ import { getWebsiteStats, getWebsites } from "@/lib/actions/website";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WebsiteCard } from "@/components/dashboard/website-card";
+
+function ChecklistStep({
+  number,
+  done,
+  title,
+  description,
+  actionLabel,
+  actionHref,
+  icon,
+}: {
+  number: number;
+  done: boolean;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionHref: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+        done ? "border-emerald-500/20 bg-emerald-500/5" : "border-border"
+      }`}
+    >
+      <div className="shrink-0">
+        {done ? (
+          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+        ) : (
+          <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-muted-foreground/40 text-[10px] font-bold text-muted-foreground">
+            {number}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
+          {title}
+        </p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      {!done && (
+        <Button asChild size="sm" variant="outline" className="shrink-0 h-7 text-xs gap-1.5">
+          <Link href={actionHref}>
+            {icon}
+            {actionLabel}
+          </Link>
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export const metadata: Metadata = {
   title: "Dashboard | ComplianceKit",
@@ -177,114 +229,70 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Getting Started */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Get Started</CardTitle>
-            <CardDescription>
-              Complete these steps to achieve GDPR compliance
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {/* Step 1 */}
-            <div
-              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.websiteCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-primary/30 bg-primary/5'}`}
-              aria-label={`Step 1: Add your website — ${stats.websiteCount > 0 ? 'completed' : 'pending'}`}
-            >
-              <div className="shrink-0" aria-hidden="true">
-                {stats.websiteCount > 0 ? (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary bg-primary text-[11px] font-bold text-primary-foreground">
-                    1
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-sm ${stats.websiteCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
-                  Add your website
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Enter your website URL to get started
-                </p>
-              </div>
-              {stats.websiteCount === 0 && (
-                <Button asChild size="sm" className="shrink-0">
-                  <Link href="/dashboard/websites/new">
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Add
-                  </Link>
-                </Button>
-              )}
-            </div>
-
-            {/* Step 2 */}
-            <div
-              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.scanCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-border'}`}
-              aria-label={`Step 2: Scan for cookies — ${stats.scanCount > 0 ? 'completed' : 'pending'}`}
-            >
-              <div className="shrink-0" aria-hidden="true">
-                {stats.scanCount > 0 ? (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
-                    2
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-sm ${stats.scanCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
-                  Scan for cookies
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  We&apos;ll detect all cookies and trackers
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div
-              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${stats.policyCount > 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-border'}`}
-              aria-label={`Step 3: Generate policies — ${stats.policyCount > 0 ? 'completed' : 'pending'}`}
-            >
-              <div className="shrink-0" aria-hidden="true">
-                {stats.policyCount > 0 ? (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
-                    3
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-sm ${stats.policyCount > 0 ? 'line-through text-muted-foreground' : ''}`}>
-                  Generate policies
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Create compliant privacy &amp; cookie policies
-                </p>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div
-              className="flex items-center gap-4 rounded-lg border p-4"
-              aria-label="Step 4: Deploy cookie banner — pending"
-            >
-              <div className="shrink-0" aria-hidden="true">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-[11px] font-bold text-muted-foreground">
-                  4
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Deploy cookie banner</p>
-                <p className="text-xs text-muted-foreground">
-                  Add consent banner to your website
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Onboarding Checklist — hidden once all steps complete */}
+        {stats.consentCount === 0 && (
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Setup Checklist</CardTitle>
+              <CardDescription>
+                {[
+                  stats.websiteCount > 0,
+                  stats.scanCount > 0,
+                  stats.policyCount > 0,
+                  stats.bannerConfigCount > 0,
+                  stats.consentCount > 0,
+                ].filter(Boolean).length} of 5 steps complete
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <ChecklistStep
+                number={1}
+                done={stats.websiteCount > 0}
+                title="Add your website"
+                description="Enter your website URL to get started"
+                actionLabel="Add website"
+                actionHref="/dashboard/websites/new"
+                icon={<Globe className="h-3.5 w-3.5" />}
+              />
+              <ChecklistStep
+                number={2}
+                done={stats.scanCount > 0}
+                title="Run your first scan"
+                description="Detect cookies and trackers on your site"
+                actionLabel="Go to scan"
+                actionHref={stats.firstWebsiteId ? `/dashboard/websites/${stats.firstWebsiteId}/scan` : "/dashboard/websites"}
+                icon={<Scan className="h-3.5 w-3.5" />}
+              />
+              <ChecklistStep
+                number={3}
+                done={stats.policyCount > 0}
+                title="Generate a cookie policy"
+                description="Create compliant privacy and cookie policies"
+                actionLabel="Generate"
+                actionHref={stats.firstWebsiteId ? `/dashboard/websites/${stats.firstWebsiteId}/policies` : "/dashboard/websites"}
+                icon={<FileText className="h-3.5 w-3.5" />}
+              />
+              <ChecklistStep
+                number={4}
+                done={stats.bannerConfigCount > 0}
+                title="Configure your consent banner"
+                description="Customise colours, text, and behaviour"
+                actionLabel="Configure"
+                actionHref={stats.firstWebsiteId ? `/dashboard/websites/${stats.firstWebsiteId}/banner` : "/dashboard/websites"}
+                icon={<Code className="h-3.5 w-3.5" />}
+              />
+              <ChecklistStep
+                number={5}
+                done={stats.consentCount > 0}
+                title="Install the banner on your site"
+                description="Paste the embed code — first consent confirms it's live"
+                actionLabel="Get embed code"
+                actionHref={stats.firstWebsiteId ? `/dashboard/websites/${stats.firstWebsiteId}/embed` : "/dashboard/websites"}
+                icon={<Download className="h-3.5 w-3.5" />}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Resources */}

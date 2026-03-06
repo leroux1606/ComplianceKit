@@ -12,6 +12,9 @@ At the start of each session:
 2. Read this file to know what is done, in progress, and next
 3. When the user says "work on [item]" — implement it, then update this file
 4. Always append to the Session Log at the bottom with date + what was done
+5. When a code change requires a Vercel env var or infrastructure action, add it to VERCEL_SETUP.md
+
+> VERCEL_SETUP.md — all pending Vercel environment variables and infrastructure actions
 
 ---
 
@@ -19,7 +22,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P1 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 9 / 19
+**P1 items completed:** 17 / 19
 **P2 items completed:** 4 / 6
 
 ---
@@ -52,14 +55,14 @@ At the start of each session:
 | B5 | Paystack webhook signature audit | COMPLETE | HMAC-SHA512 correct; fixed non-timing-safe comparison → `crypto.timingSafeEqual()` |
 | D2 | Demo mode + setup wizard | NOT STARTED | |
 | D3 | WordPress plugin | NOT STARTED | |
-| D4 | USD pricing on marketing page | NOT STARTED | |
-| D5 | Onboarding email sequence | NOT STARTED | |
-| E1 | Onboarding checklist in dashboard | NOT STARTED | |
-| E2 | Actionable compliance score UI | NOT STARTED | |
-| E3 | Installation verification tool | NOT STARTED | |
-| F1 | Sentry error tracking | NOT STARTED | |
-| F2 | Security event alerting | NOT STARTED | |
-| F3 | Uptime monitoring setup | NOT STARTED | External service only |
+| D4 | USD pricing on marketing page | COMPLETE | `priceUsd` field on Plan; pricing page shows $USD primary + "Billed as R{price} via Paystack" |
+| D5 | Onboarding email sequence | COMPLETE | Day 0 welcome on signup + Days 1/3/7 cron at `/api/cron/onboarding-emails` |
+| E1 | Onboarding checklist in dashboard | COMPLETE | 5-step checklist on dashboard; hides when all steps done; deep links to correct website pages |
+| E2 | Actionable compliance score UI | COMPLETE | Rewrote `ActionChecklist` — 3 severity groups, plain-English "why it matters", per-type action buttons |
+| E3 | Installation verification tool | COMPLETE | `GET /api/websites/[id]/verify-installation` + `VerifyInstallationButton` on embed page + quick actions |
+| F1 | Sentry error tracking | COMPLETE | `sentry.{client,server,edge}.config.ts` + `instrumentation.ts` + `withSentryConfig` in next.config.ts |
+| F2 | Security event alerting | COMPLETE | `sendSecurityAlertEmail()` in lib/email.ts; wired fire-and-forget into logSecurityEvent; `SECURITY_ALERT_EMAIL` env var |
+| F3 | Uptime monitoring setup | COMPLETE | `/api/health` endpoint created; UptimeRobot setup guide in VERCEL_SETUP.md item 9 |
 
 ---
 
@@ -103,6 +106,126 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 ---
 
 ## SESSION LOG
+
+### 2026-03-06 — E2: Actionable compliance score UI
+- Rewrote `components/dashboard/action-checklist.tsx` (was generic checklist, now a fully actionable findings panel):
+  - Added `websiteId: string` prop — used to build direct links to banner, policies, embed pages
+  - **Severity grouping** — findings split into 3 labelled sections with count badges:
+    - "Critical — fix now" (error) — red tint
+    - "Important — fix this week" (warning) — yellow tint
+    - "Minor — when you can" (info) — blue tint
+  - **`FINDING_META` registry** — maps all 12 `FindingType` values to:
+    - `whyItMatters` — plain-English GDPR risk explanation (no jargon, specific regulation cited)
+    - `actionLabel` + `actionPath` — direct link to the relevant dashboard page for actionable types
+  - **Expanded detail panels** — each finding expands to show: "What it means", "Why it matters", "How to fix", and action button (where applicable)
+  - **Non-actionable types** (secure_cookie, user_profile_settings, data_export, account_deletion, data_rectification) — shown with explanation but no button (fixes require changes on the customer's own server/site)
+  - Retained checkbox/progress-bar UX from previous version
+- Updated `app/(dashboard)/dashboard/websites/[id]/scans/[scanId]/page.tsx` — passes `websiteId={id}` to `ActionChecklist`
+- TypeScript clean
+
+---
+
+### 2026-03-06 — D5: Onboarding email sequence
+- Added 4 email functions to `lib/email.ts`:
+  - `sendWelcomeEmail()` — Day 0 immediate; 3-step getting-started guide with direct CTA to add first website
+  - `sendOnboardingDay1Email()` — no scan yet; explains what scan finds, links directly to scan page
+  - `sendOnboardingDay3Email()` — banner not live (no consents); step-by-step install guide, links to embed page
+  - `sendOnboardingDay7Email()` — still on free plan; Pro feature list with pricing, links to /pricing
+  - All functions use shared `emailShell()` helper (avoids repeating 50 lines of inline CSS per email)
+  - All catch errors internally and never throw (fire-and-forget safe)
+- Wired Day 0 welcome into `lib/auth-actions.ts` `signUp()`: fire-and-forget after user creation, before `signIn()` call — never blocks signup
+- Created `app/api/cron/onboarding-emails/route.ts` (GET, daily at 09:00 UTC):
+  - Day 1 window: `createdAt` 24–48 h ago, user has no websites with scans → sends Day 1 email
+  - Day 3 window: `createdAt` 72–96 h ago, user has no websites with consents → sends Day 3 email
+  - Day 7 window: `createdAt` 168–192 h ago, no active paid subscription → sends Day 7 email
+  - Each window is a separate Prisma query with nested `none:{}` filters to avoid N+1
+  - Same CRON_SECRET bearer token auth as other cron routes
+  - Returns `{ day1, day3, day7, errors }` counts for observability
+- Updated `vercel.json`: added `{ path: /api/cron/onboarding-emails, schedule: 0 9 * * * }`
+- TypeScript clean
+
+---
+
+### 2026-03-06 — E1: Onboarding checklist in dashboard
+- Updated `getWebsiteStats()` in `lib/actions/website.ts`:
+  - Added `bannerConfigCount` (parallel Prisma count on `BannerConfig` table filtered by user)
+  - Added `firstWebsiteId` (earliest website by `createdAt`) — used to generate deep links for each step
+- Replaced old 4-step static "Get Started" card in `app/(dashboard)/dashboard/page.tsx` with a proper 5-step checklist:
+  1. Add your website (websiteCount > 0)
+  2. Run your first scan (scanCount > 0) → links to `/websites/{id}/scan`
+  3. Generate a cookie policy (policyCount > 0) → links to `/websites/{id}/policies`
+  4. Configure your consent banner (bannerConfigCount > 0) → links to `/websites/{id}/banner`
+  5. Install the banner (consentCount > 0) → links to `/websites/{id}/embed`
+- Each incomplete step shows an action button with a deep link; complete steps show a strikethrough label + green check
+- Progress counter in card description: "X of 5 steps complete"
+- Checklist card hidden entirely once all 5 steps complete (`consentCount > 0` covers step 5)
+- Added `ChecklistStep` as a file-local component (not a separate file — it's only used here)
+- Removed unused `Circle`, `BarChart3` imports; added `Scan`, `Code`, `Download`, `ReactNode`
+- TypeScript clean
+
+---
+
+### 2026-03-06 — F3: Uptime monitoring
+- Created `app/api/health/route.ts` — lightweight GET endpoint, returns `{"status":"ok","timestamp":"..."}` with `Cache-Control: no-store`; no DB hit so it survives DB outages and cold starts faster
+- Updated VERCEL_SETUP.md item 9 with step-by-step UptimeRobot setup: alert contact → 4 monitors (App, Health API, Widget JS, Consent API) with exact URLs and expected status codes
+- No environment variables needed — this is external service configuration only
+- Action required: sign up at uptimerobot.com and follow VERCEL_SETUP.md item 9
+
+---
+
+### 2026-03-06 — E3: Installation verification tool
+- Created `app/api/websites/[id]/verify-installation/route.ts` (GET):
+  - Auth + ownership check via Prisma (`findFirst` with `userId` filter)
+  - SSRF protection: reuses `validateScanUrl()` from `lib/ssrf-check.ts` before fetching
+  - Fetches customer homepage with 10 s `AbortController` timeout, `User-Agent: ComplianceKit-VerifyBot/1.0`
+  - Detects both new format (`data-embed-code="<code>"`) and legacy format (`/widget/<code>/script.js`) via string search
+  - Returns `{ detected: boolean, message: string }` — never throws a 5xx for site-reachability issues
+- Created `components/dashboard/verify-installation-button.tsx` (client component):
+  - Idle → Loading (spinner) → Detected (green banner) / Not detected (red banner)
+  - Shows human-readable message returned from the API
+- Added `VerifyInstallationButton` to embed page (`app/(dashboard)/dashboard/websites/[id]/embed/page.tsx`) — only shown when banner is configured
+- Added `VerifyInstallationButton` to Quick Actions on website detail page — only shown when banner is configured
+- TypeScript clean
+
+---
+
+### 2026-03-06 — F1: Sentry error tracking
+- Installed `@sentry/nextjs@10` (package.json already had it from interrupted session)
+- Created `sentry.client.config.ts` — client-side init with Session Replay (100% on error, 1% session sampling), 10% traces
+- Created `sentry.server.config.ts` — server-side init with 10% traces
+- Created `sentry.edge.config.ts` — edge runtime init with 10% traces
+- Created `instrumentation.ts` — Next.js instrumentation hook registers server/edge configs at runtime
+- Updated `next.config.ts`: wrapped export with `withSentryConfig` (silent build, hideSourceMaps, automaticVercelMonitors, disableLogger)
+- Added `https://*.ingest.sentry.io` to CSP `connect-src` directive
+- Added `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` to `.env.example` with setup instructions
+- Vercel action required: set the four SENTRY_* env vars (see VERCEL_SETUP.md)
+
+---
+
+### 2026-03-06 — F2: Security event alerting via email
+- Added `sendSecurityAlertEmail()` to `lib/email.ts`:
+  - Sends to `SECURITY_ALERT_EMAIL` env var (falls back to `NEXT_PUBLIC_SUPPORT_EMAIL`)
+  - HTML email with event type badge + details table (event type, timestamp, IP, user ID, email, resource, message, metadata)
+  - Inner try/catch — never throws, logs failure to console instead
+- Updated `logSecurityEvent()` in `lib/security-log.ts`:
+  - Removed `// TODO: Send alert notification` comment
+  - Fires `sendSecurityAlertEmail()` for all `shouldAlert()` events: `LOGIN_LOCKED`, `CSRF_DETECTED`, `SQL_INJECTION_ATTEMPT`, `XSS_ATTEMPT`, `UNAUTHORIZED_ACCESS`, `RATE_LIMIT_DB_ERROR`
+  - Fire-and-forget (`.catch(() => {})`) — email failure cannot break the request
+  - `logSecurityEvent` stays synchronous; no caller changes needed
+- Added `SECURITY_ALERT_EMAIL` to `.env.example` with full documentation
+- TypeScript clean
+
+---
+
+### 2026-03-06 — D4: USD pricing on marketing page
+- Added `priceUsd: number` field to `Plan` interface in `lib/plans.ts`
+- Set USD display prices: Starter $16, Professional $43, Enterprise $109 (approximate ZAR conversion at ~18.5 ZAR/USD)
+- Updated `app/(marketing)/pricing/page.tsx`: shows `$XX/mo` as primary with `Billed as R{price} via Paystack` as secondary (xs text)
+- Dashboard billing/checkout pages left showing ZAR — those are payment confirmation flows where the actual charge amount matters
+- Homepage (`app/page.tsx`) already had its own hardcoded USD-string pricing list — no change needed there
+- TypeScript clean (priceUsd added to all 3 plan objects)
+
+---
 
 ### 2026-03-05 — A3: Consent record versioning (final P0 item)
 - Added 3 fields to `Consent` model:

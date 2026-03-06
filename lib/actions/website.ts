@@ -254,13 +254,27 @@ export async function getWebsiteStats() {
     throw new Error("Unauthorized");
   }
 
-  const [websiteCount, policyCount, scanCount, consentCount] = await Promise.all([
-    db.website.count({ where: { userId: session.user.id } }),
-    db.policy.count({ where: { website: { userId: session.user.id } } }),
-    db.scan.count({ where: { website: { userId: session.user.id } } }),
-    db.consent.count({ where: { website: { userId: session.user.id } } }),
-  ]);
+  const [websiteCount, policyCount, scanCount, consentCount, bannerConfigCount, firstWebsite] =
+    await Promise.all([
+      db.website.count({ where: { userId: session.user.id } }),
+      db.policy.count({ where: { website: { userId: session.user.id } } }),
+      db.scan.count({ where: { website: { userId: session.user.id } } }),
+      db.consent.count({ where: { website: { userId: session.user.id } } }),
+      db.bannerConfig.count({ where: { website: { userId: session.user.id } } }),
+      db.website.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      }),
+    ]);
 
-  return { websiteCount, policyCount, scanCount, consentCount };
+  return {
+    websiteCount,
+    policyCount,
+    scanCount,
+    consentCount,
+    bannerConfigCount,
+    firstWebsiteId: firstWebsite?.id ?? null,
+  };
 }
 

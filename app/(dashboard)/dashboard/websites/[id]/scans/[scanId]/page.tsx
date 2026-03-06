@@ -234,7 +234,7 @@ export default async function ScanResultsPage({
 
       {/* Action Checklist */}
       {scan.findings.length > 0 && (
-        <ActionChecklist findings={scan.findings} />
+        <ActionChecklist findings={scan.findings} websiteId={id} />
       )}
 
       {/* Detailed Results Tabs */}

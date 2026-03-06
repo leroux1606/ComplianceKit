@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmbedCodeDisplay } from "@/components/dashboard/embed-code-display";
+import { VerifyInstallationButton } from "@/components/dashboard/verify-installation-button";
 import { getWebsite } from "@/lib/actions/website";
 import { getBannerConfig } from "@/lib/actions/banner";
 
@@ -110,6 +111,24 @@ export default async function EmbedPage({ params }: EmbedPageProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Verify Installation */}
+      {bannerConfig && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Verify Installation</CardTitle>
+            <CardDescription>
+              Check that the widget is detected on your live website
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VerifyInstallationButton websiteId={id} />
+            <p className="mt-3 text-xs text-muted-foreground">
+              This fetches your homepage and checks for the embed code. Allow up to 10 seconds.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Instructions */}
       <Card>

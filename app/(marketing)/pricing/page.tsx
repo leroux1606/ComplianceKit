@@ -107,11 +107,14 @@ export default async function PricingPage() {
                   </CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">
-                      R{plan.price}
+                      ${plan.priceUsd}
                     </span>
                     <span className="text-muted-foreground">
                       /{plan.interval === "monthly" ? "mo" : "yr"}
                     </span>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Billed as R{plan.price} via Paystack
+                    </p>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1">

@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScanButton } from "@/components/dashboard/scan-button";
 import { ScanHistory } from "@/components/dashboard/scan-history";
 import { ConsentExportButton } from "@/components/dashboard/consent-export-button";
+import { VerifyInstallationButton } from "@/components/dashboard/verify-installation-button";
 import { getWebsite } from "@/lib/actions/website";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
@@ -234,6 +235,12 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
                 </Button>
                 {website._count.consents > 0 && (
                   <ConsentExportButton
+                    websiteId={website.id}
+                    className="w-full justify-start"
+                  />
+                )}
+                {website.bannerConfig && (
+                  <VerifyInstallationButton
                     websiteId={website.id}
                     className="w-full justify-start"
                   />

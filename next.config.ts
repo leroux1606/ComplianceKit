@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -49,7 +50,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://accounts.google.com https://api.paystack.co",
+              "connect-src 'self' https://accounts.google.com https://api.paystack.co https://*.ingest.sentry.io",
               "frame-src 'self' https://accounts.google.com https://js.paystack.co",
               "object-src 'none'",
               "base-uri 'self'",
@@ -85,4 +86,16 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(withNextIntl(nextConfig), {
+  // Suppress Sentry CLI output during build
+  silent: !process.env.CI,
+
+  // Upload source maps to Sentry for readable stack traces; hide them from the client bundle
+  hideSourceMaps: true,
+
+  // Automatically instrument Vercel cron monitors
+  automaticVercelMonitors: true,
+
+  // Disable the Sentry logger to reduce bundle size
+  disableLogger: true,
+});
