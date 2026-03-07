@@ -22,7 +22,7 @@ At the start of each session:
 
 **Phase:** Pre-launch (P1 items in progress)
 **P0 items completed:** 6 / 6 ✓ ALL P0 ITEMS COMPLETE
-**P1 items completed:** 17 / 19
+**P1 items completed:** 18 / 19
 **P2 items completed:** 4 / 6
 
 ---
@@ -53,7 +53,7 @@ At the start of each session:
 | B3 | Rate limit fail-open alerting | COMPLETE | In-memory fallback + `RATE_LIMIT_DB_ERROR` security alert |
 | B4 | DSAR file attachment security audit | COMPLETE | Feature unimplemented (no risk); validator + schema guards created |
 | B5 | Paystack webhook signature audit | COMPLETE | HMAC-SHA512 correct; fixed non-timing-safe comparison → `crypto.timingSafeEqual()` |
-| D2 | Demo mode + setup wizard | NOT STARTED | |
+| D2 | Demo mode + setup wizard | COMPLETE | `/demo` public page + in-dashboard sample scan preview |
 | D3 | WordPress plugin | NOT STARTED | |
 | D4 | USD pricing on marketing page | COMPLETE | `priceUsd` field on Plan; pricing page shows $USD primary + "Billed as R{price} via Paystack" |
 | D5 | Onboarding email sequence | COMPLETE | Day 0 welcome on signup + Days 1/3/7 cron at `/api/cron/onboarding-emails` |
@@ -106,6 +106,24 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 ---
 
 ## SESSION LOG
+
+### 2026-03-07 — D2: Demo mode + public demo page
+- Created `lib/demo-data.ts` — static demo scan data for "Demo Store" (score 42, 8 cookies, 3 scripts, 5 findings covering all key finding types: cookie_banner/error, privacy_policy/error, tracking_script/warning, third_party_cookie/warning, secure_cookie/info)
+- Created `app/(marketing)/demo/page.tsx` — full public marketing demo page at `/demo`:
+  - Same header pattern as `/pricing` (logo + sign in/sign up buttons)
+  - Hero: "See what ComplianceKit finds" with amber sample-data disclaimer
+  - Full scan results layout reusing `ComplianceScore`, `FindingsList`, `CookieList`, `ScriptList`
+  - Tabs: Findings (5), Cookies (8), Scripts (3)
+  - CTA section at bottom: "Get your free compliance report" → `/sign-up`, "See pricing" → `/pricing`
+- Updated `app/(dashboard)/dashboard/page.tsx` — when `websiteCount === 0`, shows a "Sample Scan — Demo Store" card:
+  - "Demo data" badge to clearly label it as sample
+  - Compliance score gauge (42 / Fair) + cookie/script/finding counts
+  - Top 3 findings listed with severity icons and one-line description
+  - "View full demo" link → `/demo`; "Add your site" CTA → `/dashboard/websites/new`
+  - Card disappears once user adds their first website
+- TypeScript clean
+
+---
 
 ### 2026-03-06 — E2: Actionable compliance score UI
 - Rewrote `components/dashboard/action-checklist.tsx` (was generic checklist, now a fully actionable findings panel):

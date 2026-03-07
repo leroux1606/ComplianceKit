@@ -12,7 +12,20 @@ import {
   Scan,
   Code,
   Download,
+  Cookie,
+  AlertCircle,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
+
+import {
+  DEMO_SITE_NAME,
+  DEMO_SCORE,
+  DEMO_FINDINGS,
+  DEMO_COOKIES,
+  DEMO_SCRIPTS,
+} from "@/lib/demo-data";
+import { ComplianceScore } from "@/components/dashboard/compliance-score";
 
 import { auth } from "@/lib/auth";
 import { getWebsiteStats, getWebsites } from "@/lib/actions/website";
@@ -294,6 +307,90 @@ export default async function DashboardPage() {
           </Card>
         )}
       </div>
+
+      {/* Demo Scan Preview — only shown before user has added any websites */}
+      {stats.websiteCount === 0 && (
+        <Card className="border-dashed">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <CardTitle>Sample Scan — {DEMO_SITE_NAME}</CardTitle>
+                  <span className="rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300 uppercase tracking-wide">
+                    Demo data
+                  </span>
+                </div>
+                <CardDescription>
+                  This is what a real scan looks like. Add your website to get your actual compliance report.
+                </CardDescription>
+              </div>
+              <Button asChild size="sm" className="shrink-0">
+                <Link href="/dashboard/websites/new">
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Add your site
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Score + stats row */}
+            <div className="flex flex-wrap items-center gap-6 rounded-lg border bg-muted/30 p-4">
+              <ComplianceScore score={DEMO_SCORE} size="md" />
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Cookie className="h-4 w-4 text-muted-foreground" />
+                  <span>{DEMO_COOKIES.length} cookies detected</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Code className="h-4 w-4 text-muted-foreground" />
+                  <span>{DEMO_SCRIPTS.length} tracking scripts</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <span>{DEMO_FINDINGS.filter((f) => f.severity === "error").length} critical issues</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Top findings preview */}
+            <div className="space-y-2">
+              {DEMO_FINDINGS.slice(0, 3).map((finding) => {
+                const iconProps =
+                  finding.severity === "error"
+                    ? { Icon: AlertCircle, color: "text-red-600", bg: "bg-red-500/10" }
+                    : finding.severity === "warning"
+                    ? { Icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-500/10" }
+                    : { Icon: Info, color: "text-blue-600", bg: "bg-blue-500/10" };
+                const { Icon, color, bg } = iconProps;
+
+                return (
+                  <div key={finding.id} className="flex items-start gap-3 rounded-lg border p-3">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${bg}`}>
+                      <Icon className={`h-3.5 w-3.5 ${color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{finding.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{finding.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 p-3">
+              <p className="text-sm text-muted-foreground">
+                See all {DEMO_FINDINGS.length} findings, cookies, and trackers on the full demo page.
+              </p>
+              <Button asChild variant="ghost" size="sm" className="shrink-0 gap-1">
+                <Link href="/demo">
+                  View full demo
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Resources */}
       <Card>
