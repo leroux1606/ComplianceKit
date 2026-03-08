@@ -4,6 +4,11 @@
  * Embed on any website:
  *   <script src="https://app.compliancekit.com/widget.js" data-embed-code="YOUR_CODE" defer></script>
  *
+ * Public API (available on window.ComplianceKit after the script loads):
+ *   getConsent()              — returns current preferences object or null
+ *   openSettings()            — opens the cookie preferences modal
+ *   onConsentChange(callback) — fires on every consent change; returns unsubscribe fn
+ *
  * This file is intentionally static and identical for all customers.
  * The embed code is read at runtime from the script tag's data-embed-code attribute.
  * The API base URL is derived from this script's own origin, so it works in any environment.
@@ -14,12 +19,15 @@
 (function () {
   'use strict';
 
+  var CK_VERSION = '1.0.1';
+
   // ── Bootstrap: identify this script tag and extract configuration ─────────
   // document.currentScript is populated synchronously during script execution.
   // Capture it immediately before any async code can null it out.
   var _script = document.currentScript;
 
-  // Fallback: find script tag by matching src pattern (handles async/defer edge cases)
+  // Fallback: find script tag by matching src pattern (handles async/defer edge cases
+  // and eval-in-test environments where currentScript is always null).
   if (!_script) {
     var all = document.getElementsByTagName('script');
     for (var i = all.length - 1; i >= 0; i--) {
@@ -56,9 +64,109 @@
     ? new URL(_script.src).origin
     : window.location.origin;
 
-  var CK_API_URL = _apiOrigin + '/api/widget/' + CK_EMBED_CODE;
+  var CK_API_URL    = _apiOrigin + '/api/widget/' + CK_EMBED_CODE;
   var CK_STORAGE_KEY = 'ck_consent_' + CK_EMBED_CODE;
   var CK_VISITOR_KEY = 'ck_visitor_id';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ── Private shared state ──────────────────────────────────────────────────
+  // These are set once the config fetch resolves and used by the public API.
+  var _ckConfig              = null;   // banner config object from /config
+  var _ckConsentModeV2       = false;  // Google Consent Mode v2 flag
+  var _ckPendingOpenSettings = false;  // openSettings() called before config arrived
+  var _ckCallbacks           = [];     // onConsentChange listeners
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ── Public API (D6) ───────────────────────────────────────────────────────
+  // Exposed synchronously — before the config fetch — so integrators can
+  // register callbacks before the banner appears.  All methods are safe to
+  // call at any point in the page lifecycle.
+  window.ComplianceKit = {
+    version: CK_VERSION,
+
+    /**
+     * Returns the visitor's current consent preferences, or null if no consent
+     * decision has been recorded on this browser yet.
+     *
+     * @returns {{ necessary: boolean, analytics: boolean, marketing: boolean, functional: boolean } | null}
+     *
+     * @example
+     * var prefs = window.ComplianceKit.getConsent();
+     * if (prefs && prefs.analytics) { initAnalytics(); }
+     */
+    getConsent: function () {
+      return window.CK_CONSENT || null;
+    },
+
+    /**
+     * Programmatically opens the cookie preferences modal.
+     *
+     * - If the banner config is already loaded: opens the modal immediately.
+     * - If the config is still loading: queues the call and opens the modal
+     *   as soon as the config arrives (returning visitors only; first-time
+     *   visitors see the banner instead of the modal for their initial choice).
+     * - If the modal is already open: no-op.
+     *
+     * @example
+     * document.getElementById('my-cookie-link').addEventListener('click', function () {
+     *   window.ComplianceKit.openSettings();
+     * });
+     */
+    openSettings: function () {
+      if (_ckConfig) {
+        openSettingsModal(_ckConfig, _ckConsentModeV2);
+      } else {
+        // Config not loaded yet — set flag; modal will open after fetch resolves
+        // (only for returning visitors who have existing consent; first-time
+        // visitors will see the banner, which is the canonical first-choice UI).
+        _ckPendingOpenSettings = true;
+      }
+    },
+
+    /**
+     * Registers a callback that fires whenever the visitor's consent changes.
+     *
+     * If consent already exists on this page load, the callback is called
+     * immediately with the current preferences so integrators do not need to
+     * separately check getConsent().
+     *
+     * @param {function} callback - Receives the preferences object on each change.
+     * @returns {function} Unsubscribe — call to remove this listener.
+     *
+     * @example
+     * var unsub = window.ComplianceKit.onConsentChange(function (prefs) {
+     *   if (prefs.analytics)  { initGoogleAnalytics(); }
+     *   if (prefs.marketing)  { initFacebookPixel();   }
+     * });
+     * // To stop listening:
+     * unsub();
+     */
+    onConsentChange: function (callback) {
+      if (typeof callback !== 'function') {
+        return function () {};
+      }
+      _ckCallbacks.push(callback);
+
+      // Fire immediately if consent already exists (catch-up for late registrations)
+      if (window.CK_CONSENT) {
+        try {
+          callback(window.CK_CONSENT);
+        } catch (e) {
+          console.error('ComplianceKit: onConsentChange callback error', e);
+        }
+      }
+
+      // Return an unsubscribe function
+      return function () {
+        var idx = _ckCallbacks.indexOf(callback);
+        if (idx !== -1) _ckCallbacks.splice(idx, 1);
+      };
+    },
+
+    // Internal — exposed for WordPress footer link and testing.
+    // Not part of the public API contract; may change without notice.
+    _callbacks: _ckCallbacks,
+  };
   // ─────────────────────────────────────────────────────────────────────────
 
   function getVisitorId() {
@@ -75,19 +183,6 @@
       var s = localStorage.getItem(CK_STORAGE_KEY);
       return s ? JSON.parse(s) : null;
     } catch (e) { return null; }
-  }
-
-  // consentModeV2 flag is stored with the record so returning visitors
-  // get gtag signals synchronously without waiting for the config fetch.
-  function saveConsent(preferences, consentModeV2, consentMethod) {
-    var record = { preferences: preferences, timestamp: Date.now() };
-    if (consentModeV2) { record.consentModeV2 = true; updateGtagConsent(preferences); }
-    localStorage.setItem(CK_STORAGE_KEY, JSON.stringify(record));
-    fetch(CK_API_URL + '/consent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visitorId: getVisitorId(), preferences: preferences, consentMethod: consentMethod })
-    }).catch(function () {});
   }
 
   // ── Google Consent Mode v2 (D1) ───────────────────────────────────────────
@@ -111,24 +206,77 @@
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Synchronous: restore consent state + fire gtag update for returning visitors.
+  /**
+   * Persist consent to localStorage, update window.CK_CONSENT, fire all
+   * registered onConsentChange callbacks, then POST to the API.
+   *
+   * window.CK_CONSENT is set here (single source of truth) so getConsent()
+   * returns the correct value immediately when callbacks run.
+   */
+  function saveConsent(preferences, consentModeV2, consentMethod) {
+    var record = { preferences: preferences, timestamp: Date.now() };
+    if (consentModeV2) {
+      record.consentModeV2 = true;
+      updateGtagConsent(preferences);
+    }
+    localStorage.setItem(CK_STORAGE_KEY, JSON.stringify(record));
+
+    // Update the in-memory state before firing callbacks so getConsent() is
+    // correct inside any callback that calls it.
+    window.CK_CONSENT = preferences;
+
+    // Fire all registered onConsentChange listeners.
+    // Use a snapshot of the array so that unsubscribing inside a callback is safe.
+    var snapshot = _ckCallbacks.slice();
+    for (var ci = 0; ci < snapshot.length; ci++) {
+      try {
+        snapshot[ci](preferences);
+      } catch (e) {
+        console.error('ComplianceKit: onConsentChange callback error', e);
+      }
+    }
+
+    // POST to API — fire-and-forget, never blocks the user
+    fetch(CK_API_URL + '/consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorId: getVisitorId(), preferences: preferences, consentMethod: consentMethod })
+    }).catch(function () {});
+  }
+
+  // ── Restore returning visitor state ───────────────────────────────────────
+  // Synchronous: read stored consent so getConsent() works immediately,
+  // and fire gtag update for returning visitors without waiting for the fetch.
   var existingConsent = getStoredConsent();
   if (existingConsent) {
     window.CK_CONSENT = existingConsent.preferences;
     if (existingConsent.consentModeV2) { updateGtagConsent(existingConsent.preferences); }
   }
 
-  // Always fetch config — needed for the withdrawal button even on return visits (A4).
+  // Always fetch config — needed to render the withdrawal button on return visits (A4).
   fetch(CK_API_URL + '/config')
     .then(function (res) { return res.json(); })
     .then(function (data) {
       if (data.error) return;
+
+      // Store config so openSettings() can use it at any point after this.
+      _ckConfig        = data.config;
+      _ckConsentModeV2 = data.consentModeV2 || false;
+
       injectStyles(data.config);
+
       if (existingConsent) {
         createWithdrawalButton(data.config, data.consentModeV2);
+        // Honour a pending openSettings() call made before config arrived.
+        // Only for returning visitors — first-time visitors will see the banner.
+        if (_ckPendingOpenSettings) {
+          _ckPendingOpenSettings = false;
+          openSettingsModal(data.config, data.consentModeV2);
+        }
       } else {
         if (data.consentModeV2) { setDefaultGtagConsent(); }
         createBanner(data.config, data.privacyPolicyUrl, data.cookiePolicyUrl, data.consentModeV2);
+        _ckPendingOpenSettings = false; // first-time visitor — banner handles initial choice
       }
     })
     .catch(function (err) { console.error('ComplianceKit: Failed to load config', err); });
@@ -160,6 +308,9 @@
 
     var overlay = document.createElement('div');
     overlay.id = 'ck-modal-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Cookie Preferences');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;';
 
     var box = document.createElement('div');
@@ -184,13 +335,12 @@
     document.getElementById('ck-modal-close').addEventListener('click', function () { overlay.remove(); });
     document.getElementById('ck-modal-save').addEventListener('click', function () {
       var newPrefs = {
-        necessary: true,
+        necessary:  true,
         analytics:  document.getElementById('ck-m-analytics').checked,
         marketing:  document.getElementById('ck-m-marketing').checked,
         functional: document.getElementById('ck-m-functional').checked
       };
       saveConsent(newPrefs, consentModeV2, 'custom');
-      window.CK_CONSENT = newPrefs;
       overlay.remove();
     });
   }
@@ -200,6 +350,8 @@
     var banner = document.createElement('div');
     banner.id = 'ck-cookie-banner';
     banner.className = 'ck-banner ck-banner--' + config.position + ' ck-banner--' + config.animation;
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Cookie consent');
     banner.innerHTML = getBannerHTML(config, privacyPolicyUrl, cookiePolicyUrl);
     document.body.appendChild(banner);
     setTimeout(function () { banner.classList.add('ck-banner--visible'); }, 100);
@@ -207,14 +359,13 @@
     banner.querySelector('.ck-accept-all').addEventListener('click', function () {
       var prefs = { necessary: true, analytics: true, marketing: true, functional: true };
       saveConsent(prefs, consentModeV2, 'accept_all');
-      window.CK_CONSENT = prefs;
+      // NOTE: window.CK_CONSENT is set inside saveConsent() — do not set again here.
       hideBanner(banner, function () { createWithdrawalButton(config, consentModeV2); });
     });
 
     banner.querySelector('.ck-reject-all').addEventListener('click', function () {
       var prefs = { necessary: true, analytics: false, marketing: false, functional: false };
       saveConsent(prefs, consentModeV2, 'reject_all');
-      window.CK_CONSENT = prefs;
       hideBanner(banner, function () { createWithdrawalButton(config, consentModeV2); });
     });
 
@@ -233,13 +384,12 @@
       });
       banner.querySelector('.ck-save-prefs').addEventListener('click', function () {
         var prefs = {
-          necessary: true,
+          necessary:  true,
           analytics:  banner.querySelector('#ck-analytics').checked,
           marketing:  banner.querySelector('#ck-marketing').checked,
           functional: banner.querySelector('#ck-functional').checked
         };
         saveConsent(prefs, consentModeV2, 'custom');
-        window.CK_CONSENT = prefs;
         hideBanner(banner, function () { createWithdrawalButton(config, consentModeV2); });
       });
     }

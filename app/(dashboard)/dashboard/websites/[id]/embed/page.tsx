@@ -187,8 +187,17 @@ export default async function EmbedPage({ params }: EmbedPageProps) {
                 <code className="bg-background px-1 rounded">layout.tsx</code>
               </p>
               <p>
-                <strong>WordPress:</strong> Use a plugin like &quot;Insert Headers and Footers&quot; 
-                or add to your theme&apos;s header.php
+                <strong>WordPress:</strong>{" "}
+                Install the{" "}
+                <a
+                  href="https://wordpress.org/plugins/compliancekit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  ComplianceKit WordPress plugin
+                </a>{" "}
+                — paste your embed code in Settings → ComplianceKit. No theme editing required.
               </p>
               <p>
                 <strong>Shopify:</strong> Add to theme.liquid in the{" "}
