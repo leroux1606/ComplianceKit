@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php:*)",
+      "Bash(node:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx vitest:*)",
+      "Bash(pnpm vitest:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(curl -s -L https://windows.php.net/download)",
+      "WebFetch(domain:windows.php.net)",
+      "WebFetch(domain:downloads.php.net)"
+    ]
+  }
+}

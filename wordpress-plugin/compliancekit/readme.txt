@@ -4,7 +4,7 @@ Tags:              cookie consent, GDPR, cookie banner, privacy, compliance
 Requires at least: 5.9
 Tested up to:      6.7
 Requires PHP:      7.4
-Stable tag:        1.0.0
+Stable tag:        1.0.1
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,13 @@ The widget automatically renders a persistent "Manage Cookie Preferences" button
 
 == Changelog ==
 
+= 1.0.1 =
+* Fixed: footer "Manage Cookie Preferences" link now calls `window.ComplianceKit.openSettings()` (requires widget version with Public JS API)
+* Fixed: unchecking the Footer Link checkbox now correctly saves as disabled (hidden field added before checkbox)
+* Fixed: plugin uninstall now cleans up all `ck_*` options from wp_options
+* Fixed: translation loading now correctly wired to `plugins_loaded` hook
+* Added: `uninstall.php` for clean removal per WordPress.org guidelines
+
 = 1.0.0 =
 * Initial release
 * Script injection via `wp_head`
@@ -105,6 +112,9 @@ The widget automatically renders a persistent "Manage Cookie Preferences" button
 * Optional "Manage Cookie Preferences" footer link
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Bug fixes: footer link now functional, checkbox uncheck now saves correctly. Update recommended.
 
 = 1.0.0 =
 Initial release.

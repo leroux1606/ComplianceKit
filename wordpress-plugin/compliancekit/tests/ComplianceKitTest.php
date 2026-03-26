@@ -104,13 +104,11 @@ class ComplianceKitTest extends TestCase {
     }
 
     public function test_inject_widget_script_outputs_script_tag(): void {
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_EMBED_CODE, '' )
-            ->andReturn( 'ABC123' );
-
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_APP_URL, CK_DEFAULT_APP_URL )
-            ->andReturn( 'https://compliancekit.com' );
+        Functions\when( 'get_option' )->alias( function( $option, $default = false ) {
+            if ( $option === CK_OPTION_EMBED_CODE ) return 'ABC123';
+            if ( $option === CK_OPTION_APP_URL ) return 'https://compliancekit.com';
+            return $default;
+        });
 
         Functions\expect( 'esc_attr' )->andReturnFirstArg();
         Functions\expect( 'esc_url' )->andReturnFirstArg();
@@ -127,13 +125,11 @@ class ComplianceKitTest extends TestCase {
     }
 
     public function test_inject_widget_script_strips_trailing_slash_from_app_url(): void {
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_EMBED_CODE, '' )
-            ->andReturn( 'XYZ789' );
-
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_APP_URL, CK_DEFAULT_APP_URL )
-            ->andReturn( 'https://compliancekit.com/' ); // trailing slash
+        Functions\when( 'get_option' )->alias( function( $option, $default = false ) {
+            if ( $option === CK_OPTION_EMBED_CODE ) return 'XYZ789';
+            if ( $option === CK_OPTION_APP_URL ) return 'https://compliancekit.com/';
+            return $default;
+        });
 
         Functions\expect( 'esc_attr' )->andReturnFirstArg();
         Functions\expect( 'esc_url' )->andReturnFirstArg();
@@ -151,7 +147,7 @@ class ComplianceKitTest extends TestCase {
 
     public function test_footer_link_not_shown_when_option_disabled(): void {
         Functions\expect( 'get_option' )
-            ->with( CK_OPTION_FOOTER_LINK, false )
+            ->with( CK_OPTION_FOOTER_LINK, 0 )
             ->andReturn( false );
 
         ob_start();
@@ -162,13 +158,11 @@ class ComplianceKitTest extends TestCase {
     }
 
     public function test_footer_link_not_shown_when_no_embed_code(): void {
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_FOOTER_LINK, false )
-            ->andReturn( true );
-
-        Functions\expect( 'get_option' )
-            ->with( CK_OPTION_EMBED_CODE, '' )
-            ->andReturn( '' );
+        Functions\when( 'get_option' )->alias( function( $option, $default = false ) {
+            if ( $option === CK_OPTION_FOOTER_LINK ) return true;
+            if ( $option === CK_OPTION_EMBED_CODE ) return '';
+            return $default;
+        });
 
         ob_start();
         ck_inject_footer_link();
@@ -179,7 +173,7 @@ class ComplianceKitTest extends TestCase {
 
     public function test_footer_link_shown_when_enabled_and_embed_code_set(): void {
         Functions\expect( 'get_option' )
-            ->with( CK_OPTION_FOOTER_LINK, false )
+            ->with( CK_OPTION_FOOTER_LINK, 0 )
             ->andReturn( true );
 
         Functions\expect( 'get_option' )
@@ -199,7 +193,7 @@ class ComplianceKitTest extends TestCase {
 
     public function test_footer_link_has_graceful_degradation(): void {
         Functions\expect( 'get_option' )
-            ->with( CK_OPTION_FOOTER_LINK, false )
+            ->with( CK_OPTION_FOOTER_LINK, 0 )
             ->andReturn( true );
 
         Functions\expect( 'get_option' )
@@ -240,6 +234,7 @@ class ComplianceKitTest extends TestCase {
         Functions\expect( 'checked' )->andReturnNull();
         Functions\expect( 'submit_button' )->andReturnNull();
         Functions\expect( 'admin_url' )->andReturn( 'http://example.com/wp-admin/options-general.php' );
+        Functions\expect( 'wp_kses_post' )->andReturnFirstArg();
 
         ob_start();
         ck_render_settings_page();

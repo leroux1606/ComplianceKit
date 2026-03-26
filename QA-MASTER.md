@@ -38,7 +38,7 @@ Verify `.env.local` contains all required variables:
 | `NEXTAUTH_SECRET` | ✅ | Session signing |
 | `NEXT_PUBLIC_APP_URL` | ✅ | Widget embed URL, email links |
 | `RESEND_API_KEY` | ✅ | All transactional email |
-| `NEXT_PUBLIC_RESEND_FROM_EMAIL` | ✅ | From address |
+| `EMAIL_FROM` | ✅ | From address (e.g. `ComplianceKit <noreply@yourdomain.com>`) |
 | `PAYSTACK_SECRET_KEY` | ✅ | Payments |
 | `PAYSTACK_WEBHOOK_SECRET` | ✅ | Webhook signature verification |
 | `CRON_SECRET` | ✅ | Cron route authentication |
@@ -1184,8 +1184,7 @@ Fill out after completing all phases:
 2. _______________________________________________
 
 **Known gaps to address before launch:**
-- WordPress plugin: footer link non-functional until D6 (Public JS API) is built
-- WordPress plugin: PHP tests require local WP environment + Composer to run
+- WordPress plugin: PHP tests require local WP environment + Composer to run (`cd wordpress-plugin/compliancekit && composer install && composer test`)
 - WordPress plugin: not yet submitted to WordPress.org plugin directory
 
 ---

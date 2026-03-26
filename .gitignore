@@ -45,3 +45,8 @@ next-env.d.ts
 
 # prisma
 /app/generated/prisma
+
+# WordPress plugin build artifacts
+wordpress-plugin/compliancekit/vendor/
+wordpress-plugin/compliancekit/composer.lock
+wordpress-plugin/*.zip

@@ -340,6 +340,24 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 
 ---
 
+### 2026-03-09 — Documentation audit + QA-MASTER.md fixes
+- Read PROGRESS.md, QA-MASTER.md, DEPLOYMENT.md, AUDIT.md — confirmed all P0/P1/P2 items are code-complete
+- Fixed ENV-1 table in QA-MASTER.md: `NEXT_PUBLIC_RESEND_FROM_EMAIL` → `EMAIL_FROM` (matches actual code in `lib/email.ts` and `.env.example`)
+- Removed outdated "Known gaps" bullet from QA-MASTER.md: "WordPress plugin: footer link non-functional until D6 is built" — D6 was completed in the previous session; footer link correctly calls `window.ComplianceKit.openSettings()`
+- Remaining non-code items before launch: set 9 Vercel env vars per VERCEL_SETUP.md; run WP plugin PHP tests in local WP install; submit plugin to wordpress.org
+
+---
+
+### 2026-03-09 — WordPress plugin pre-submission fixes
+- Fixed readme.txt `Stable tag: 1.0.0` → `1.0.1` to match PHP header `Version: 1.0.1` (mismatch would fail wordpress.org review)
+- Added `1.0.1` changelog entry to readme.txt with all 5 fixes documented
+- Added upgrade notice for 1.0.1
+- **Still needed:** 3 screenshots (see step-by-step guide below); LocalWP install + manual QA phase 10; wordpress.org submission
+
+---
+
+---
+
 ### 2026-03-05 — A4: Consent withdrawal mechanism
 - Added `withdrawalButtonPosition String @default("bottom-right")` to `BannerConfig` schema + pushed to DB
 - Config API exposes `withdrawalButtonPosition` inside the `config` object
