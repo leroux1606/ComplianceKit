@@ -324,15 +324,16 @@ function ck_inject_footer_link() {
 // Admin: setup notice when embed code is not configured
 // ---------------------------------------------------------------------------
 
-add_action( 'admin_notices', 'ck_setup_notice' );
+add_action( 'admin_enqueue_scripts', 'ck_maybe_add_setup_notice' );
+
+function ck_maybe_add_setup_notice( $hook_suffix ) {
+	if ( 'settings_page_compliancekit' !== $hook_suffix ) {
+		add_action( 'admin_notices', 'ck_setup_notice' );
+	}
+}
 
 function ck_setup_notice() {
 	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
-
-	$screen = get_current_screen();
-	if ( $screen && 'settings_page_compliancekit' === $screen->id ) {
 		return;
 	}
 

@@ -9,7 +9,9 @@
       "Bash(pnpm tsc:*)",
       "Bash(curl -s -L https://windows.php.net/download)",
       "WebFetch(domain:windows.php.net)",
-      "WebFetch(domain:downloads.php.net)"
+      "WebFetch(domain:downloads.php.net)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
