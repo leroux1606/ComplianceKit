@@ -107,13 +107,13 @@ export default function HomePage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo />
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Features
-            </Link>
-            <Link href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </a>
+            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Pricing
-            </Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </a>
+            <Link href="/docs" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Documentation
             </Link>
           </div>
@@ -165,10 +165,10 @@ export default function HomePage() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="border-border/50 hover:bg-muted/50 text-lg px-8 py-6 rounded-xl">
-                <Link href="#features">
+                <a href="#features">
                   See How It Works
                   <ChevronRight className="ml-2 h-5 w-5" />
-                </Link>
+                </a>
               </Button>
             </div>
 
@@ -385,9 +385,9 @@ export default function HomePage() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl">
-                  <Link href="#pricing">
+                  <a href="#pricing">
                     View Pricing
-                  </Link>
+                  </a>
                 </Button>
               </div>
             </div>

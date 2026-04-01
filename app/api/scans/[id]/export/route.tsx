@@ -6,17 +6,17 @@ import { ScanReportPDF } from "@/lib/pdf/scan-report";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ scanId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { scanId } = await params;
-    
+    const { id: scanId } = await params;
+
     // Get scan with all relations
     const scan = await db.scan.findFirst({
       where: {
@@ -39,12 +39,12 @@ export async function GET(
 
     // Generate PDF stream
     const stream = await ReactPDF.renderToStream(
-      <ScanReportPDF 
+      <ScanReportPDF
         website={{
           name: scan.website.name,
           url: scan.website.url,
-        }} 
-        scan={scan} 
+        }}
+        scan={scan}
       />
     );
 
