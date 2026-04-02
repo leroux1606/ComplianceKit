@@ -53,11 +53,6 @@ export function SignInForm() {
     }
   }
 
-  async function handleGoogleSignIn() {
-    setIsLoading(true);
-    await signInWithGoogle();
-  }
-
   return (
     <div className="space-y-6">
       <Form {...form}>
@@ -160,15 +155,17 @@ export function SignInForm() {
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-        disabled={isLoading}
-      >
-        <GoogleIcon className="mr-2 h-4 w-4" />
-        {t("signInWithGoogle")}
-      </Button>
+      <form action={signInWithGoogle}>
+        <Button
+          type="submit"
+          variant="outline"
+          className="w-full"
+          disabled={isLoading}
+        >
+          <GoogleIcon className="mr-2 h-4 w-4" />
+          {t("signInWithGoogle")}
+        </Button>
+      </form>
 
       <p className="text-center text-sm text-muted-foreground">
         {t("dontHaveAccount")}{" "}

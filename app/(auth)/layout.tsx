@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/icons/logo";
-import { Shield, Check, Sparkles } from "lucide-react";
+import { Shield, Check } from "lucide-react";
 
 export default async function AuthLayout({
   children,
@@ -31,18 +31,28 @@ export default async function AuthLayout({
         </div>
         
         <div className="relative z-10 p-10 space-y-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-sm text-white/90 backdrop-blur-sm">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Trusted by 10,000+ businesses
-            </div>
-            <blockquote className="text-2xl font-medium text-white leading-relaxed">
-              &ldquo;ComplianceKit made GDPR compliance simple for our business. 
-              We went from confused to compliant in just one afternoon.&rdquo;
-            </blockquote>
-            <p className="text-white/70">
-              — Sarah Chen, CEO at TechStart
+          <div className="space-y-6">
+            <p className="text-2xl font-medium text-white leading-relaxed">
+              Everything you need for GDPR compliance — in one place.
             </p>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3 text-white/80 text-sm">
+                <Check className="h-4 w-4 text-accent shrink-0" />
+                Automated cookie scanning &amp; categorization
+              </li>
+              <li className="flex items-center gap-3 text-white/80 text-sm">
+                <Check className="h-4 w-4 text-accent shrink-0" />
+                Auto-generated privacy &amp; cookie policies
+              </li>
+              <li className="flex items-center gap-3 text-white/80 text-sm">
+                <Check className="h-4 w-4 text-accent shrink-0" />
+                Customizable consent banner
+              </li>
+              <li className="flex items-center gap-3 text-white/80 text-sm">
+                <Check className="h-4 w-4 text-accent shrink-0" />
+                Data subject access request management
+              </li>
+            </ul>
           </div>
         </div>
 

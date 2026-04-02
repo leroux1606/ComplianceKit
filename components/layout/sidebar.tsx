@@ -55,10 +55,20 @@ const navigationItems = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  planName: string;
+  maxWebsites: number;
+}
+
+export function Sidebar({ planName, maxWebsites }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("billing");
+
+  const websiteLabel =
+    maxWebsites === -1
+      ? "Unlimited websites"
+      : `${maxWebsites} website${maxWebsites !== 1 ? "s" : ""}`;
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card" role="complementary">
@@ -101,7 +111,7 @@ export function Sidebar() {
 
       {/* Plan / Upgrade Footer */}
       <div className="border-t p-4">
-        <div className="rounded-lg bg-muted p-4" aria-label="Current plan: Free">
+        <div className="rounded-lg bg-muted p-4" aria-label={`Current plan: ${planName}`}>
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
@@ -110,8 +120,8 @@ export function Sidebar() {
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium">{tBilling("plans.free")}</p>
-              <p className="text-xs text-muted-foreground">1 website</p>
+              <p className="text-sm font-medium">{planName}</p>
+              <p className="text-xs text-muted-foreground">{websiteLabel}</p>
             </div>
           </div>
           <Link

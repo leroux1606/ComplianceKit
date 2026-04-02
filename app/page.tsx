@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/icons/logo";
+import { MobileNav } from "@/components/marketing/mobile-nav";
 
 const features = [
   {
@@ -46,13 +47,6 @@ const features = [
       "Track consent rates, compliance scores, and user preferences with detailed analytics and insights.",
     color: "from-orange-500 to-amber-500",
   },
-];
-
-const stats = [
-  { value: "10K+", label: "Websites Protected" },
-  { value: "99.9%", label: "Uptime Guarantee" },
-  { value: "50M+", label: "Consents Managed" },
-  { value: "24/7", label: "Expert Support" },
 ];
 
 const pricingPlans = [
@@ -107,18 +101,19 @@ export default function HomePage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo />
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="#features" className="text-sm font-medium text-foreground/75 hover:text-foreground transition-colors">
               Features
             </a>
-            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="#pricing" className="text-sm font-medium text-foreground/75 hover:text-foreground transition-colors">
               Pricing
             </a>
-            <Link href="/docs" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/docs" className="text-sm font-medium text-foreground/75 hover:text-foreground transition-colors">
               Documentation
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+            <MobileNav />
+            <Button variant="ghost" asChild className="text-foreground/75 hover:text-foreground">
               <Link href="/sign-in">Sign In</Link>
             </Button>
             <Button asChild className="gradient-primary glow-primary hover:opacity-90 transition-opacity">
@@ -140,7 +135,7 @@ export default function HomePage() {
             {/* Badge */}
             <div className="mb-8 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm backdrop-blur-sm">
               <Sparkles className="mr-2 h-4 w-4 text-primary animate-pulse-glow" />
-              <span className="text-primary font-medium">Trusted by 10,000+ businesses worldwide</span>
+              <span className="text-foreground font-medium">GDPR compliance for modern businesses</span>
             </div>
             
             {/* Headline */}
@@ -187,20 +182,6 @@ export default function HomePage() {
                 <span>Cancel anytime</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 border-y border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-gradient mb-2">{stat.value}</div>
-                <div className="text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -374,8 +355,8 @@ export default function HomePage() {
                 Ready to Get Compliant?
               </h2>
               <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-                Join thousands of businesses that trust ComplianceKit for their GDPR compliance needs. 
-                Start your free trial today — no credit card required.
+                Start your GDPR compliance journey today.
+                No legal expertise required — no credit card needed.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button size="lg" variant="secondary" asChild className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 rounded-xl shadow-lg">

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { PLANS, FREE_TIER } from "@/lib/plans";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
@@ -25,9 +26,22 @@ export default async function DashboardLayout({
     redirect("/consent");
   }
 
+  const subscription = await db.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { paystackPlanCode: true, status: true },
+  });
+
+  const activePlan =
+    subscription?.status === "active"
+      ? PLANS.find((p) => p.paystackPlanCode === subscription.paystackPlanCode)
+      : null;
+
+  const planName = activePlan?.name ?? "Free";
+  const maxWebsites = activePlan?.features.maxWebsites ?? FREE_TIER.maxWebsites;
+
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar planName={planName} maxWebsites={maxWebsites} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
         <main

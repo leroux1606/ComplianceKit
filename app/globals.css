@@ -43,7 +43,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Dark theme by default - Hostinger-inspired */
+/* Dark theme by default */
 :root {
   --radius: 0.75rem;
   /* Dark background */
@@ -249,4 +249,10 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow {
+    animation: none;
+  }
 }
