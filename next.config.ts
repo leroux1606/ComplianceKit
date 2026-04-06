@@ -91,7 +91,7 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   silent: !process.env.CI,
 
   // Upload source maps to Sentry for readable stack traces; hide them from the client bundle
-  hideSourceMaps: true,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
 
   // Automatically instrument Vercel cron monitors
   automaticVercelMonitors: true,

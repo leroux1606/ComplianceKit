@@ -1,51 +1,35 @@
-// ComplianceKit Database Schema
-// GDPR Compliance SaaS Platform
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  // Connection URLs are configured in prisma.config.ts (Prisma 7+).
-  // DATABASE_URL  → pooled PgBouncer endpoint (runtime queries)
-  // DIRECT_URL    → direct connection (migrations only — see prisma.config.ts)
 }
 
-// ============================================
-// PHASE 1: Authentication & User Management
-// ============================================
-
 model User {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   name           String?
-  email          String    @unique
+  email          String        @unique
   emailVerified  DateTime?
-  password       String?   // For credentials auth
+  password       String?
   image          String?
-  companyName    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   companyAddress String?
   companyEmail   String?
-  dpoName        String?   // Data Protection Officer
+  companyName    String?
   dpoEmail       String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  
-  // GDPR Compliance: Consent & Age Verification (Art. 7 & 8)
-  consentedAt    DateTime? // When user accepted Terms & Privacy Policy
-  ageVerifiedAt  DateTime? // When user confirmed age >= 16
-  // GDPR Art. 28 — Data Processing Agreement acceptance
-  dpaAcceptedAt  DateTime? // When user accepted the Data Processing Agreement
-
-  // GDPR Compliance: Account Deletion & Anonymization
-  deletedAt      DateTime? // Soft delete timestamp (30-day grace period)
-  anonymizedAt   DateTime? // When PII was anonymized (for legal retention)
-  deletionReason String?   // User-provided reason for deletion
-  
-  accounts     Account[]
-  sessions     Session[]
-  websites     Website[]
-  subscription Subscription?
+  dpoName        String?
+  anonymizedAt   DateTime?
+  deletedAt      DateTime?
+  deletionReason String?
+  ageVerifiedAt  DateTime?
+  consentedAt    DateTime?
+  dpaAcceptedAt  DateTime?
+  accounts       Account[]
+  sessions       Session[]
+  subscription   Subscription?
+  websites       Website[]
 
   @@map("users")
 }
@@ -56,15 +40,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -89,60 +72,47 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// ============================================
-// PHASE 2: Website Management
-// ============================================
-
 model Website {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  url         String
-  description String?
-  status      String   @default("active") // active, scanning, error
-  embedCode   String?  @unique
-  lastScanAt  DateTime?
+  id             String               @id @default(cuid())
+  userId         String
+  name           String
+  url            String
+  description    String?
+  status         String               @default("active")
+  embedCode      String?              @unique
+  lastScanAt     DateTime?
   lastScanStatus String?
-  
-  // Company information for policies
   companyName    String?
   companyAddress String?
   companyEmail   String?
   dpoName        String?
   dpoEmail       String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scans        Scan[]
-  policies     Policy[]
-  bannerConfig BannerConfig?
-  consents     Consent[]
-  dsarRequests DataSubjectRequest[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  bannerConfig   BannerConfig?
+  consents       Consent[]
+  dsarRequests   DataSubjectRequest[]
+  policies       Policy[]
+  scans          Scan[]
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("websites")
 }
 
-// ============================================
-// PHASE 3: Website Scanning
-// ============================================
-
 model Scan {
   id          String    @id @default(cuid())
   websiteId   String
-  status      String    @default("pending") // pending, running, completed, failed
+  status      String    @default("pending")
   startedAt   DateTime?
   completedAt DateTime?
   error       String?
-  score       Int?      // Compliance score 0-100
+  score       Int?
   createdAt   DateTime  @default(now())
-
-  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
-  cookies  Cookie[]
-  scripts  Script[]
-  findings Finding[]
+  cookies     Cookie[]
+  findings    Finding[]
+  website     Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  scripts     Script[]
 
   @@index([websiteId])
   @@index([status])
@@ -157,13 +127,12 @@ model Cookie {
   path        String    @default("/")
   secure      Boolean   @default(false)
   httpOnly    Boolean   @default(false)
-  sameSite    String?   // Strict, Lax, None
+  sameSite    String?
   expires     DateTime?
-  category    String?   // necessary, analytics, marketing, functional
+  category    String?
   description String?
   createdAt   DateTime  @default(now())
-
-  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  scan        Scan      @relation(fields: [scanId], references: [id], onDelete: Cascade)
 
   @@index([scanId])
   @@map("cookies")
@@ -173,13 +142,12 @@ model Script {
   id         String   @id @default(cuid())
   scanId     String
   url        String?
-  content    String?  @db.Text
-  type       String   // inline, external
-  category   String?  // analytics, marketing, functional, unknown
-  name       String?  // Google Analytics, Facebook Pixel, etc.
+  content    String?
+  type       String
+  category   String?
+  name       String?
   detectedAt DateTime @default(now())
-
-  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  scan       Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
 
   @@index([scanId])
   @@map("scripts")
@@ -188,88 +156,71 @@ model Script {
 model Finding {
   id             String   @id @default(cuid())
   scanId         String
-  type           String   // cookie_banner, privacy_policy, tracking_script, etc.
-  severity       String   // info, warning, error
+  type           String
+  severity       String
   title          String
-  description    String   @db.Text
-  recommendation String?  @db.Text
+  description    String
+  recommendation String?
   createdAt      DateTime @default(now())
-
-  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  scan           Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
 
   @@index([scanId])
   @@map("findings")
 }
 
-// ============================================
-// PHASE 4: Cookie Consent Banner
-// ============================================
-
 model BannerConfig {
-  id           String   @id @default(cuid())
-  websiteId    String   @unique
-  theme        String   @default("light") // light, dark, custom
-  position     String   @default("bottom") // bottom, top, center
-  primaryColor String   @default("#0f172a")
-  textColor    String   @default("#ffffff")
-  buttonStyle  String   @default("rounded") // rounded, square, pill
-  animation    String   @default("slide") // slide, fade, none
-  customCss       String?  @db.Text
-  // GDPR: Configurable policy links for consent banner (Issue #9)
-  privacyPolicyUrl  String?
-  cookiePolicyUrl   String?
-  // D1: Google Consent Mode v2
-  consentModeV2              Boolean  @default(true)
-  // A4: persistent withdrawal button position (GDPR Article 7(3))
-  withdrawalButtonPosition   String   @default("bottom-right")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  id                       String   @id @default(cuid())
+  websiteId                String   @unique
+  theme                    String   @default("light")
+  position                 String   @default("bottom")
+  primaryColor             String   @default("#0f172a")
+  textColor                String   @default("#ffffff")
+  buttonStyle              String   @default("rounded")
+  animation                String   @default("slide")
+  customCss                String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  cookiePolicyUrl          String?
+  privacyPolicyUrl         String?
+  consentModeV2            Boolean  @default(true)
+  withdrawalButtonPosition String   @default("bottom-right")
+  website                  Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
   @@map("banner_configs")
 }
 
 model Consent {
-  id          String   @id @default(cuid())
-  websiteId   String
-  visitorId   String   // Anonymous visitor identifier
-  preferences Json     // { necessary: true, analytics: false, marketing: false, functional: true }
-  ipAddress   String?
-  userAgent   String?
-  // A3: GDPR Recital 42 + Article 7 — proof that consent was specific and informed
-  consentMethod       String   @default("unknown") // accept_all | reject_all | custom
-  bannerConfigVersion String?  // BannerConfig.updatedAt ISO string at time of consent
-  policyVersion       Int?     // Active privacy policy version at time of consent
-  consentedAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  id                  String   @id @default(cuid())
+  websiteId           String
+  visitorId           String
+  preferences         Json
+  ipAddress           String?
+  userAgent           String?
+  consentedAt         DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  bannerConfigVersion String?
+  consentMethod       String   @default("unknown")
+  policyVersion       Int?
+  website             Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
   @@index([websiteId])
   @@index([visitorId])
-  // Composite index for archival deletes and date-range exports (A9 / C4)
   @@index([websiteId, consentedAt])
   @@map("consents")
 }
 
-// ============================================
-// PHASE 5: Legal Document Generator
-// ============================================
-
 model Policy {
   id          String   @id @default(cuid())
   websiteId   String
-  type        String   // privacy_policy, cookie_policy
+  type        String
   language    String   @default("en")
-  content     String   @db.Text
-  htmlContent String?  @db.Text
+  content     String
+  htmlContent String?
   version     Int      @default(1)
   isActive    Boolean  @default(true)
   generatedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
   @@index([websiteId])
   @@index([websiteId, type, isActive])
@@ -278,10 +229,10 @@ model Policy {
 
 model PolicyTemplate {
   id        String   @id @default(cuid())
-  type      String   // privacy_policy, cookie_policy
+  type      String
   language  String
-  content   String   @db.Text
-  variables Json     // Template variables
+  content   String
+  variables Json
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -290,20 +241,16 @@ model PolicyTemplate {
   @@map("policy_templates")
 }
 
-// ============================================
-// PHASE 6: Subscriptions & Billing
-// ============================================
-
 model Plan {
   id               String   @id @default(cuid())
-  name             String   // Starter, Professional, Enterprise
+  name             String
   slug             String   @unique
   paystackPlanCode String   @unique
   price            Decimal  @db.Decimal(10, 2)
   currency         String   @default("ZAR")
-  interval         String   @default("monthly") // monthly, yearly
+  interval         String   @default("monthly")
   maxWebsites      Int?
-  features         Json     // Feature flags
+  features         Json
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -312,22 +259,21 @@ model Plan {
 }
 
 model Subscription {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  planId             String
-  paystackPlanCode   String
-  paystackSubCode    String?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  planId               String
+  paystackPlanCode     String
+  paystackSubCode      String?
   paystackCustomerCode String?
-  status             String    // active, cancelled, expired, past_due
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean   @default(false)
-  cancelledAt        DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoices Invoice[]
+  status               String
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean   @default(false)
+  cancelledAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  invoices             Invoice[]
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -335,64 +281,46 @@ model Subscription {
 }
 
 model Invoice {
-  id             String    @id @default(cuid())
+  id             String       @id @default(cuid())
   subscriptionId String
   paystackRef    String?
-  amount         Decimal   @db.Decimal(10, 2)
-  currency       String    @default("ZAR")
-  status         String    // paid, pending, failed
+  amount         Decimal      @db.Decimal(10, 2)
+  currency       String       @default("ZAR")
+  status         String
   paidAt         DateTime?
   dueDate        DateTime
   pdfUrl         String?
-  createdAt      DateTime  @default(now())
-
-  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([subscriptionId])
   @@index([status])
   @@map("invoices")
 }
 
-// ============================================
-// PHASE 7: DSAR Management
-// ============================================
-
 model DataSubjectRequest {
-  id              String    @id @default(cuid())
-  websiteId       String
-  requestType     String    // access, erasure, rectification, portability, restriction, objection
-  status          String    @default("pending") // pending, in_progress, completed, rejected
-  priority        String    @default("normal") // low, normal, high, urgent
-  
-  // Requester information
-  requesterEmail  String
-  requesterName   String?
-  requesterPhone  String?
-  
-  // Request details
-  description     String    @db.Text
-  additionalInfo  String?   @db.Text
-  
-  // Verification
-  verificationToken String  @unique @default(cuid())
-  verifiedAt      DateTime?
-  
-  // Processing
-  assignedTo      String?   // User ID of assigned team member
-  internalNotes   String?   @db.Text
-  responseContent String?   @db.Text
-  
-  // Deadlines (GDPR requires response within 30 days)
-  dueDate         DateTime
-  completedAt     DateTime?
-  
-  // Audit trail
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  website         Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
-  activities      DsarActivity[]
-  attachments     DsarAttachment[]
+  id                String           @id @default(cuid())
+  websiteId         String
+  requestType       String
+  status            String           @default("pending")
+  priority          String           @default("normal")
+  requesterEmail    String
+  requesterName     String?
+  requesterPhone    String?
+  description       String
+  additionalInfo    String?
+  verificationToken String           @unique @default(cuid())
+  verifiedAt        DateTime?
+  assignedTo        String?
+  internalNotes     String?
+  responseContent   String?
+  dueDate           DateTime
+  completedAt       DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  website           Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  activities        DsarActivity[]
+  attachments       DsarAttachment[]
 
   @@index([websiteId])
   @@index([status])
@@ -402,52 +330,39 @@ model DataSubjectRequest {
 }
 
 model DsarActivity {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   dsarId      String
-  action      String   // created, status_changed, note_added, response_sent, completed, etc.
+  action      String
   description String
-  performedBy String?  // User ID or "system" or "requester"
-  metadata    Json?    // Additional action-specific data
-  createdAt   DateTime @default(now())
-
-  dsar DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
+  performedBy String?
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  dsar        DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
 
   @@index([dsarId])
   @@map("dsar_activities")
 }
 
-// B4: File upload not yet implemented. When building this feature:
-//   - Validate MIME type against magic numbers (see lib/dsar/attachment-validator.ts)
-//   - Enforce 10 MB size limit before writing to storage
-//   - Store in a PRIVATE bucket (Supabase Storage / S3) — never a public URL
-//   - Serve via short-lived signed URLs, not direct fileUrl
-//   - Sanitize filename before storing (strip path traversal, control chars)
 model DsarAttachment {
-  id          String   @id @default(cuid())
-  dsarId      String
-  filename    String   // sanitized filename — see sanitizeFilename() in attachment-validator.ts
-  fileUrl     String   // signed URL or private storage path — MUST NOT be a public URL
-  fileSize    Int      // bytes — validated <= 10 MB before upload
-  mimeType    String   // server-validated MIME type — not the client Content-Type header
-  uploadedBy  String   // User ID or "requester"
-  createdAt   DateTime @default(now())
-
-  dsar DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
+  id         String             @id @default(cuid())
+  dsarId     String
+  filename   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  uploadedBy String
+  createdAt  DateTime           @default(now())
+  dsar       DataSubjectRequest @relation(fields: [dsarId], references: [id], onDelete: Cascade)
 
   @@index([dsarId])
   @@map("dsar_attachments")
 }
 
-// ============================================
-// PHASE 8: Security — DB-backed rate limiting & brute-force (Issue #4)
-// Replaces in-memory Maps so protection works across serverless instances.
-// ============================================
-
 model RateLimitRecord {
-  id       String   @id @default(cuid())
-  key      String   @unique // "<ip>:<path>"
-  count    Int      @default(1)
-  resetAt  DateTime
+  id      String   @id @default(cuid())
+  key     String   @unique
+  count   Int      @default(1)
+  resetAt DateTime
 
   @@index([key])
   @@index([resetAt])
@@ -456,7 +371,7 @@ model RateLimitRecord {
 
 model LoginAttemptRecord {
   id           String    @id @default(cuid())
-  identifier   String    @unique // "<email>:<ip>"
+  identifier   String    @unique
   count        Int       @default(0)
   firstAttempt DateTime
   lastAttempt  DateTime

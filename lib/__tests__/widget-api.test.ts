@@ -445,7 +445,7 @@ describe("openSettings()", () => {
 
   it("queues openSettings() and executes it when config arrives (returning visitor)", async () => {
     // Let fetch be slow so we can call openSettings() before it resolves
-    let resolveConfig!: (v: unknown) => void;
+    let resolveConfig!: () => void;
     vi.spyOn(globalThis, "fetch").mockImplementation((url: RequestInfo | URL) => {
       const u = url.toString();
       if (u.includes("/config")) {

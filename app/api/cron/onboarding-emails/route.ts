@@ -47,26 +47,25 @@ export async function GET(request: Request) {
     const day1Users = await db.user.findMany({
       where: {
         deletedAt: null,
-        email: { not: null },
         createdAt: { gte: hoursAgo(48), lt: hoursAgo(24) },
         websites: {
           none: { scans: { some: {} } },
         },
       },
-      select: {
-        email: true,
-        name: true,
-        websites: { select: { id: true }, orderBy: { createdAt: "asc" }, take: 1 },
-      },
+      select: { id: true, email: true, name: true },
     });
 
     for (const user of day1Users) {
-      if (!user.email) continue;
       try {
+        const firstWebsite = await db.website.findFirst({
+          where: { userId: user.id },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        });
         await sendOnboardingDay1Email({
           to: user.email,
           name: user.name,
-          websiteId: user.websites[0]?.id ?? null,
+          websiteId: firstWebsite?.id ?? null,
         });
         results.day1++;
       } catch (err) {
@@ -86,26 +85,25 @@ export async function GET(request: Request) {
     const day3Users = await db.user.findMany({
       where: {
         deletedAt: null,
-        email: { not: null },
         createdAt: { gte: hoursAgo(96), lt: hoursAgo(72) },
         websites: {
           none: { consents: { some: {} } },
         },
       },
-      select: {
-        email: true,
-        name: true,
-        websites: { select: { id: true }, orderBy: { createdAt: "asc" }, take: 1 },
-      },
+      select: { id: true, email: true, name: true },
     });
 
     for (const user of day3Users) {
-      if (!user.email) continue;
       try {
+        const firstWebsite = await db.website.findFirst({
+          where: { userId: user.id },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        });
         await sendOnboardingDay3Email({
           to: user.email,
           name: user.name,
-          websiteId: user.websites[0]?.id ?? null,
+          websiteId: firstWebsite?.id ?? null,
         });
         results.day3++;
       } catch (err) {
@@ -125,7 +123,6 @@ export async function GET(request: Request) {
     const day7Users = await db.user.findMany({
       where: {
         deletedAt: null,
-        email: { not: null },
         createdAt: { gte: hoursAgo(192), lt: hoursAgo(168) },
         OR: [
           { subscription: null },

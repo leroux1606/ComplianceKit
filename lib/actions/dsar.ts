@@ -9,8 +9,14 @@ import {
   type DsarSubmissionInput,
   type DsarUpdateInput 
 } from "@/lib/validations";
-import { calculateDueDate, type DsarStatus, type DsarActivityAction } from "@/lib/dsar/types";
+import { calculateDueDate, type DsarStatus, type DsarActivityAction, DSAR_REQUEST_TYPES, type DsarRequestType } from "@/lib/dsar/types";
 import { requireFeature } from "@/lib/actions/subscription";
+import {
+  sendDsarConfirmationEmail,
+  sendDsarOwnerNotificationEmail,
+  sendDsarResponseEmail,
+  sendDsarRejectionEmail,
+} from "@/lib/email";
 import type { DataSubjectRequest, DsarActivity } from "@prisma/client";
 
 export type DsarWithRelations = DataSubjectRequest & {
@@ -80,10 +86,33 @@ export async function submitDsar(
       },
     });
 
-    // TODO: Send verification email to requester
-    // TODO: Send notification to website owner
+    const requestTypeLabel = DSAR_REQUEST_TYPES[requestType as DsarRequestType]?.label ?? requestType;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://compliancekit.app';
 
-    return { 
+    // Send confirmation email to requester (fire-and-forget)
+    sendDsarConfirmationEmail({
+      to: requesterEmail,
+      requesterName: requesterName || null,
+      requestTypeLabel,
+      referenceId: dsar.id,
+      dueDate: dsar.dueDate,
+      websiteName: website.name,
+      companyName: website.user.companyName || null,
+    }).catch((err) => console.error('[DSAR] Failed to send confirmation email:', err));
+
+    // Send notification email to website owner (fire-and-forget)
+    sendDsarOwnerNotificationEmail({
+      to: website.user.email!,
+      requesterName: requesterName || null,
+      requesterEmail,
+      requestTypeLabel,
+      referenceId: dsar.id,
+      dueDate: dsar.dueDate,
+      websiteName: website.name,
+      dashboardUrl: `${appUrl}/dashboard/dsar/${dsar.id}`,
+    }).catch((err) => console.error('[DSAR] Failed to send owner notification:', err));
+
+    return {
       success: true, 
       dsarId: dsar.id,
       verificationToken: dsar.verificationToken,
@@ -377,6 +406,7 @@ export async function completeDsar(dsarId: string, responseContent: string) {
       id: dsarId,
       website: { userId: session.user.id },
     },
+    include: { website: { include: { user: true } } },
   });
 
   if (!dsar) {
@@ -402,7 +432,17 @@ export async function completeDsar(dsarId: string, responseContent: string) {
       },
     });
 
-    // TODO: Send response email to requester
+    // Send response email to requester (fire-and-forget)
+    const requestTypeLabel = DSAR_REQUEST_TYPES[dsar.requestType as DsarRequestType]?.label ?? dsar.requestType;
+    sendDsarResponseEmail({
+      to: dsar.requesterEmail,
+      requesterName: dsar.requesterName,
+      requestTypeLabel,
+      referenceId: dsar.id,
+      websiteName: dsar.website.name,
+      companyName: dsar.website.user.companyName || null,
+      responseContent,
+    }).catch((err) => console.error('[DSAR] Failed to send response email:', err));
 
     revalidatePath("/dashboard/dsar");
     revalidatePath(`/dashboard/dsar/${dsarId}`);
@@ -429,6 +469,7 @@ export async function rejectDsar(dsarId: string, reason: string) {
       id: dsarId,
       website: { userId: session.user.id },
     },
+    include: { website: { include: { user: true } } },
   });
 
   if (!dsar) {
@@ -454,7 +495,17 @@ export async function rejectDsar(dsarId: string, reason: string) {
       },
     });
 
-    // TODO: Send rejection email to requester
+    // Send rejection email to requester (fire-and-forget)
+    const requestTypeLabel = DSAR_REQUEST_TYPES[dsar.requestType as DsarRequestType]?.label ?? dsar.requestType;
+    sendDsarRejectionEmail({
+      to: dsar.requesterEmail,
+      requesterName: dsar.requesterName,
+      requestTypeLabel,
+      referenceId: dsar.id,
+      websiteName: dsar.website.name,
+      companyName: dsar.website.user.companyName || null,
+      reason,
+    }).catch((err) => console.error('[DSAR] Failed to send rejection email:', err));
 
     revalidatePath("/dashboard/dsar");
     revalidatePath(`/dashboard/dsar/${dsarId}`);

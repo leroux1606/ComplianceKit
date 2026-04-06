@@ -663,6 +663,180 @@ No long-term commitment — cancel any time.
 }
 
 /**
+ * Send DSAR response email to the requester when request is completed (A3)
+ */
+export async function sendDsarResponseEmail(params: {
+  to: string;
+  requesterName: string | null;
+  requestTypeLabel: string;
+  referenceId: string;
+  websiteName: string;
+  companyName: string | null;
+  responseContent: string;
+}): Promise<void> {
+  const { to, requesterName, requestTypeLabel, referenceId, websiteName, companyName, responseContent } = params;
+  const displayName = requesterName || 'there';
+  const displayCompany = companyName || websiteName;
+  const shortRef = referenceId.slice(0, 8).toUpperCase();
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@compliancekit.app';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .response-box { background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0; white-space: pre-wrap; font-size: 14px; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Your Request Has Been Completed</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${displayName},</p>
+            <p><strong>${displayCompany}</strong> has responded to your <strong>${requestTypeLabel}</strong> request (Ref: ${shortRef}).</p>
+
+            <p><strong>Response from ${displayCompany}:</strong></p>
+            <div class="response-box">${responseContent}</div>
+
+            <p>If you are not satisfied with this response, you have the right to lodge a complaint with your local data protection authority.</p>
+            <p>If you have further questions, please contact ${displayCompany} directly and quote your reference number <strong>${shortRef}</strong>.</p>
+          </div>
+          <div class="footer">
+            <p>This message was sent by ComplianceKit on behalf of ${displayCompany}</p>
+            <p>Questions about this service? <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Your ${requestTypeLabel} Request Has Been Completed — Ref: ${shortRef}
+
+Hi ${displayName},
+
+${displayCompany} has responded to your request.
+
+Their response:
+${responseContent}
+
+If you are not satisfied with this response, you have the right to lodge a complaint with your local data protection authority.
+
+Please quote reference ${shortRef} in any follow-up correspondence.
+
+---
+This message was sent by ComplianceKit on behalf of ${displayCompany}
+  `.trim();
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Your data request has been completed — Ref: ${shortRef}`,
+      html,
+      text,
+    });
+  } catch (err) {
+    console.error('[DSAR] Failed to send response email:', err);
+  }
+}
+
+/**
+ * Send DSAR rejection email to the requester (A4)
+ */
+export async function sendDsarRejectionEmail(params: {
+  to: string;
+  requesterName: string | null;
+  requestTypeLabel: string;
+  referenceId: string;
+  websiteName: string;
+  companyName: string | null;
+  reason: string;
+}): Promise<void> {
+  const { to, requesterName, requestTypeLabel, referenceId, websiteName, companyName, reason } = params;
+  const displayName = requesterName || 'there';
+  const displayCompany = companyName || websiteName;
+  const shortRef = referenceId.slice(0, 8).toUpperCase();
+  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@compliancekit.app';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .reason-box { background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0; white-space: pre-wrap; font-size: 14px; }
+          .info { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Your Request Could Not Be Fulfilled</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${displayName},</p>
+            <p><strong>${displayCompany}</strong> has reviewed your <strong>${requestTypeLabel}</strong> request (Ref: ${shortRef}) and was unable to fulfil it for the following reason:</p>
+
+            <div class="reason-box">${reason}</div>
+
+            <div class="info">
+              <strong>Your rights under GDPR</strong><br>
+              If you believe this decision is incorrect, you have the right to lodge a complaint with your local data protection authority (e.g. ICO in the UK, CNIL in France, or the Information Regulator in South Africa).
+            </div>
+
+            <p>If you have further questions, please contact ${displayCompany} directly and quote your reference number <strong>${shortRef}</strong>.</p>
+          </div>
+          <div class="footer">
+            <p>This message was sent by ComplianceKit on behalf of ${displayCompany}</p>
+            <p>Questions about this service? <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Your ${requestTypeLabel} Request — Ref: ${shortRef}
+
+Hi ${displayName},
+
+${displayCompany} has reviewed your request and was unable to fulfil it.
+
+Reason:
+${reason}
+
+YOUR RIGHTS: If you believe this decision is incorrect, you have the right to lodge a complaint with your local data protection authority.
+
+Please quote reference ${shortRef} in any follow-up correspondence.
+
+---
+This message was sent by ComplianceKit on behalf of ${displayCompany}
+  `.trim();
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Update on your data request — Ref: ${shortRef}`,
+      html,
+      text,
+    });
+  } catch (err) {
+    console.error('[DSAR] Failed to send rejection email:', err);
+  }
+}
+
+/**
  * Send account deletion confirmation email
  */
 export async function sendAccountDeletionEmail(email: string, userName?: string | null) {
