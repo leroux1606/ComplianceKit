@@ -22,11 +22,12 @@ export const metadata: Metadata = {
 };
 
 interface CheckoutPageProps {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; billing?: string }>;
 }
 
 export default async function CheckoutPage({ searchParams }: CheckoutPageProps) {
-  const { plan: planSlug } = await searchParams;
+  const { plan: planSlug, billing: billingParam } = await searchParams;
+  const billing = billingParam === "annual" ? "annual" : "monthly";
 
   if (!planSlug) {
     redirect("/pricing");
@@ -67,13 +68,20 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
             <div>
               <p className="font-semibold text-lg">{plan.name} Plan</p>
               <p className="text-sm text-muted-foreground">
-                Billed {plan.interval}
+                Billed {billing === "annual" ? "annually" : "monthly"}
               </p>
+              {billing === "annual" && (
+                <p className="text-xs text-green-600 font-medium mt-0.5">
+                  Save R{(plan.price * 12 - plan.yearlyPrice).toLocaleString()} vs monthly
+                </p>
+              )}
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">R{plan.price}</p>
+              <p className="text-2xl font-bold">
+                R{billing === "annual" ? plan.yearlyPrice.toLocaleString() : plan.price}
+              </p>
               <p className="text-sm text-muted-foreground">
-                per {plan.interval === "monthly" ? "month" : "year"}
+                per {billing === "annual" ? "year" : "month"}
               </p>
             </div>
           </div>
@@ -119,9 +127,11 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
               <p className="text-sm font-medium text-muted-foreground mb-3">Pay in ZAR (South Africa)</p>
               <div className="flex items-center justify-between mb-4">
                 <p className="font-semibold">Total due today</p>
-                <p className="text-2xl font-bold">R{plan.price}</p>
+                <p className="text-2xl font-bold">
+                  R{billing === "annual" ? plan.yearlyPrice.toLocaleString() : plan.price}
+                </p>
               </div>
-              <CheckoutButton planSlug={plan.slug} planName={plan.name} />
+              <CheckoutButton planSlug={plan.slug} planName={plan.name} billing={billing} />
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                 <Shield className="h-4 w-4" />
                 <p>Secure payment powered by PayStack</p>

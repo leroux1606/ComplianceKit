@@ -14,6 +14,7 @@ import {
 import { ScanButton } from "@/components/dashboard/scan-button";
 import { getWebsite } from "@/lib/actions/website";
 import { getWebsiteScans } from "@/lib/actions/scan";
+import { classifyScanError } from "@/lib/scan-errors";
 import { formatDateTime } from "@/lib/utils";
 
 interface ScanPageProps {
@@ -175,13 +176,28 @@ export default async function ScanPage({ params }: ScanPageProps) {
                       </div>
                     </div>
                   </div>
-                  {scan.status === "completed" && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/websites/${id}/scans/${scan.id}`}>
-                        View Results
-                      </Link>
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {scan.status === "failed" && (
+                      <div className="text-right mr-2 max-w-xs">
+                        <p className="text-xs text-destructive font-medium">
+                          {classifyScanError(scan.error).title}
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {classifyScanError(scan.error).description}
+                        </p>
+                      </div>
+                    )}
+                    {scan.status === "failed" && classifyScanError(scan.error).canRetry && (
+                      <ScanButton websiteId={id} variant="outline" size="sm" />
+                    )}
+                    {scan.status === "completed" && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/dashboard/websites/${id}/scans/${scan.id}`}>
+                          View Results
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

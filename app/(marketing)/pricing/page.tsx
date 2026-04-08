@@ -1,36 +1,16 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Check, X, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PLANS, formatFeatureValue } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
 import { auth } from "@/lib/auth";
+import { PricingToggle } from "@/components/marketing/pricing-toggle";
 
 export const metadata: Metadata = {
   title: "Pricing | ComplianceKit",
   description: "Choose the right plan for your GDPR compliance needs",
-};
-
-const featureLabels: Record<string, string> = {
-  maxWebsites: "Websites",
-  maxScansPerMonth: "Scans per month",
-  cookieBanner: "Cookie consent banner",
-  policyGenerator: "Policy generator",
-  dsarManagement: "DSAR management",
-  customBranding: "Custom branding",
-  prioritySupport: "Priority support",
-  apiAccess: "API access",
-  teamMembers: "Team members",
-  dataRetentionDays: "Data retention (days)",
 };
 
 export default async function PricingPage() {
@@ -83,90 +63,7 @@ export default async function PricingPage() {
       {/* Pricing Cards */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
-            {PLANS.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`relative flex flex-col ${
-                  plan.popular
-                    ? "border-primary shadow-lg scale-105"
-                    : "border-border"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-8 pt-6">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription className="min-h-[40px]">
-                    {plan.description}
-                  </CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">
-                      ${plan.priceUsd}
-                    </span>
-                    <span className="text-muted-foreground">
-                      /{plan.interval === "monthly" ? "mo" : "yr"}
-                    </span>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Billed as R{plan.price} via Paystack
-                    </p>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3">
-                    {Object.entries(plan.features).map(([key, value]) => {
-                      const isEnabled =
-                        typeof value === "boolean" ? value : value !== 0;
-                      return (
-                        <li
-                          key={key}
-                          className={`flex items-center gap-2 text-sm ${
-                            !isEnabled ? "text-muted-foreground" : ""
-                          }`}
-                        >
-                          {isEnabled ? (
-                            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          )}
-                          <span>
-                            {featureLabels[key]}
-                            {typeof value === "number" && value !== 0 && (
-                              <span className="font-medium ml-1">
-                                ({formatFeatureValue(value)})
-                              </span>
-                            )}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </CardContent>
-                <CardFooter className="pt-6">
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                    asChild
-                  >
-                    <Link
-                      href={
-                        session
-                          ? `/dashboard/billing/checkout?plan=${plan.slug}`
-                          : `/sign-up?plan=${plan.slug}`
-                      }
-                    >
-                      Get Started
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <PricingToggle plans={PLANS} isSignedIn={!!session} />
         </div>
       </section>
 

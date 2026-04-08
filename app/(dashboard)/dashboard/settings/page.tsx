@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CompanyDetailsForm } from "@/components/dashboard/company-details-form";
 import { getUserCompanyDetails } from "@/lib/actions/user";
 import { AccountDeletionSection } from "@/components/dashboard/account-deletion-section";
+import { ApiKeySection } from "@/components/dashboard/api-key-section";
+import { getApiKey } from "@/lib/actions/api-key";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -19,6 +21,10 @@ export default async function SettingsPage() {
   }
 
   const companyDetails = await getUserCompanyDetails();
+  const apiKey = await getApiKey();
+  const maskedKey = apiKey
+    ? apiKey.slice(0, 12) + "•".repeat(Math.max(0, apiKey.length - 16)) + apiKey.slice(-4)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -64,6 +70,20 @@ export default async function SettingsPage() {
           <p className="pt-2 text-xs">
             <strong>Note:</strong> These details are optional but recommended for generating accurate, professional policies.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* API Key */}
+      <Card>
+        <CardHeader>
+          <CardTitle>API Key</CardTitle>
+          <CardDescription>
+            Use your API key to access the ComplianceKit REST API programmatically.
+            Requires a Professional or Enterprise plan.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ApiKeySection hasKey={!!apiKey} maskedKey={maskedKey} />
         </CardContent>
       </Card>
 

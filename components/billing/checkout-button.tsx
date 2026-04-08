@@ -10,16 +10,17 @@ import { initializeSubscription } from "@/lib/actions/subscription";
 interface CheckoutButtonProps {
   planSlug: string;
   planName: string;
+  billing?: "monthly" | "annual";
 }
 
-export function CheckoutButton({ planSlug, planName }: CheckoutButtonProps) {
+export function CheckoutButton({ planSlug, planName, billing = "monthly" }: CheckoutButtonProps) {
   const [isPending, setIsPending] = useState(false);
 
   async function handleCheckout() {
     setIsPending(true);
 
     try {
-      const result = await initializeSubscription(planSlug);
+      const result = await initializeSubscription(planSlug, billing);
 
       if (result.error) {
         toast.error(result.error);

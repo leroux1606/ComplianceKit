@@ -60,7 +60,7 @@ export async function getUserFeatures(): Promise<PlanFeatures> {
 /**
  * Initialize subscription checkout
  */
-export async function initializeSubscription(planSlug: string) {
+export async function initializeSubscription(planSlug: string, billing: "monthly" | "annual" = "monthly") {
   const session = await auth();
 
   if (!session?.user?.id || !session.user.email) {
@@ -72,6 +72,10 @@ export async function initializeSubscription(planSlug: string) {
   if (!plan) {
     return { error: "Invalid plan" };
   }
+
+  const isAnnual = billing === "annual";
+  const planCode = isAnnual ? plan.paystackYearlyPlanCode : plan.paystackPlanCode;
+  const amount = isAnnual ? plan.yearlyPrice : plan.price;
 
   try {
     // Create or get PayStack customer
@@ -92,13 +96,14 @@ export async function initializeSubscription(planSlug: string) {
     // Initialize transaction with plan
     const transaction = await initializeTransaction({
       email: session.user.email,
-      amount: toKobo(plan.price),
-      plan: plan.paystackPlanCode,
+      amount: toKobo(amount),
+      plan: planCode,
       callback_url: `${APP_URL}/dashboard/billing/callback`,
       metadata: {
         userId: session.user.id,
         planId: plan.id,
         planSlug: plan.slug,
+        billing,
         customerCode: customer.customer_code,
       },
     });

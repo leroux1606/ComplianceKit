@@ -26,6 +26,7 @@ model User {
   ageVerifiedAt  DateTime?
   consentedAt    DateTime?
   dpaAcceptedAt  DateTime?
+  apiKey         String?   @unique
   accounts       Account[]
   sessions       Session[]
   subscription   Subscription?

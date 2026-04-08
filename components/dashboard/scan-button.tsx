@@ -58,7 +58,9 @@ export function ScanButton({
           clearInterval(intervalRef.current!);
           intervalRef.current = null;
           setPhase("idle");
-          toast.error(data.error || "Scan failed. Please try again.");
+          const { classifyScanError } = await import("@/lib/scan-errors");
+          const info = classifyScanError(data.error);
+          toast.error(`${info.title}: ${info.description}`, { duration: 8000 });
         }
       } catch {
         // Network hiccup — keep polling

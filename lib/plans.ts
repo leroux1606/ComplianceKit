@@ -21,12 +21,16 @@ export interface Plan {
   name: string;
   slug: string;
   description: string;
-  price: number; // in ZAR (used for Paystack billing)
-  priceUsd: number; // approximate USD display price
+  price: number; // in ZAR monthly (used for Paystack billing)
+  yearlyPrice: number; // in ZAR yearly (20% discount, billed annually)
+  priceUsd: number; // approximate USD monthly display price
+  yearlyPriceUsd: number; // approximate USD yearly display price
   currency: string;
   interval: "monthly" | "yearly";
   paystackPlanCode: string;
-  stripePriceId: string; // Stripe price ID for USD billing
+  paystackYearlyPlanCode: string; // PayStack annual plan code
+  stripePriceId: string; // Stripe monthly price ID
+  stripeYearlyPriceId: string; // Stripe annual price ID
   features: PlanFeatures;
   popular?: boolean;
 }
@@ -38,11 +42,15 @@ export const PLANS: Plan[] = [
     slug: "starter",
     description: "Perfect for small websites and blogs",
     price: 299,
+    yearlyPrice: 2870, // 299 * 12 * 0.8
     priceUsd: 16,
+    yearlyPriceUsd: 154, // 16 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_STARTER_PLAN_CODE || "PLN_starter",
+    paystackYearlyPlanCode: process.env.PAYSTACK_STARTER_YEARLY_PLAN_CODE || "PLN_starter_yearly",
     stripePriceId: process.env.STRIPE_STARTER_PRICE_ID || "",
+    stripeYearlyPriceId: process.env.STRIPE_STARTER_YEARLY_PRICE_ID || "",
     features: {
       maxWebsites: 1,
       maxScansPerMonth: 10,
@@ -62,11 +70,15 @@ export const PLANS: Plan[] = [
     slug: "professional",
     description: "For growing businesses with multiple websites",
     price: 799,
+    yearlyPrice: 7670, // 799 * 12 * 0.8
     priceUsd: 43,
+    yearlyPriceUsd: 413, // 43 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_PROFESSIONAL_PLAN_CODE || "PLN_professional",
+    paystackYearlyPlanCode: process.env.PAYSTACK_PROFESSIONAL_YEARLY_PLAN_CODE || "PLN_professional_yearly",
     stripePriceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || "",
+    stripeYearlyPriceId: process.env.STRIPE_PROFESSIONAL_YEARLY_PRICE_ID || "",
     features: {
       maxWebsites: 5,
       maxScansPerMonth: 50,
@@ -87,11 +99,15 @@ export const PLANS: Plan[] = [
     slug: "enterprise",
     description: "For large organizations with advanced needs",
     price: 1999,
+    yearlyPrice: 19190, // 1999 * 12 * 0.8
     priceUsd: 109,
+    yearlyPriceUsd: 1046, // 109 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_ENTERPRISE_PLAN_CODE || "PLN_enterprise",
+    paystackYearlyPlanCode: process.env.PAYSTACK_ENTERPRISE_YEARLY_PLAN_CODE || "PLN_enterprise_yearly",
     stripePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || "",
+    stripeYearlyPriceId: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || "",
     features: {
       maxWebsites: -1, // Unlimited
       maxScansPerMonth: -1, // Unlimited
