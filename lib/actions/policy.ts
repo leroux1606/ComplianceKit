@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getUserFeatures } from "@/lib/actions/subscription";
 import { getTeamContext, canWrite } from "@/lib/team-context";
+import { generateAiPolicyContent } from "@/lib/ai-policy";
 import type { Policy } from "@prisma/client";
 import type { CompanyInfoInput } from "@/lib/validations";
 
@@ -117,6 +118,151 @@ export async function generatePolicy(
       htmlContent,
       version,
       isActive: true,
+    },
+  });
+
+  revalidatePath(`/dashboard/websites/${websiteId}`);
+  revalidatePath(`/dashboard/policies`);
+  return { success: true, policy };
+}
+
+/**
+ * Generate an AI-powered policy using Claude.
+ * Gated behind Professional/Enterprise (aiPolicyGenerator feature flag).
+ */
+export async function generateAiPolicy(
+  websiteId: string,
+  type: PolicyType
+): Promise<{ success: true; policy: Policy } | { success: false; error: string }> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+  const features = await getUserFeatures();
+  if (!features.aiPolicyGenerator) {
+    return {
+      success: false,
+      error: "AI policy generation requires a Professional or Enterprise plan. Please upgrade.",
+    };
+  }
+
+  const { ownerId, role } = await getTeamContext(session.user.id);
+  if (!canWrite(role)) return { success: false, error: "Read-only access." };
+
+  // Load owner's company details
+  const user = await db.user.findUnique({
+    where: { id: ownerId },
+    select: {
+      companyName: true,
+      companyAddress: true,
+      companyEmail: true,
+      dpoName: true,
+      dpoEmail: true,
+    },
+  });
+
+  // Load website with latest scan
+  const website = await db.website.findFirst({
+    where: { id: websiteId, userId: ownerId },
+    include: {
+      scans: {
+        where: { status: "completed" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: {
+          cookies: true,
+          scripts: true,
+          findings: true,
+        },
+      },
+    },
+  });
+
+  if (!website) return { success: false, error: "Website not found" };
+
+  const latestScan = website.scans[0];
+  if (!latestScan) {
+    return {
+      success: false,
+      error: "No completed scan found. Please run a scan first.",
+    };
+  }
+
+  const mergedDetails = {
+    companyName: user?.companyName || website.companyName || website.name,
+    companyAddress: user?.companyAddress || website.companyAddress || "",
+    companyEmail:
+      user?.companyEmail || website.companyEmail || website.dpoEmail || "privacy@example.com",
+    dpoName: user?.dpoName || website.dpoName || "",
+    dpoEmail:
+      user?.dpoEmail ||
+      website.dpoEmail ||
+      user?.companyEmail ||
+      website.companyEmail ||
+      "",
+  };
+
+  // Deactivate previous versions
+  await db.policy.updateMany({
+    where: { websiteId, type, isActive: true },
+    data: { isActive: false },
+  });
+
+  // Call Claude
+  let content: string;
+  try {
+    content = await generateAiPolicyContent(type, {
+      websiteName: website.name,
+      websiteUrl: website.url,
+      websiteDescription: website.description ?? undefined,
+      ...mergedDetails,
+      cookies: latestScan.cookies.map((c) => ({
+        name: c.name,
+        domain: c.domain,
+        category: c.category ?? undefined,
+        description: c.description ?? undefined,
+        expires: c.expires,
+      })),
+      scripts: latestScan.scripts.map((s) => ({
+        name: s.name,
+        url: s.url,
+        category: s.category,
+      })),
+      findings: latestScan.findings.map((f) => ({
+        type: f.type,
+        severity: f.severity,
+        title: f.title,
+      })),
+      hasPrivacyPolicy: !latestScan.findings.some((f) => f.type === "privacy_policy"),
+      hasCookieBanner: !latestScan.findings.some((f) => f.type === "cookie_banner"),
+      complianceScore: latestScan.score ?? 0,
+      ccpaScore: latestScan.ccpaScore,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI generation failed";
+    return { success: false, error: message };
+  }
+
+  // Convert markdown to HTML
+  const htmlContent = markdownToHtml(
+    content,
+    type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy"
+  );
+
+  const previousPolicy = await db.policy.findFirst({
+    where: { websiteId, type },
+    orderBy: { version: "desc" },
+  });
+  const version = (previousPolicy?.version || 0) + 1;
+
+  const policy = await db.policy.create({
+    data: {
+      websiteId,
+      type,
+      content,
+      htmlContent,
+      version,
+      isActive: true,
+      isAiGenerated: true,
     },
   });
 

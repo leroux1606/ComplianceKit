@@ -2,43 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generatePolicy } from "@/lib/actions/policy";
+import { Badge } from "@/components/ui/badge";
+import { generateAiPolicy } from "@/lib/actions/policy";
 
-interface GeneratePolicyButtonProps {
+interface GenerateAiPolicyButtonProps {
   websiteId: string;
   type: "privacy_policy" | "cookie_policy";
   className?: string;
-  variant?: "default" | "outline" | "secondary" | "ghost";
 }
 
-export function GeneratePolicyButton({
+export function GenerateAiPolicyButton({
   websiteId,
   type,
   className,
-  variant = "default",
-}: GeneratePolicyButtonProps) {
+}: GenerateAiPolicyButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const router = useRouter();
 
   async function handleGenerate() {
     setIsGenerating(true);
-
     try {
-      const result = await generatePolicy(websiteId, type);
-
+      const result = await generateAiPolicy(websiteId, type);
       if (!result.success) {
-        alert(result.error || "Failed to generate policy");
+        alert(result.error || "AI generation failed");
         setIsGenerating(false);
         return;
       }
-
       router.refresh();
       router.push(`/dashboard/websites/${websiteId}/policies/${result.policy.id}`);
     } catch (error) {
-      console.error("Failed to generate policy:", error);
-      alert(`Failed to generate policy: ${(error as Error).message}`);
+      alert(`Failed: ${(error as Error).message}`);
       setIsGenerating(false);
     }
   }
@@ -49,18 +44,21 @@ export function GeneratePolicyButton({
     <Button
       onClick={handleGenerate}
       disabled={isGenerating}
-      variant={variant}
+      variant="default"
       className={className}
     >
       {isGenerating ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Generating...
+          Generating with AI…
         </>
       ) : (
         <>
-          <FileText className="mr-2 h-4 w-4" />
-          Generate {label}
+          <Sparkles className="mr-2 h-4 w-4" />
+          AI {label}
+          <Badge variant="secondary" className="ml-2 text-xs py-0 px-1.5">
+            New
+          </Badge>
         </>
       )}
     </Button>

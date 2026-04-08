@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { getWebsite } from "@/lib/actions/website";
 import { getPolicies } from "@/lib/actions/policy";
+import { getUserFeatures } from "@/lib/actions/subscription";
 import { GeneratePolicyButton } from "@/components/dashboard/generate-policy-button";
+import { GenerateAiPolicyButton } from "@/components/dashboard/generate-ai-policy-button";
 import { formatDate } from "@/lib/utils";
 
 interface WebsitePoliciesPageProps {
@@ -35,12 +37,17 @@ export default async function WebsitePoliciesPage({
   params,
 }: WebsitePoliciesPageProps) {
   const { id } = await params;
-  const website = await getWebsite(id);
-  const policies = await getPolicies(id);
+  const [website, policies, features] = await Promise.all([
+    getWebsite(id),
+    getPolicies(id),
+    getUserFeatures(),
+  ]);
 
   if (!website) {
     notFound();
   }
+
+  const hasAiGenerator = features.aiPolicyGenerator;
 
   const privacyPolicies = policies.filter((p) => p.type === "privacy_policy");
   const cookiePolicies = policies.filter((p) => p.type === "cookie_policy");
@@ -74,7 +81,7 @@ export default async function WebsitePoliciesPage({
       {/* Privacy Policy Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
@@ -84,7 +91,12 @@ export default async function WebsitePoliciesPage({
                 GDPR-compliant privacy policy based on your website's data collection
               </CardDescription>
             </div>
-            <GeneratePolicyButton websiteId={id} type="privacy_policy" />
+            <div className="flex items-center gap-2 shrink-0">
+              {hasAiGenerator && (
+                <GenerateAiPolicyButton websiteId={id} type="privacy_policy" />
+              )}
+              <GeneratePolicyButton websiteId={id} type="privacy_policy" variant={hasAiGenerator ? "outline" : "default"} />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -95,11 +107,16 @@ export default async function WebsitePoliciesPage({
               <p className="text-muted-foreground mt-2">
                 Generate a GDPR-compliant privacy policy based on your latest scan results
               </p>
-              <GeneratePolicyButton
-                websiteId={id}
-                type="privacy_policy"
-                className="mt-4"
-              />
+              <div className="flex justify-center gap-2 mt-4">
+                {hasAiGenerator && (
+                  <GenerateAiPolicyButton websiteId={id} type="privacy_policy" />
+                )}
+                <GeneratePolicyButton
+                  websiteId={id}
+                  type="privacy_policy"
+                  variant={hasAiGenerator ? "outline" : "default"}
+                />
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -139,7 +156,7 @@ export default async function WebsitePoliciesPage({
       {/* Cookie Policy Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
@@ -149,7 +166,12 @@ export default async function WebsitePoliciesPage({
                 Detailed cookie policy explaining all cookies used on your website
               </CardDescription>
             </div>
-            <GeneratePolicyButton websiteId={id} type="cookie_policy" />
+            <div className="flex items-center gap-2 shrink-0">
+              {hasAiGenerator && (
+                <GenerateAiPolicyButton websiteId={id} type="cookie_policy" />
+              )}
+              <GeneratePolicyButton websiteId={id} type="cookie_policy" variant={hasAiGenerator ? "outline" : "default"} />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -160,11 +182,16 @@ export default async function WebsitePoliciesPage({
               <p className="text-muted-foreground mt-2">
                 Generate a comprehensive cookie policy based on detected cookies
               </p>
-              <GeneratePolicyButton
-                websiteId={id}
-                type="cookie_policy"
-                className="mt-4"
-              />
+              <div className="flex justify-center gap-2 mt-4">
+                {hasAiGenerator && (
+                  <GenerateAiPolicyButton websiteId={id} type="cookie_policy" />
+                )}
+                <GeneratePolicyButton
+                  websiteId={id}
+                  type="cookie_policy"
+                  variant={hasAiGenerator ? "outline" : "default"}
+                />
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -201,26 +228,47 @@ export default async function WebsitePoliciesPage({
         </CardContent>
       </Card>
 
+      {/* AI Upsell — shown only when AI generator not available */}
+      {!hasAiGenerator && (
+        <Card className="border-purple-500/20 bg-purple-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base text-purple-700 dark:text-purple-300">
+              <Plus className="h-4 w-4" />
+              AI-Powered Policy Generation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-2">
+            <p>
+              Upgrade to <strong>Professional</strong> to generate custom policies written by Claude AI.
+              Unlike templates, AI-generated policies are tailored to your specific data practices,
+              cookie inventory, and company context.
+            </p>
+            <Button asChild size="sm" variant="outline" className="mt-2">
+              <Link href="/dashboard/billing">Upgrade to Professional</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Help Section */}
       <Card className="bg-muted/50">
         <CardHeader>
           <CardTitle className="text-base">About Policy Generation</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>
-            • Policies are automatically generated based on your latest website scan results
-          </p>
-          <p>
-            • Each time you generate a policy, a new version is created and marked as active
-          </p>
-          <p>
-            • Privacy policies cover data collection, user rights, and GDPR compliance
-          </p>
-          <p>
-            • Cookie policies list all detected cookies with their purposes and durations
-          </p>
+          {hasAiGenerator ? (
+            <>
+              <p>• <strong className="text-foreground">AI Policy</strong> — written by Claude AI using your actual scan data: specific cookies, third-party services, and company details. More natural and specific than a template.</p>
+              <p>• <strong className="text-foreground">Template Policy</strong> — structured template populated with your scan data. Faster, no AI credits used.</p>
+            </>
+          ) : (
+            <p>• Policies are generated from a template populated with your website scan results and company details.</p>
+          )}
+          <p>• Each generation creates a new version; the latest is marked Active.</p>
+          <p>• Privacy policies cover data collection, user rights, and GDPR compliance.</p>
+          <p>• Cookie policies list all detected cookies with their purposes and durations.</p>
           <p className="pt-2 text-xs">
-            <strong>Note:</strong> Generated policies are templates and should be reviewed by legal counsel before publication.
+            <strong>Note:</strong> All generated policies should be reviewed by legal counsel before publication.
           </p>
         </CardContent>
       </Card>

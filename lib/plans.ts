@@ -8,6 +8,7 @@ export interface PlanFeatures {
   maxScansPerMonth: number;
   cookieBanner: boolean;
   policyGenerator: boolean;
+  aiPolicyGenerator: boolean;
   dsarManagement: boolean;
   customBranding: boolean;
   prioritySupport: boolean;
@@ -56,6 +57,7 @@ export const PLANS: Plan[] = [
       maxScansPerMonth: 10,
       cookieBanner: true,
       policyGenerator: true,
+      aiPolicyGenerator: false,
       dsarManagement: false,
       customBranding: false,
       prioritySupport: false,
@@ -84,6 +86,7 @@ export const PLANS: Plan[] = [
       maxScansPerMonth: 50,
       cookieBanner: true,
       policyGenerator: true,
+      aiPolicyGenerator: true,
       dsarManagement: true,
       customBranding: true,
       prioritySupport: false,
@@ -113,6 +116,7 @@ export const PLANS: Plan[] = [
       maxScansPerMonth: -1, // Unlimited
       cookieBanner: true,
       policyGenerator: true,
+      aiPolicyGenerator: true,
       dsarManagement: true,
       customBranding: true,
       prioritySupport: true,
@@ -131,6 +135,7 @@ export const FREE_TIER: PlanFeatures = {
   maxScansPerMonth: 3,
   cookieBanner: true,
   policyGenerator: false,
+  aiPolicyGenerator: false,
   dsarManagement: true, // GDPR compliance requires handling data requests
   customBranding: false,
   prioritySupport: false,

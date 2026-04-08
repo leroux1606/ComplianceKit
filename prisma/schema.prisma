@@ -216,17 +216,18 @@ model Consent {
 }
 
 model Policy {
-  id          String   @id @default(cuid())
-  websiteId   String
-  type        String
-  language    String   @default("en")
-  content     String
-  htmlContent String?
-  version     Int      @default(1)
-  isActive    Boolean  @default(true)
-  generatedAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  websiteId      String
+  type           String
+  language       String   @default("en")
+  content        String
+  htmlContent    String?
+  version        Int      @default(1)
+  isActive       Boolean  @default(true)
+  isAiGenerated  Boolean  @default(false)
+  generatedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  website        Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
   @@index([websiteId])
   @@index([websiteId, type, isActive])
