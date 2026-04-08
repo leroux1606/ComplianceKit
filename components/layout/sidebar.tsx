@@ -12,10 +12,12 @@ import {
   Shield,
   Inbox,
   BarChart3,
+  Users,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/icons/logo";
+import { AccountSwitcher } from "@/components/layout/account-switcher";
 
 const navigationItems = [
   {
@@ -55,15 +57,36 @@ const navigationItems = [
   },
 ];
 
+const teamNavItem = {
+  key: "team",
+  href: "/dashboard/team",
+  icon: Users,
+};
+
+interface Membership {
+  id: string;
+  role: string;
+  owner: { id: string; name: string | null; email: string; companyName: string | null };
+}
+
 interface SidebarProps {
   planName: string;
   maxWebsites: number;
+  maxTeamMembers: number;
+  teamMemberships: Membership[];
+  activeOwnerId: string | null;
+  currentUserEmail: string;
 }
 
-export function Sidebar({ planName, maxWebsites }: SidebarProps) {
+export function Sidebar({ planName, maxWebsites, maxTeamMembers, teamMemberships, activeOwnerId, currentUserEmail }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("navigation");
   const tBilling = useTranslations("billing");
+
+  // Combine standard nav items + team (if plan allows)
+  const navItems = maxTeamMembers !== 1
+    ? [...navigationItems.slice(0, -2), teamNavItem, ...navigationItems.slice(-2)]
+    : navigationItems;
 
   const websiteLabel =
     maxWebsites === -1
@@ -84,7 +107,7 @@ export function Sidebar({ planName, maxWebsites }: SidebarProps) {
         aria-label="Main navigation"
         className="flex-1 space-y-1 px-3 py-4"
       >
-        {navigationItems.map((item) => {
+        {navItems.map((item) => {
           // Exact match for /dashboard, startsWith for others
           const isActive =
             item.href === "/dashboard"
@@ -108,6 +131,17 @@ export function Sidebar({ planName, maxWebsites }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Account switcher (shown if user is a member of other accounts) */}
+      {teamMemberships.length > 0 && (
+        <div className="px-3 pb-2">
+          <AccountSwitcher
+            memberships={teamMemberships}
+            activeOwnerId={activeOwnerId}
+            currentUserEmail={currentUserEmail}
+          />
+        </div>
+      )}
 
       {/* Plan / Upgrade Footer */}
       <div className="border-t p-4">

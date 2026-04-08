@@ -26,11 +26,13 @@ model User {
   ageVerifiedAt  DateTime?
   consentedAt    DateTime?
   dpaAcceptedAt  DateTime?
-  apiKey         String?   @unique
-  accounts       Account[]
-  sessions       Session[]
-  subscription   Subscription?
-  websites       Website[]
+  apiKey           String?   @unique
+  accounts         Account[]
+  sessions         Session[]
+  subscription     Subscription?
+  websites         Website[]
+  ownedTeam        TeamMember[] @relation("OwnedTeam")
+  teamMemberships  TeamMember[] @relation("TeamMemberships")
 
   @@map("users")
 }
@@ -359,6 +361,26 @@ model DsarAttachment {
 
   @@index([dsarId])
   @@map("dsar_attachments")
+}
+
+model TeamMember {
+  id          String    @id @default(cuid())
+  ownerId     String
+  userId      String?
+  email       String
+  role        String    @default("viewer")
+  status      String    @default("pending")
+  inviteToken String    @unique @default(cuid())
+  invitedAt   DateTime  @default(now())
+  acceptedAt  DateTime?
+  owner       User      @relation("OwnedTeam", fields: [ownerId], references: [id], onDelete: Cascade)
+  user        User?     @relation("TeamMemberships", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([ownerId, email])
+  @@index([ownerId])
+  @@index([userId])
+  @@index([inviteToken])
+  @@map("team_members")
 }
 
 model RateLimitRecord {

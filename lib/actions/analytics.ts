@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getTeamContext } from "@/lib/team-context";
 import {
   type OverallAnalytics,
   type WebsiteAnalytics,
@@ -35,9 +36,11 @@ export async function getOverallAnalytics(
   const startDate = getDateRangeStart(dateRange);
   const endDate = new Date();
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   // Get all user's websites
   const websites = await db.website.findMany({
-    where: { userId: session.user.id },
+    where: { userId: ownerId },
     select: { id: true, name: true },
   });
 
@@ -95,10 +98,12 @@ export async function getWebsiteAnalytics(
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const website = await db.website.findFirst({
     where: {
       id: websiteId,
-      userId: session.user.id,
+      userId: ownerId,
     },
     include: {
       scans: {

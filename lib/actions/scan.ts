@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkPlanLimit } from "@/lib/actions/subscription";
+import { getTeamContext } from "@/lib/team-context";
 import type { Scan, Cookie, Script, Finding } from "@prisma/client";
 
 export type ScanWithRelations = Scan & {
@@ -26,6 +27,8 @@ export async function triggerScan(websiteId: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const limitCheck = await checkPlanLimit("scans");
   if (!limitCheck.allowed) {
     return {
@@ -35,7 +38,7 @@ export async function triggerScan(websiteId: string) {
   }
 
   const website = await db.website.findFirst({
-    where: { id: websiteId, userId: session.user.id },
+    where: { id: websiteId, userId: ownerId },
   });
 
   if (!website) {
@@ -59,11 +62,13 @@ export async function getScan(scanId: string): Promise<ScanWithRelations | null>
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const scan = await db.scan.findFirst({
     where: {
       id: scanId,
       website: {
-        userId: session.user.id,
+        userId: ownerId,
       },
     },
     include: {
@@ -86,11 +91,13 @@ export async function getWebsiteScans(websiteId: string) {
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const scans = await db.scan.findMany({
     where: {
       websiteId,
       website: {
-        userId: session.user.id,
+        userId: ownerId,
       },
     },
     orderBy: {
@@ -120,11 +127,13 @@ export async function deleteScan(scanId: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const scan = await db.scan.findFirst({
     where: {
       id: scanId,
       website: {
-        userId: session.user.id,
+        userId: ownerId,
       },
     },
     include: {

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getUserFeatures } from "@/lib/actions/subscription";
+import { getTeamContext, canWrite } from "@/lib/team-context";
 import type { Policy } from "@prisma/client";
 import type { CompanyInfoInput } from "@/lib/validations";
 
@@ -31,9 +32,12 @@ export async function generatePolicy(
     };
   }
 
-  // Get user's company details
+  const { ownerId, role } = await getTeamContext(session.user.id);
+  if (!canWrite(role)) return { success: false, error: "Read-only access." };
+
+  // Get user's company details (owner's details)
   const user = await db.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: ownerId },
     select: {
       companyName: true,
       companyAddress: true,
@@ -47,7 +51,7 @@ export async function generatePolicy(
   const website = await db.website.findFirst({
     where: {
       id: websiteId,
-      userId: session.user.id,
+      userId: ownerId,
     },
     include: {
       scans: {

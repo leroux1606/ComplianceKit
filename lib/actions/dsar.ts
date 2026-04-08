@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getTeamContext } from "@/lib/team-context";
 import { 
   dsarSubmissionSchema, 
   dsarUpdateSchema,
@@ -182,9 +183,11 @@ export async function getDsarList(): Promise<DsarListItem[]> {
   // Check feature access
   await requireFeature("dsarManagement");
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsars = await db.dataSubjectRequest.findMany({
     where: {
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
     include: {
       website: { select: { name: true } },
@@ -206,10 +209,12 @@ export async function getWebsiteDsars(websiteId: string): Promise<DsarListItem[]
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsars = await db.dataSubjectRequest.findMany({
     where: {
       websiteId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
     include: {
       website: { select: { name: true } },
@@ -231,10 +236,12 @@ export async function getDsar(dsarId: string): Promise<DsarWithRelations | null>
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsar = await db.dataSubjectRequest.findFirst({
     where: {
       id: dsarId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
     include: {
       activities: { orderBy: { createdAt: "desc" } },
@@ -255,6 +262,8 @@ export async function updateDsar(dsarId: string, values: DsarUpdateInput) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const validatedFields = dsarUpdateSchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -264,7 +273,7 @@ export async function updateDsar(dsarId: string, values: DsarUpdateInput) {
   const dsar = await db.dataSubjectRequest.findFirst({
     where: {
       id: dsarId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
   });
 
@@ -361,10 +370,12 @@ export async function addDsarNote(dsarId: string, note: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsar = await db.dataSubjectRequest.findFirst({
     where: {
       id: dsarId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
   });
 
@@ -401,10 +412,12 @@ export async function completeDsar(dsarId: string, responseContent: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsar = await db.dataSubjectRequest.findFirst({
     where: {
       id: dsarId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
     include: { website: { include: { user: true } } },
   });
@@ -464,10 +477,12 @@ export async function rejectDsar(dsarId: string, reason: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const dsar = await db.dataSubjectRequest.findFirst({
     where: {
       id: dsarId,
-      website: { userId: session.user.id },
+      website: { userId: ownerId },
     },
     include: { website: { include: { user: true } } },
   });
@@ -527,31 +542,33 @@ export async function getDsarStats() {
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const [total, pending, inProgress, completed, overdue] = await Promise.all([
     db.dataSubjectRequest.count({
       where: { website: { userId: session.user.id } },
     }),
     db.dataSubjectRequest.count({
       where: { 
-        website: { userId: session.user.id },
+        website: { userId: ownerId },
         status: { in: ["pending", "verified"] },
       },
     }),
     db.dataSubjectRequest.count({
       where: { 
-        website: { userId: session.user.id },
+        website: { userId: ownerId },
         status: "in_progress",
       },
     }),
     db.dataSubjectRequest.count({
       where: { 
-        website: { userId: session.user.id },
+        website: { userId: ownerId },
         status: "completed",
       },
     }),
     db.dataSubjectRequest.count({
       where: { 
-        website: { userId: session.user.id },
+        website: { userId: ownerId },
         status: { notIn: ["completed", "rejected"] },
         dueDate: { lt: new Date() },
       },

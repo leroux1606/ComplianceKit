@@ -1021,3 +1021,70 @@ export async function sendScanScoreDropEmail(params: {
     text: `Compliance score dropped on ${params.websiteName}: ${params.previousScore} to ${params.newScore} (-${drop} pts). View results: ${scanUrl}`,
   });
 }
+
+/**
+ * Send team invitation email
+ */
+export async function sendTeamInviteEmail(params: {
+  to: string;
+  inviterName: string;
+  inviterEmail: string;
+  role: string;
+  acceptUrl: string;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.compliancekit.app';
+  const roleLabel = params.role === "admin" ? "Admin" : "Viewer";
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .role-badge { display: inline-block; background: #e2e8f0; color: #475569; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 8px 0; }
+          .btn { display: inline-block; background: #0f172a; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 20px; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 13px; }
+          .divider { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin:0">You've been invited</h1>
+            <p style="margin:8px 0 0;opacity:0.8">to join a ComplianceKit workspace</p>
+          </div>
+          <div class="content">
+            <p>Hi there,</p>
+            <p><strong>${params.inviterName}</strong> (${params.inviterEmail}) has invited you to join their ComplianceKit account as a team member.</p>
+            <p>Your role: <span class="role-badge">${roleLabel}</span></p>
+            ${params.role === "admin"
+              ? "<p>As an <strong>Admin</strong>, you can manage websites, run scans, generate policies, and handle DSARs on this account.</p>"
+              : "<p>As a <strong>Viewer</strong>, you have read-only access to the account's websites, scans, and policies.</p>"
+            }
+            <hr class="divider" />
+            <p style="text-align:center">
+              <a href="${params.acceptUrl}" class="btn">Accept Invitation</a>
+            </p>
+            <p style="text-align:center;font-size:13px;color:#64748b;margin-top:12px">
+              Or copy this link: <a href="${params.acceptUrl}">${params.acceptUrl}</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+            <p><a href="${appUrl}">ComplianceKit</a> — GDPR Compliance Made Simple</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: params.to,
+    subject: `${params.inviterName} invited you to their ComplianceKit workspace`,
+    html,
+    text: `${params.inviterName} (${params.inviterEmail}) invited you to join their ComplianceKit account as ${roleLabel}. Accept here: ${params.acceptUrl}`,
+  });
+}

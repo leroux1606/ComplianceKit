@@ -7,6 +7,7 @@ import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
 import { validateScanUrl } from "@/lib/ssrf-check";
 import { checkPlanLimit } from "@/lib/actions/subscription";
+import { getTeamContext, canWrite } from "@/lib/team-context";
 import type { Website, Scan, Policy, BannerConfig, Cookie, Script, Finding } from "@prisma/client";
 
 // Types for website with relations
@@ -41,8 +42,10 @@ export async function getWebsites(): Promise<WebsiteWithCounts[]> {
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const websites = await db.website.findMany({
-    where: { userId: session.user.id },
+    where: { userId: ownerId },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {
@@ -61,10 +64,12 @@ export async function getWebsite(id: string): Promise<WebsiteWithDetails | null>
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const website = await db.website.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      userId: ownerId,
     },
     include: {
       scans: {
@@ -101,6 +106,9 @@ export async function createWebsite(values: WebsiteInput) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId, role } = await getTeamContext(session.user.id);
+  if (!canWrite(role)) return { error: "Read-only access. Ask the account owner to add websites." };
+
   // Check plan limits
   const limitCheck = await checkPlanLimit("websites");
   if (!limitCheck.allowed) {
@@ -125,10 +133,10 @@ export async function createWebsite(values: WebsiteInput) {
     return { error: `Invalid URL: ${ssrfCheck.reason}` };
   }
 
-  // Check if website with same URL already exists for this user
+  // Check if website with same URL already exists for this account
   const existingWebsite = await db.website.findFirst({
     where: {
-      userId: session.user.id,
+      userId: ownerId,
       url: normalizedUrl,
     },
   });
@@ -140,10 +148,11 @@ export async function createWebsite(values: WebsiteInput) {
   try {
     const website = await db.website.create({
       data: {
-        userId: session.user.id,
+        userId: ownerId,
         name,
         url: normalizedUrl,
         description: description || null,
+        scanSchedule: values.scanSchedule || "none",
         embedCode: generateEmbedCode(),
       },
     });
@@ -165,11 +174,14 @@ export async function updateWebsite(id: string, values: Partial<WebsiteInput>) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId, role } = await getTeamContext(session.user.id);
+  if (!canWrite(role)) return { error: "Read-only access." };
+
   // Verify ownership
   const existingWebsite = await db.website.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      userId: ownerId,
     },
   });
 
@@ -235,11 +247,14 @@ export async function deleteWebsite(id: string) {
     return { error: "Unauthorized" };
   }
 
+  const { ownerId, role } = await getTeamContext(session.user.id);
+  if (role !== "owner") return { error: "Only the account owner can delete websites." };
+
   // Verify ownership
   const existingWebsite = await db.website.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      userId: ownerId,
     },
   });
 
@@ -269,15 +284,17 @@ export async function getWebsiteStats() {
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   const [websiteCount, policyCount, scanCount, consentCount, bannerConfigCount, firstWebsite] =
     await Promise.all([
-      db.website.count({ where: { userId: session.user.id } }),
-      db.policy.count({ where: { website: { userId: session.user.id } } }),
-      db.scan.count({ where: { website: { userId: session.user.id } } }),
-      db.consent.count({ where: { website: { userId: session.user.id } } }),
-      db.bannerConfig.count({ where: { website: { userId: session.user.id } } }),
+      db.website.count({ where: { userId: ownerId } }),
+      db.policy.count({ where: { website: { userId: ownerId } } }),
+      db.scan.count({ where: { website: { userId: ownerId } } }),
+      db.consent.count({ where: { website: { userId: ownerId } } }),
+      db.bannerConfig.count({ where: { website: { userId: ownerId } } }),
       db.website.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: ownerId },
         orderBy: { createdAt: "asc" },
         select: { id: true },
       }),

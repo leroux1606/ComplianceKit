@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { bannerConfigSchema, type BannerConfigInput } from "@/lib/validations";
 import { generateEmbedCode } from "@/lib/utils";
+import { getTeamContext } from "@/lib/team-context";
 import type { BannerConfig } from "@prisma/client";
 
 /**
@@ -17,11 +18,13 @@ export async function getBannerConfig(websiteId: string): Promise<BannerConfig |
     throw new Error("Unauthorized");
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   // Verify ownership
   const website = await db.website.findFirst({
     where: {
       id: websiteId,
-      userId: session.user.id,
+      userId: ownerId,
     },
     include: {
       bannerConfig: true,
@@ -48,11 +51,13 @@ export async function saveBannerConfig(
     return { error: "Unauthorized" };
   }
 
+  const { ownerId } = await getTeamContext(session.user.id);
+
   // Verify ownership
   const website = await db.website.findFirst({
     where: {
       id: websiteId,
-      userId: session.user.id,
+      userId: ownerId,
     },
   });
 
