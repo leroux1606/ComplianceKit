@@ -42,11 +42,14 @@ Items 3 and 4 above are already done (D5 + E1 from the audit list). Only the hel
 | 3.3 Automated scheduling | ✅ Complete |
 | 3.4 Remediation guidance | ✅ Complete |
 | 3.5 AI policy generation | ✅ Complete |
-| 3.6 Support infrastructure | **⬅ START HERE — final phase** |
-
----
-
-> **Phase 3.6 is the final development phase. There is no Phase 4.**
+| 3.6 Support infrastructure | **⬅ START HERE** |
+| **Phase 4** | **Not started** |
+| 4.1 Chrome extension | Not started |
+| 4.2 Slack / Teams scan alerts | Not started |
+| 4.3 LGPD (Brazil) + PECR (UK) scanner | Not started |
+| 4.4 White-label / agency tier | Not started |
+| 4.5 Mobile app | Not started |
+| 4.6 Multi-tenant reseller model | Not started |
 
 ---
 

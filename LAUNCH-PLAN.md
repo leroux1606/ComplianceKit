@@ -250,9 +250,14 @@ Before any marketing spend, you need a way for customers to get help.
 
 ---
 
-## Phase 4 — Out of scope
+## Phase 4 — Longer Term (Q3–Q4 2026)
 
-Phase 4 items are not being built. Development ends after Phase 3.6.
+- [ ] Chrome extension for quick compliance checks
+- [ ] Slack / Teams integration for scan alerts
+- [ ] LGPD (Brazil) + PECR (UK) compliance scanner
+- [ ] White-label / agency tier
+- [ ] Mobile app
+- [ ] Multi-tenant reseller model
 
 ---
 
