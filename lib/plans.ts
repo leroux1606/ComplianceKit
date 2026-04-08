@@ -26,6 +26,7 @@ export interface Plan {
   currency: string;
   interval: "monthly" | "yearly";
   paystackPlanCode: string;
+  stripePriceId: string; // Stripe price ID for USD billing
   features: PlanFeatures;
   popular?: boolean;
 }
@@ -41,6 +42,7 @@ export const PLANS: Plan[] = [
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_STARTER_PLAN_CODE || "PLN_starter",
+    stripePriceId: process.env.STRIPE_STARTER_PRICE_ID || "",
     features: {
       maxWebsites: 1,
       maxScansPerMonth: 10,
@@ -64,6 +66,7 @@ export const PLANS: Plan[] = [
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_PROFESSIONAL_PLAN_CODE || "PLN_professional",
+    stripePriceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || "",
     features: {
       maxWebsites: 5,
       maxScansPerMonth: 50,
@@ -88,6 +91,7 @@ export const PLANS: Plan[] = [
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_ENTERPRISE_PLAN_CODE || "PLN_enterprise",
+    stripePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || "",
     features: {
       maxWebsites: -1, // Unlimited
       maxScansPerMonth: -1, // Unlimited

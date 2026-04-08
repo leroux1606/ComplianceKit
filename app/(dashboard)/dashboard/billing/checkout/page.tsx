@@ -11,8 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { getPlanBySlug, PLANS } from "@/lib/plans";
 import { CheckoutButton } from "@/components/billing/checkout-button";
+import { StripeCheckoutButton } from "@/components/billing/stripe-checkout-button";
 
 export const metadata: Metadata = {
   title: "Checkout | ComplianceKit",
@@ -112,17 +114,34 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
             </ul>
           </div>
 
-          <div className="pt-4 border-t">
-            <div className="flex items-center justify-between mb-6">
-              <p className="font-semibold">Total due today</p>
-              <p className="text-2xl font-bold">R{plan.price}</p>
+          <div className="pt-4 border-t space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-3">Pay in ZAR (South Africa)</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-semibold">Total due today</p>
+                <p className="text-2xl font-bold">R{plan.price}</p>
+              </div>
+              <CheckoutButton planSlug={plan.slug} planName={plan.name} />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <Shield className="h-4 w-4" />
+                <p>Secure payment powered by PayStack</p>
+              </div>
             </div>
-            <CheckoutButton planSlug={plan.slug} planName={plan.name} />
-          </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Shield className="h-4 w-4" />
-            <p>Secure payment powered by PayStack</p>
+            <Separator />
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-3">Pay in USD (International)</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-semibold">Total due today</p>
+                <p className="text-2xl font-bold">${plan.priceUsd}</p>
+              </div>
+              <StripeCheckoutButton planSlug={plan.slug} planName={plan.name} />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <Shield className="h-4 w-4" />
+                <p>Secure payment powered by Stripe</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

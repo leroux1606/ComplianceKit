@@ -7,7 +7,6 @@ import {
   Check,
   ArrowRight,
   Globe,
-  Lock,
   BarChart3,
   Users,
   Sparkles,
@@ -17,13 +16,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/icons/logo";
 import { MobileNav } from "@/components/marketing/mobile-nav";
+import { PLANS } from "@/lib/plans";
 
 const features = [
   {
     icon: Cookie,
     title: "Cookie Scanner",
     description:
-      "Automatically detect all cookies and tracking scripts on your website with our advanced AI-powered scanning engine.",
+      "Automatically detect all cookies and tracking scripts on your website with our automated scanning engine powered by a real browser.",
     color: "from-purple-500 to-pink-500",
   },
   {
@@ -49,49 +49,31 @@ const features = [
   },
 ];
 
-const pricingPlans = [
-  {
-    name: "Starter",
-    price: "$29",
-    description: "Perfect for small websites and blogs",
-    features: [
-      "1 website",
-      "Monthly compliance scans",
-      "Basic cookie banner",
-      "Privacy policy generator",
-      "Email support",
-    ],
-  },
-  {
-    name: "Professional",
-    price: "$99",
-    description: "For growing businesses and agencies",
-    features: [
-      "5 websites",
-      "Weekly compliance scans",
-      "Custom branded banner",
-      "All policy types",
-      "Priority support",
-      "Analytics dashboard",
-      "DSAR management",
-    ],
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "$299",
-    description: "For large organizations with custom needs",
-    features: [
-      "Unlimited websites",
-      "Daily compliance scans",
-      "White-label solution",
-      "API access",
-      "Dedicated account manager",
-      "Custom integrations",
-      "SLA guarantee",
-    ],
-  },
-];
+const planFeatureLists: Record<string, string[]> = {
+  starter: [
+    "1 website · 10 scans/month",
+    "Cookie consent banner",
+    "Privacy & cookie policy generator",
+    "30-day data retention",
+    "Email support",
+  ],
+  professional: [
+    "5 websites · 50 scans/month",
+    "Everything in Starter",
+    "DSAR management",
+    "Custom branding",
+    "3 team members",
+    "90-day data retention",
+  ],
+  enterprise: [
+    "Unlimited websites & scans",
+    "Everything in Professional",
+    "API access",
+    "Unlimited team members",
+    "365-day data retention",
+    "Priority support",
+  ],
+};
 
 export default function HomePage() {
   return (
@@ -286,12 +268,12 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {pricingPlans.map((plan) => (
+            {PLANS.map((plan) => (
               <div
-                key={plan.name}
+                key={plan.id}
                 className={`relative rounded-2xl border p-8 hover-lift ${
-                  plan.popular 
-                    ? "border-primary/50 bg-gradient-to-b from-primary/10 to-transparent glow-primary" 
+                  plan.popular
+                    ? "border-primary/50 bg-gradient-to-b from-primary/10 to-transparent glow-primary"
                     : "border-border/50 bg-card/50"
                 }`}
               >
@@ -303,30 +285,31 @@ export default function HomePage() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                   <p className="text-muted-foreground text-sm">{plan.description}</p>
                 </div>
-                
+
                 <div className="mb-8">
-                  <span className="text-5xl font-bold">{plan.price}</span>
+                  <span className="text-5xl font-bold">R{plan.price}</span>
                   <span className="text-muted-foreground ml-2">/month</span>
+                  <p className="text-xs text-muted-foreground mt-1">≈ ${plan.priceUsd} USD</p>
                 </div>
-                
+
                 <ul className="mb-8 space-y-4">
-                  {plan.features.map((feature) => (
+                  {(planFeatureLists[plan.slug] ?? []).map((feature) => (
                     <li key={feature} className="flex items-start text-sm">
                       <Check className="mr-3 h-5 w-5 text-primary shrink-0 mt-0.5" />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-                
+
                 <Button
                   className={`w-full rounded-xl py-6 ${
-                    plan.popular 
-                      ? "gradient-primary hover:opacity-90" 
+                    plan.popular
+                      ? "gradient-primary hover:opacity-90"
                       : "bg-secondary hover:bg-secondary/80"
                   }`}
                   asChild
