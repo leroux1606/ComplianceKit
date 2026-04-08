@@ -108,7 +108,100 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 
 ---
 
+## LAUNCH-PLAN PHASE STATUS (as of 2026-04-08)
+
+| Item | Status |
+|------|--------|
+| Phase 2.4 REST API | ✅ Complete |
+| Phase 3.1 Team/multi-user management | ✅ Complete |
+| Phase 3.2 CCPA compliance scanner | ✅ Complete |
+| Phase 3.3 Automated scan scheduling | ✅ Complete |
+| Phase 3.4 Remediation guidance + GDPR article links | ✅ Complete |
+| Phase 3.5 AI-powered policy generation | ✅ Complete |
+| Phase 3.6 Support infrastructure | **Next up** |
+
+---
+
 ## SESSION LOG
+
+### 2026-04-08 — Phase 3.5: AI-powered policy generation
+- Installed `@anthropic-ai/sdk` via pnpm (npm arborist bug blocked it)
+- Created `lib/ai-policy.ts` — builds tailored prompts for Claude Opus and calls the API:
+  - Privacy policy prompt: instructs Claude to cover GDPR Arts 13–14 + CCPA/CPRA if tracking detected; references actual cookie names, third-party services, and company details from the scan
+  - Cookie policy prompt: generates Markdown tables with real cookie names/domains/expiry from scan data
+  - Returns raw markdown; never throws by design — callers handle errors
+- Added `generateAiPolicy()` server action to `lib/actions/policy.ts`:
+  - Gated behind new `aiPolicyGenerator` feature flag (Professional/Enterprise only)
+  - Loads scan data (cookies, scripts, findings) + owner company details, calls Claude, saves with `isAiGenerated: true`
+  - Falls back with a human-readable error if `ANTHROPIC_API_KEY` is not set
+- Added `aiPolicyGenerator: boolean` to `PlanFeatures` and all plan definitions in `lib/plans.ts`:
+  - Free/Starter: false | Professional/Enterprise: true
+- Added `isAiGenerated Boolean @default(false)` to `Policy` model in schema → pushed to DB
+- Created `components/dashboard/generate-ai-policy-button.tsx` — "✨ AI Policy [New]" button, loading state
+- Updated `GeneratePolicyButton` to accept a `variant` prop
+- Updated policies page (`app/(dashboard)/dashboard/websites/[id]/policies/page.tsx`):
+  - Professional+ sees both buttons: `[AI Privacy Policy] [Template]`
+  - Starter users see purple upsell card explaining AI generation advantage
+  - Help section updated to explain both options
+- Updated policy view page (`[policyId]/page.tsx`):
+  - AI policies get a purple "✨ AI" badge in the header
+  - Amber review banner for AI-generated policies listing 3 specific things to check before publishing
+- Added `ANTHROPIC_API_KEY` to `.env.example` with full documentation
+- TypeScript clean, build passes
+
+---
+
+### 2026-04-08 — Phase 3.2: CCPA/CPRA compliance scanner
+- Created `lib/scanner/ccpa-detector.ts`:
+  - `detectDoNotSellLink(page)` — checks home page for "Do Not Sell or Share My Personal Information", "Your Privacy Choices" links, and opt-out iframes; runs in parallel with other page-level detectors
+  - `analyzeCcpaPolicyContent(text)` — pure function; analyses policy text for CCPA mentions, California consumer rights (≥2 hits), California contact method, last-updated date
+  - `calculateCcpaScore(checks)` — 0–100 score: opt-out link (35), CCPA policy section (25), CA rights list (20), contact method (15), last-updated (5)
+  - `generateCcpaFindings(checks, hasTracking)` — produces `ccpa_do_not_sell` / `ccpa_privacy_policy` / `ccpa_consumer_rights` findings; severity escalates to error when tracking is detected
+- Added 3 new `FindingType` values to `lib/scanner/types.ts`; added `ccpaScore?: number` to `ScanResult`
+- Updated `lib/scanner/index.ts` — CCPA home-page check runs in parallel with GDPR detectors; after GDPR policy navigation, extracts page text and runs CCPA policy analysis without re-navigating
+- Added `ccpaScore Int?` to Scan model in schema → pushed to DB; `lib/scan-runner.ts` persists it
+- Updated `components/dashboard/action-checklist.tsx` — CCPA finding metadata with oag.ca.gov regulation links; "Regulation" label shows `CCPA §...` instead of `GDPR Art.` for CCPA findings
+- Updated scan results page — shows GDPR score and CCPA score as two separate cards (CCPA card only shown when not null)
+- TypeScript clean, build passes
+
+---
+
+### 2026-04-08 — Phase 3.1: Team/multi-user management
+- Added `TeamMember` model to schema: ownerId/userId FK, email, role (admin/viewer), status (pending/active/revoked), inviteToken, invitedAt/acceptedAt
+- Created `lib/team-context.ts`: `getTeamContext(sessionUserId)` reads `ck_active_owner` cookie to determine effective ownerId; `canWrite(role)` helper
+- Created `lib/actions/team.ts`: `getTeamMembers`, `getMyTeamMemberships`, `inviteTeamMember`, `acceptTeamInvite`, `updateMemberRole`, `revokeTeamMember`, `switchActiveAccount` (sets httpOnly cookie)
+- Updated all 6 data actions (website, scan, banner, policy, analytics, dsar — 24 functions total) to call `getTeamContext` and use `ownerId` instead of `session.user.id`
+- Role enforcement: viewers get errors on writes; only owners can delete websites
+- Created team page at `/dashboard/team` (invite form + member list with role dropdown)
+- Created `/accept-invite?token=xxx` page — works logged-in or logged-out; uses `callbackUrl` to return after auth
+- Created `components/layout/account-switcher.tsx` — dropdown for switching between "My account" and team accounts
+- Dashboard layout shows blue "Viewing [Account]'s workspace" banner when in team context
+- Team nav item visible only on Professional/Enterprise plans
+- Added `sendTeamInviteEmail` to `lib/email.ts`
+- Added `"team"` key to all 5 locale files (en/de/es/fr/nl)
+- TypeScript clean, build passes, 122/122 tests passing
+
+---
+
+### 2026-04-08 — Phase 2.4: REST API
+- Created `app/api/v1/websites/route.ts` — `GET /api/v1/websites` (list websites for API key owner)
+- Created `app/api/v1/websites/[id]/scan/route.ts` — `POST /api/v1/websites/:id/scan` (trigger scan, returns 202)
+- Created `app/api/v1/scans/[id]/route.ts` — `GET /api/v1/scans/:id` (status + cookies + findings)
+- Created `app/api/v1/policies/route.ts` — `GET /api/v1/policies` (filterable by `?websiteId=&type=`)
+- Created `lib/api-auth.ts` — `validateApiKey()` helper; keys stored hashed in DB
+- Created `lib/actions/api-key.ts` — `getApiKey`, `generateApiKey`, `revokeApiKey`; keys format `ck_live_{48 hex chars}`; requires active subscription with `apiAccess` feature
+- Created `components/dashboard/api-key-section.tsx` — show/hide toggle, copy, generate, revoke; shows amber "copy now" warning on first generation
+- Updated settings page to show API key card
+- TypeScript clean
+
+---
+
+### 2026-04-08 — Phases 3.3 + 3.4: Automated scanning + remediation guidance
+*(Done in previous session, committed this session)*
+- **3.3**: Added `scanSchedule`/`nextScheduledScanAt` fields to Website model; schedule picker in edit form; cron at `/api/cron/scheduled-scans` runs every 6 h, fires `executeScan`, advances schedule, sends score-drop email if score drops ≥5 pts; `sendScanScoreDropEmail` added to `lib/email.ts`
+- **3.4**: Updated `action-checklist.tsx` — all 12 `FindingType` values in `FINDING_META` now have `gdprArticle` + `gdprArticleUrl`; expanded panel renders "Regulation" link to gdpr-info.eu
+
+---
 
 ### 2026-03-08 — D6: Public JS API for banner
 - Added `window.ComplianceKit` API object to `public/widget.js` — exposed synchronously before the config fetch so integrators can register callbacks before the banner appears

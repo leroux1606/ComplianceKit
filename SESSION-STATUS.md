@@ -1,59 +1,55 @@
 # Session Status — Pick up from here
 
-## Test results so far
+## START HERE TOMORROW: Phase 3.6 — Support Infrastructure
 
-| Test | Result |
-|------|--------|
-| 10.1 Plugin activated | PASSED |
-| 10.2 Settings page loads | PASSED |
-| 10.3 Script tag in `<head>` when embed code is set | PASSED |
-| 10.4 No script tag when embed code is empty | PASSED |
-| 10.5 Footer link checkbox works | PASSED |
-| 10.6 Admin notice hides on ComplianceKit settings page | PASSED |
-| 10.7 Delete plugin cleans database | PASSED |
-| 10.8 XSS protection | PASSED |
-| 10.9 Works with caching plugin | PASSED |
+### What to do
 
----
+Run `do 3.6` — Claude will pick up Phase 3.6 from LAUNCH-PLAN.md.
 
-## Start here tomorrow — Test 10.7
+### What 3.6 covers
 
-### 10.7 — Delete cleans database
-1. In WordPress admin go to **Plugins**
-2. Click **Deactivate** under ComplianceKit
-3. Click **Delete** under ComplianceKit
-4. In LocalWP click the **Database** tab → open **Adminer**
-5. Browse the `wp_options` table → search for `ck_`
-6. There should be **no entries** starting with `ck_`
-7. Then re-install the plugin: **Plugins → Add New → Upload Plugin** → pick `C:\Private\AI\ComplianceKit\wordpress-plugin\compliancekit.zip` → Install Now → Activate
+```
+### 3.6 Support infrastructure
+- [ ] Set up help centre / FAQ (static page in the app)
+- [ ] Add in-app chat or support ticket widget (Crisp, Intercom, or Tawk.to)
+- [ ] Create onboarding email sequence (Day 0, Day 3, Day 7 after signup)   ← ALREADY DONE (D5)
+- [ ] Add in-app onboarding checklist for new users                          ← ALREADY DONE (E1)
+```
+
+Items 3 and 4 above are already done (D5 + E1 from the audit list). Only the help centre page and the in-app chat widget remain.
+
+### Recommended approach for 3.6
+
+1. **Help centre page** — Build a static `/help` or `/docs`-style page in the marketing layout with FAQs grouped by topic (Getting Started, Scanner, Banner, Billing, GDPR). Already have a `/docs` route — check if it's a stub or a real page first.
+
+2. **In-app chat widget** — Crisp is free for small teams, easy to embed. Add `CRISP_WEBSITE_ID` env var, then inject the Crisp script in the dashboard layout's `<head>`. Show it only in the dashboard (not marketing pages).
 
 ---
 
-### 10.8 — XSS protection
-1. Go to **Settings → ComplianceKit**
-2. Paste this into the Embed Code field: `<script>alert(1)</script>`
-3. Click **Save Changes**
-4. The field should show only: `scriptalert1script` (all special characters stripped)
+## Phase completion as of 2026-04-08
+
+| Phase | Status |
+|-------|--------|
+| Phase 1 — Launch Blockers | ✅ All P0/P1/P2 complete |
+| 2.1 WordPress plugin | Code complete — needs WP testing + wordpress.org submission (manual) |
+| 2.2 Vercel production deployment | Manual — follow VERCEL_SETUP.md |
+| 2.3 Google Search Console | Manual — follow LAUNCH-PLAN.md instructions |
+| 2.4 REST API | ✅ Complete (GET /v1/websites, POST /v1/websites/:id/scan, GET /v1/scans/:id, GET /v1/policies, API key UI) |
+| 2.5 E2E tests | Not started |
+| 2.6 Scan error UX | Not started |
+| 3.1 Team management | ✅ Complete |
+| 3.2 CCPA scanner | ✅ Complete |
+| 3.3 Automated scheduling | ✅ Complete |
+| 3.4 Remediation guidance | ✅ Complete |
+| 3.5 AI policy generation | ✅ Complete |
+| 3.6 Support infrastructure | **⬅ START HERE** |
 
 ---
 
-### 10.9 — Works with caching plugin
-1. Go to **Plugins → Add New** → search for **WP Super Cache** → Install → Activate
-2. Visit the front-end of your site twice (click **Open site** in LocalWP)
-3. View Page Source → search for `widget.js` — the script tag should still be there
+## Important: set ANTHROPIC_API_KEY in Vercel
 
----
+Phase 3.5 (AI policy generation) requires `ANTHROPIC_API_KEY` to be set in Vercel environment variables. Without it, clicking "AI Policy" shows a clear error message — the app won't crash, but the feature won't work. Add it at:
 
-## After all 3 tests pass — final steps
+**Vercel → Project → Settings → Environment Variables → ANTHROPIC_API_KEY**
 
-1. Take 3 screenshots and save to `wordpress-plugin/compliancekit/assets/`:
-   - `screenshot-1.png` — Settings → ComplianceKit page with embed code filled in
-   - `screenshot-2.png` — Cookie consent banner on the front-end
-   - `screenshot-3.png` — Your real ComplianceKit dashboard
-
-2. Submit to wordpress.org:
-   - Go to wordpress.org/plugins/developers/add
-   - Name: `ComplianceKit — Cookie Consent`
-   - Plugin URL: `https://compliancekit.com`
-   - Upload `compliancekit.zip`
-   - Wait 1–5 business days for review
+Get your key at: https://console.anthropic.com/
