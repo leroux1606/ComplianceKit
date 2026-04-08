@@ -42,7 +42,11 @@ Items 3 and 4 above are already done (D5 + E1 from the audit list). Only the hel
 | 3.3 Automated scheduling | ✅ Complete |
 | 3.4 Remediation guidance | ✅ Complete |
 | 3.5 AI policy generation | ✅ Complete |
-| 3.6 Support infrastructure | **⬅ START HERE** |
+| 3.6 Support infrastructure | **⬅ START HERE — final phase** |
+
+---
+
+> **Phase 3.6 is the final development phase. There is no Phase 4.**
 
 ---
 
