@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getUserFeatures } from "@/lib/actions/subscription";
 import type { Policy } from "@prisma/client";
 import type { CompanyInfoInput } from "@/lib/validations";
 
@@ -19,6 +20,15 @@ export async function generatePolicy(
 
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  // Enforce plan gate — policy generator requires Starter or above
+  const features = await getUserFeatures();
+  if (!features.policyGenerator) {
+    return {
+      success: false,
+      error: "Policy generation requires a paid plan. Please upgrade to generate policies.",
+    };
   }
 
   // Get user's company details

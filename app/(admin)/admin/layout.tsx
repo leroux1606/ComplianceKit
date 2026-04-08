@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/icons/logo";
-import { LayoutDashboard, Users, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Shield, AlertTriangle } from "lucide-react";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .split(",")
@@ -29,6 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="flex-1 space-y-1 px-3 py-4">
           <AdminNavItem href="/admin" icon={LayoutDashboard} label="Overview" exact />
           <AdminNavItem href="/admin/users" icon={Users} label="Users" />
+          <AdminNavItem href="/admin/access" icon={AlertTriangle} label="Access Control" />
         </nav>
         <div className="border-t p-4">
           <Link
