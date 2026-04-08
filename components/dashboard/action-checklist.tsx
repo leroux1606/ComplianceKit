@@ -136,6 +136,31 @@ const FINDING_META: Record<string, FindingMeta> = {
     gdprArticle: "Art. 16",
     gdprArticleUrl: "https://gdpr-info.eu/art-16-gdpr/",
   },
+  // CCPA / CPRA findings
+  ccpa_do_not_sell: {
+    whyItMatters:
+      "California's CCPA/CPRA mandates a 'Do Not Sell or Share My Personal Information' link for any business that sells or shares personal data. Failure to provide this is an automatic violation — and California's AG can bring enforcement actions after a 30-day cure period.",
+    actionLabel: "Configure banner",
+    actionPath: "banner",
+    gdprArticle: "CCPA §1798.120 / CPRA §1798.135",
+    gdprArticleUrl: "https://oag.ca.gov/privacy/ccpa",
+  },
+  ccpa_privacy_policy: {
+    whyItMatters:
+      "CCPA §1798.100 requires businesses to disclose California-specific privacy rights and data practices in their privacy policy. Without a California section, the policy is non-compliant for any visitors from California.",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "CCPA §1798.100–130",
+    gdprArticleUrl: "https://oag.ca.gov/privacy/ccpa",
+  },
+  ccpa_consumer_rights: {
+    whyItMatters:
+      "CCPA/CPRA grants California residents six distinct privacy rights. Failing to document all six — or not providing a way to exercise them — exposes you to consumer complaints and regulatory scrutiny from the California Privacy Protection Agency (CPPA).",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "CCPA §1798.100–135",
+    gdprArticleUrl: "https://oag.ca.gov/privacy/ccpa",
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -345,7 +370,7 @@ export function ActionChecklist({ findings, websiteId }: ActionChecklistProps) {
                                 </div>
                               )}
 
-                              {/* GDPR article reference */}
+                              {/* Regulation reference (GDPR or CCPA) */}
                               {meta.gdprArticle && (
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
@@ -357,7 +382,10 @@ export function ActionChecklist({ findings, websiteId }: ActionChecklistProps) {
                                     rel="noopener noreferrer"
                                     className="text-sm text-primary underline underline-offset-2"
                                   >
-                                    GDPR {meta.gdprArticle} ↗
+                                    {finding.type.startsWith("ccpa_")
+                                      ? meta.gdprArticle
+                                      : `GDPR ${meta.gdprArticle}`}{" "}
+                                    ↗
                                   </a>
                                 </div>
                               )}

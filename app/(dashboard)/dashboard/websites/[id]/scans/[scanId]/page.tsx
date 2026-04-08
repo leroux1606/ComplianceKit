@@ -111,19 +111,42 @@ export default async function ScanResultsPage({
 
       {/* Score Overview */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Compliance Score</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ComplianceScore score={scan.score || 0} size="lg" />
-          </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground">
-              Technical indicators only. Does not constitute legal advice — a high score does not guarantee regulatory compliance.
-            </p>
-          </CardFooter>
-        </Card>
+        <div className="md:col-span-1 flex flex-col gap-4">
+          <Card className="flex-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                GDPR Score
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center pb-2">
+              <ComplianceScore score={scan.score || 0} size="lg" />
+            </CardContent>
+            <CardFooter>
+              <p className="text-xs text-muted-foreground">
+                EU/EEA compliance indicator. Not legal advice.
+              </p>
+            </CardFooter>
+          </Card>
+
+          {scan.ccpaScore !== null && scan.ccpaScore !== undefined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  CCPA Score
+                </CardTitle>
+                <CardDescription className="text-xs">California (US)</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center pb-2">
+                <ComplianceScore score={scan.ccpaScore} size="md" />
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground">
+                  Applies if you serve California residents.
+                </p>
+              </CardFooter>
+            </Card>
+          )}
+        </div>
 
         <Card className="md:col-span-2">
           <CardHeader>

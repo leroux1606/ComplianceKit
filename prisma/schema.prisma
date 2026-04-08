@@ -113,6 +113,7 @@ model Scan {
   completedAt DateTime?
   error       String?
   score       Int?
+  ccpaScore   Int?
   createdAt   DateTime  @default(now())
   cookies     Cookie[]
   findings    Finding[]

@@ -51,7 +51,11 @@ export type FindingType =
   | "account_deletion"
   | "dsar_mechanism"
   | "data_rectification"
-  | "user_rights_info";
+  | "user_rights_info"
+  // CCPA / CPRA
+  | "ccpa_do_not_sell"
+  | "ccpa_privacy_policy"
+  | "ccpa_consumer_rights";
 
 export type FindingSeverity = "info" | "warning" | "error";
 
@@ -79,6 +83,7 @@ export interface ScanResult {
   userRights?: UserRightsDetection;
   privacyPolicyScore?: number; // 0-100 completeness score
   consentQualityScore?: number; // 0-100 quality score
+  ccpaScore?: number; // 0-100 CCPA/CPRA compliance score
   score: number;
   error?: string;
   scannedAt: Date;

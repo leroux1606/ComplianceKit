@@ -9,6 +9,7 @@ import { detectUserRights, generateUserRightsFindings } from "./user-rights-dete
 import { analyzePrivacyPolicyContent, generatePrivacyPolicyFindings } from "./privacy-policy-analyzer";
 import { analyzeConsentQuality, generateConsentQualityFindings } from "./consent-quality-analyzer";
 import { runAdditionalComplianceChecks, generateAdditionalComplianceFindings } from "./additional-compliance-detector";
+import { detectDoNotSellLink, analyzeCcpaPolicyContent, calculateCcpaScore, generateCcpaFindings, type CcpaChecks } from "./ccpa-detector";
 import { calculateComplianceScore } from "./compliance-score";
 
 const DEFAULT_TIMEOUT = 120000; // 120 seconds (2 minutes)
@@ -96,13 +97,14 @@ export class Scanner {
       // Wait for cookies to be set after consent acceptance
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Run all detectors in parallel
-      const [cookies, scripts, privacyPolicy, cookieBanner, userRights] = await Promise.all([
+      // Run all detectors in parallel (all operate on the home page)
+      const [cookies, scripts, privacyPolicy, cookieBanner, userRights, ccpaHomeChecks] = await Promise.all([
         detectCookies(page, this.options.url),
         detectScripts(page),
         detectPrivacyPolicy(page),
         detectCookieBanner(page),
         detectUserRights(page),
+        detectDoNotSellLink(page), // CCPA: "Do Not Sell" / "Your Privacy Choices" link
       ]);
 
       // Collect findings
@@ -182,6 +184,34 @@ export class Scanner {
       const additionalFindings = generateAdditionalComplianceFindings(additionalChecks);
       findings.push(...additionalFindings);
 
+      // CCPA / CPRA checks
+      // If the policy analyser navigated to the policy URL, extract its text now.
+      // Otherwise the page is still on the home URL and we get no policy-level data.
+      let ccpaPolicyContent = "";
+      if (privacyPolicy.found && privacyPolicy.url) {
+        try {
+          ccpaPolicyContent = await page.evaluate(
+            () => document.body.textContent?.toLowerCase() ?? ""
+          );
+        } catch {
+          // ignore — no policy content available
+        }
+      }
+      const ccpaPolicyChecks = analyzeCcpaPolicyContent(ccpaPolicyContent);
+      const ccpaChecks: CcpaChecks = {
+        hasDoNotSellLink: ccpaHomeChecks.hasDoNotSellLink,
+        hasPrivacyChoicesLink: ccpaHomeChecks.hasPrivacyChoicesLink,
+        ...ccpaPolicyChecks,
+      };
+      const ccpaScore = calculateCcpaScore(ccpaChecks);
+      const hasTrackingScripts = scripts.filter(
+        (s) => s.category === "analytics" || s.category === "marketing"
+      ).length > 0 || cookies.filter(
+        (c) => c.category === "analytics" || c.category === "marketing"
+      ).length > 0;
+      const ccpaFindings = generateCcpaFindings(ccpaChecks, hasTrackingScripts);
+      findings.push(...ccpaFindings);
+
       // Calculate compliance score
       const score = calculateComplianceScore({
         hasPrivacyPolicy: privacyPolicy.found,
@@ -207,6 +237,7 @@ export class Scanner {
         userRights,
         privacyPolicyScore,
         consentQualityScore,
+        ccpaScore,
         score,
         scannedAt: new Date(),
         duration,

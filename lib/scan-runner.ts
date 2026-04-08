@@ -94,7 +94,12 @@ export async function executeScan(
 
     await db.scan.update({
       where: { id: scanId },
-      data: { status: "completed", score: result.score, completedAt: new Date() },
+      data: {
+        status: "completed",
+        score: result.score,
+        ccpaScore: result.ccpaScore,
+        completedAt: new Date(),
+      },
     });
 
     await db.website.update({
