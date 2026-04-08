@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getDsarList, getDsarStats } from "@/lib/actions/dsar";
+import { getWebsites } from "@/lib/actions/website";
 import { DsarTable } from "@/components/dsar/dsar-table";
+import { CopyButton } from "@/components/ui/copy-button";
 import { DSAR_STATUSES, DSAR_REQUEST_TYPES, isDsarOverdue } from "@/lib/dsar/types";
 
 export const metadata: Metadata = {
@@ -28,9 +30,12 @@ export const metadata: Metadata = {
 };
 
 export default async function DsarPage() {
-  const [dsars, stats] = await Promise.all([
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://compliancekit.com";
+
+  const [dsars, stats, websites] = await Promise.all([
     getDsarList(),
     getDsarStats(),
+    getWebsites(),
   ]);
 
   return (
@@ -44,6 +49,44 @@ export default async function DsarPage() {
           </p>
         </div>
       </div>
+
+      {/* Public Form Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ArrowRight className="h-5 w-5" />
+            Public Form Links
+          </CardTitle>
+          <CardDescription>
+            Share these links on your websites so visitors can submit data requests. Each link is unique per website.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {websites.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Add a website first to get your public DSAR form link.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {websites.map((website) => {
+                const formUrl = `${appUrl}/dsar/${website.embedCode}`;
+                return (
+                  <div
+                    key={website.id}
+                    className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{website.name}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{formUrl}</p>
+                    </div>
+                    <CopyButton value={formUrl} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-5">
