@@ -196,6 +196,21 @@ export async function updateWebsite(id: string, values: Partial<WebsiteInput>) {
     updateData.description = values.description || null;
   }
 
+  if (values.scanSchedule !== undefined) {
+    updateData.scanSchedule = values.scanSchedule;
+    if (values.scanSchedule === "none") {
+      updateData.nextScheduledScanAt = null;
+    } else {
+      const next = new Date();
+      if (values.scanSchedule === "weekly") {
+        next.setDate(next.getDate() + 7);
+      } else {
+        next.setMonth(next.getMonth() + 1);
+      }
+      updateData.nextScheduledScanAt = next;
+    }
+  }
+
   try {
     await db.website.update({
       where: { id },

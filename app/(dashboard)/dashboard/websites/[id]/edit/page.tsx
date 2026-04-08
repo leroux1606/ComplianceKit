@@ -68,7 +68,7 @@ export default async function EditWebsitePage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <EditWebsiteForm website={website} />
+          <EditWebsiteForm website={{ id: website.id, name: website.name, url: website.url, description: website.description, scanSchedule: website.scanSchedule }} />
         </CardContent>
       </Card>
     </div>

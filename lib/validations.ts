@@ -66,6 +66,7 @@ export const websiteSchema = z.object({
       { message: "Please enter a valid URL" }
     ),
   description: z.string().max(500, "Description must be less than 500 characters").optional(),
+  scanSchedule: z.enum(["none", "weekly", "monthly"]),
 });
 
 export const websiteUpdateSchema = websiteSchema.partial();

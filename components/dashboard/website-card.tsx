@@ -41,6 +41,8 @@ interface WebsiteCardProps {
     status: string;
     lastScanAt: Date | null;
     createdAt: Date;
+    scanSchedule: string;
+    nextScheduledScanAt: Date | null;
     _count: {
       scans: number;
       policies: number;
@@ -161,6 +163,13 @@ export function WebsiteCard({ website }: WebsiteCardProps) {
           {website.lastScanAt && (
             <p className="text-xs text-muted-foreground">
               Last scanned: {formatDate(website.lastScanAt)}
+            </p>
+          )}
+
+          {website.scanSchedule !== "none" && website.nextScheduledScanAt && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Scan className="h-3 w-3" />
+              Next auto-scan: {formatDate(website.nextScheduledScanAt)}
             </p>
           )}
         </CardContent>

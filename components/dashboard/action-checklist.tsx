@@ -45,6 +45,8 @@ interface FindingMeta {
   whyItMatters: string;
   actionLabel?: string;
   actionPath?: string; // relative to /dashboard/websites/[id]/
+  gdprArticle?: string;
+  gdprArticleUrl?: string;
 }
 
 const FINDING_META: Record<string, FindingMeta> = {
@@ -53,62 +55,86 @@ const FINDING_META: Record<string, FindingMeta> = {
       "GDPR requires informed consent before placing non-essential cookies. Without a banner, every visitor is tracked without their permission — exposing you to fines of up to €20 million.",
     actionLabel: "Configure banner",
     actionPath: "banner",
+    gdprArticle: "Art. 6 + ePrivacy Directive",
+    gdprArticleUrl: "https://gdpr-info.eu/art-6-gdpr/",
   },
   privacy_policy: {
     whyItMatters:
       "GDPR Articles 13–14 require you to tell visitors what data you collect, why, and who you share it with. A missing or incomplete policy is one of the most common reasons for DPA investigations.",
     actionLabel: "Generate policy",
     actionPath: "policies",
+    gdprArticle: "Art. 13–14",
+    gdprArticleUrl: "https://gdpr-info.eu/art-13-gdpr/",
   },
   consent_management: {
     whyItMatters:
       "Consent must be freely given, specific, informed, and unambiguous (GDPR Art. 7). Weak consent mechanisms — pre-ticked boxes, bundled consent, or no withdrawal option — are legally invalid.",
     actionLabel: "Configure banner",
     actionPath: "banner",
+    gdprArticle: "Art. 7",
+    gdprArticleUrl: "https://gdpr-info.eu/art-7-gdpr/",
   },
   tracking_script: {
     whyItMatters:
       "Analytics and marketing scripts can profile visitors across sites. Running them without consent violates GDPR and, for EU users, the ePrivacy Directive (\"cookie law\").",
     actionLabel: "Configure banner",
     actionPath: "banner",
+    gdprArticle: "Art. 6(1)(a)",
+    gdprArticleUrl: "https://gdpr-info.eu/art-6-gdpr/",
   },
   third_party_cookie: {
     whyItMatters:
       "Third-party cookies are the primary tool of cross-site tracking. Under GDPR they require explicit consent, and regulators treat unconsented third-party tracking as a serious violation.",
     actionLabel: "Configure banner",
     actionPath: "banner",
+    gdprArticle: "Art. 6(1)(a)",
+    gdprArticleUrl: "https://gdpr-info.eu/art-6-gdpr/",
   },
   secure_cookie: {
     whyItMatters:
       "Cookies without the Secure or HttpOnly flag are vulnerable to interception and XSS attacks. If a session cookie is stolen, an attacker can impersonate your users — a personal data breach under GDPR Art. 33.",
+    gdprArticle: "Art. 32–33",
+    gdprArticleUrl: "https://gdpr-info.eu/art-32-gdpr/",
   },
   user_rights_info: {
     whyItMatters:
       "GDPR Art. 13 requires you to inform visitors of their rights (access, erasure, portability, objection). Failing to do so is a direct compliance breach.",
     actionLabel: "Generate policy",
     actionPath: "policies",
+    gdprArticle: "Art. 13",
+    gdprArticleUrl: "https://gdpr-info.eu/art-13-gdpr/",
   },
   user_profile_settings: {
     whyItMatters:
       "GDPR Art. 16 gives individuals the right to correct their personal data. If users cannot update their own information, you are in breach — and regulators do check for this.",
+    gdprArticle: "Art. 16",
+    gdprArticleUrl: "https://gdpr-info.eu/art-16-gdpr/",
   },
   data_export: {
     whyItMatters:
       "GDPR Art. 20 (right to data portability) requires you to let users export their data in a machine-readable format on request. Missing this can result in upheld DSAR complaints.",
+    gdprArticle: "Art. 20",
+    gdprArticleUrl: "https://gdpr-info.eu/art-20-gdpr/",
   },
   account_deletion: {
     whyItMatters:
       "GDPR Art. 17 (right to erasure) requires you to delete personal data when asked. Without a clear deletion mechanism, every erasure request risks a 30-day breach.",
+    gdprArticle: "Art. 17",
+    gdprArticleUrl: "https://gdpr-info.eu/art-17-gdpr/",
   },
   dsar_mechanism: {
     whyItMatters:
       "Under GDPR you must respond to Data Subject Access Requests within 30 days. Without a clear process — or a published contact route — you will miss deadlines.",
     actionLabel: "View DSAR settings",
     actionPath: "../../dsars",
+    gdprArticle: "Art. 15–22",
+    gdprArticleUrl: "https://gdpr-info.eu/art-15-gdpr/",
   },
   data_rectification: {
     whyItMatters:
       "GDPR Art. 16 gives individuals the right to have inaccurate personal data corrected. Regulators expect a documented process for handling these requests.",
+    gdprArticle: "Art. 16",
+    gdprArticleUrl: "https://gdpr-info.eu/art-16-gdpr/",
   },
 };
 
@@ -316,6 +342,23 @@ export function ActionChecklist({ findings, websiteId }: ActionChecklistProps) {
                                   <p className="text-sm text-foreground/80">
                                     {finding.recommendation}
                                   </p>
+                                </div>
+                              )}
+
+                              {/* GDPR article reference */}
+                              {meta.gdprArticle && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                                    Regulation
+                                  </p>
+                                  <a
+                                    href={meta.gdprArticleUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-primary underline underline-offset-2"
+                                  >
+                                    GDPR {meta.gdprArticle} ↗
+                                  </a>
                                 </div>
                               )}
 

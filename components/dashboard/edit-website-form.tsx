@@ -19,6 +19,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { websiteSchema, type WebsiteInput } from "@/lib/validations";
 import { updateWebsite } from "@/lib/actions/website";
 
@@ -28,6 +35,7 @@ interface EditWebsiteFormProps {
     name: string;
     url: string;
     description: string | null;
+    scanSchedule: string;
   };
 }
 
@@ -41,6 +49,7 @@ export function EditWebsiteForm({ website }: EditWebsiteFormProps) {
       name: website.name,
       url: website.url,
       description: website.description || "",
+      scanSchedule: (website.scanSchedule as "none" | "weekly" | "monthly") || "none",
     },
   });
 
@@ -127,6 +136,36 @@ export function EditWebsiteForm({ website }: EditWebsiteFormProps) {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="scanSchedule"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Automatic Scan Schedule</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a schedule" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">Off — manual scans only</SelectItem>
+                  <SelectItem value="weekly">Weekly — scan every 7 days</SelectItem>
+                  <SelectItem value="monthly">Monthly — scan every 30 days</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Automatic scans run in the background and email you if your compliance score drops.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="flex gap-4">
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -145,6 +184,3 @@ export function EditWebsiteForm({ website }: EditWebsiteFormProps) {
     </Form>
   );
 }
-
-
-

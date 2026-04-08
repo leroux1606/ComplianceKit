@@ -35,6 +35,7 @@ export function AddWebsiteForm() {
       name: "",
       url: "",
       description: "",
+      scanSchedule: "none",
     },
   });
 

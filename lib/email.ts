@@ -945,3 +945,79 @@ Privacy inquiries: ${process.env.NEXT_PUBLIC_PRIVACY_EMAIL || 'privacy@complianc
     text,
   });
 }
+
+/**
+ * Notify user when a scheduled scan detects a compliance score drop
+ */
+export async function sendScanScoreDropEmail(params: {
+  to: string;
+  name?: string | null;
+  websiteName: string;
+  websiteUrl: string;
+  websiteId: string;
+  previousScore: number;
+  newScore: number;
+  scanId: string;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.compliancekit.app';
+  const drop = params.previousScore - params.newScore;
+  const scanUrl = `${appUrl}/dashboard/websites/${params.websiteId}/scans/${params.scanId}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+          .score-row { display: flex; justify-content: space-around; background: white; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+          .score-box { flex: 1; }
+          .score-num { font-size: 36px; font-weight: bold; }
+          .score-label { font-size: 13px; color: #64748b; margin-top: 4px; }
+          .btn { display: inline-block; background: #0f172a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 16px; }
+          .footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 13px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Compliance Score Dropped</h1>
+            <p style="margin:0;opacity:0.9">${params.websiteName}</p>
+          </div>
+          <div class="content">
+            <p>Hi ${params.name || 'there'},</p>
+            <p>Your scheduled scan of <strong>${params.websiteUrl}</strong> detected a compliance score drop of <strong>${drop} points</strong>.</p>
+            <div class="score-row">
+              <div class="score-box">
+                <div class="score-num" style="color:#16a34a">${params.previousScore}</div>
+                <div class="score-label">Previous score</div>
+              </div>
+              <div class="score-box" style="display:flex;align-items:center;justify-content:center;font-size:24px;color:#94a3b8">to</div>
+              <div class="score-box">
+                <div class="score-num" style="color:#dc2626">${params.newScore}</div>
+                <div class="score-label">New score</div>
+              </div>
+            </div>
+            <p>This may indicate new tracking scripts, missing consent banners, or other compliance issues have appeared on your site.</p>
+            <p style="text-align:center">
+              <a href="${scanUrl}" class="btn">View Scan Results</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p>You received this because scheduled scanning is enabled for ${params.websiteName}.</p>
+            <p>To change your scan schedule, visit <a href="${appUrl}/dashboard/websites/${params.websiteId}/edit">website settings</a>.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: params.to,
+    subject: `Compliance score dropped on ${params.websiteName} - ComplianceKit`,
+    html,
+    text: `Compliance score dropped on ${params.websiteName}: ${params.previousScore} to ${params.newScore} (-${drop} pts). View results: ${scanUrl}`,
+  });
+}

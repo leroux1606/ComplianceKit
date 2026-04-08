@@ -9,6 +9,8 @@ interface Website {
   status: string;
   lastScanAt: Date | null;
   createdAt: Date;
+  scanSchedule: string;
+  nextScheduledScanAt: Date | null;
   _count: {
     scans: number;
     policies: number;

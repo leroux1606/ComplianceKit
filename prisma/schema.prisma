@@ -81,8 +81,10 @@ model Website {
   description    String?
   status         String               @default("active")
   embedCode      String?              @unique
-  lastScanAt     DateTime?
-  lastScanStatus String?
+  lastScanAt          DateTime?
+  lastScanStatus      String?
+  scanSchedule        String    @default("none")
+  nextScheduledScanAt DateTime?
   companyName    String?
   companyAddress String?
   companyEmail   String?
