@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { PLANS, FREE_TIER } from "@/lib/plans";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { CrispChat } from "@/components/layout/crisp-chat";
 import { Button } from "@/components/ui/button";
 
 // Days before a past_due subscription is fully blocked
@@ -178,6 +179,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <CrispChat />
     </div>
   );
 }

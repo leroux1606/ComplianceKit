@@ -124,6 +124,38 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 
 ## SESSION LOG
 
+### 2026-04-09 — Phase 3.6 complete + Phase 2.5 infrastructure (auth blocker)
+
+**Phase 3.6 — Support infrastructure: ✅ COMPLETE**
+- `/docs` page already covers help centre (confirmed — not a stub)
+- Created `components/layout/crisp-chat.tsx` — client component injecting Crisp script via `next/script` (afterInteractive); renders nothing if `NEXT_PUBLIC_CRISP_WEBSITE_ID` unset
+- Mounted `<CrispChat />` in `app/(dashboard)/layout.tsx` — widget only appears in the dashboard, never on marketing pages
+- Added `NEXT_PUBLIC_CRISP_WEBSITE_ID` to `.env.example` with instructions
+- Added §10 to `VERCEL_SETUP.md` with step-by-step Crisp setup
+- All of Phase 3 is now complete
+
+**Phase 2.5 — E2E tests: ⚠️ INFRASTRUCTURE IN PLACE, AUTH BLOCKER**
+- Installed `@playwright/test` and `dotenv-cli` via pnpm
+- Created `playwright.config.ts` — webServer config, storage state auth, serial execution
+- Created `e2e/global-setup.ts` — signs in as seeded test user, saves auth state
+- Created 6 spec files covering full user flows:
+  - `01-signup.spec.ts` — signup happy path + validation errors
+  - `02-website-scan.spec.ts` — add website → run real Puppeteer scan → verify results
+  - `03-policies.spec.ts` — template cookie + privacy policy generation
+  - `04-billing.spec.ts` — billing page, pricing, upgrade CTA (no real payment)
+  - `05-dsar.spec.ts` — public DSAR submit, owner complete + reject
+  - `06-cancel-delete.spec.ts` — cancel subscription + account deletion dialogs
+- Created `scripts/seed-test-user.mjs` — uses Prisma + PrismaPg adapter + bcrypt to upsert test user directly; bypasses signup UI for reliability
+- Created separate Supabase test DB (`compliancekit_test`, project ref `ejzcznfqzcdfhpyfaiko`, eu-west-1, `aws-0-eu-west-1.pooler.supabase.com`)
+- Pushed Prisma schema to test DB
+- Added `.env.test.example`, `E2E-SETUP.md`
+- Added scripts: `dev:test` (port 3001), `test:e2e`, `test:e2e:seed`, `test:e2e:ui`, `test:e2e:report`
+- Seed script **confirmed working** (`Test user ready: e2e@test.local`)
+
+**Blocker:** `global-setup.ts` line 18 times out after 60s on sign-in. All 26 tests show "did not run". Debugging steps for tomorrow are documented in `SESSION-STATUS.md`.
+
+**Bonus fix during session:** restored a corrupted `.env.local` — lines had been deleted. Added back `DATABASE_URL` and `DIRECT_URL` using production project ref `cqackltoemwpsugboyzp`; removed stray "in my current .env.local" text from the top.
+
 ### 2026-04-08 — Phase 3.5: AI-powered policy generation
 - Installed `@anthropic-ai/sdk` via pnpm (npm arborist bug blocked it)
 - Created `lib/ai-policy.ts` — builds tailored prompts for Claude Opus and calls the API:

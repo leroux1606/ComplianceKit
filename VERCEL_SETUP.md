@@ -21,6 +21,7 @@
 | 7 | Security alert email (F2) | [ ] |
 | 8 | Sentry error tracking (F1) | [ ] |
 | 9 | Uptime monitoring (F3) | [ ] |
+| 10 | Crisp chat widget (3.6) | [ ] |
 
 ---
 
@@ -220,6 +221,24 @@ Settings for each monitor:
 Click **Test** on each monitor. You should see a green "Online" status within a few minutes.
 
 > Mark this item done once all four monitors show "Online" and you receive a test alert email.
+
+---
+
+## 10. Crisp Chat Widget (3.6)
+
+Crisp is the in-app support chat shown to logged-in users inside the dashboard. It is free for small teams.
+
+1. Sign up at [crisp.chat](https://crisp.chat) — create a new workspace for ComplianceKit
+2. Go to **Dashboard → Settings → Website Settings → Setup Instructions**
+3. Copy the **Website ID** (format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+4. Add to Vercel:
+
+| Variable | Value |
+|----------|-------|
+| `NEXT_PUBLIC_CRISP_WEBSITE_ID` | Your Crisp Website ID |
+
+> Leave the variable empty (or unset) to disable the widget entirely — the app will not show a chat bubble.
+> The widget is only injected on dashboard pages, not on marketing pages.
 
 ---
 

@@ -149,19 +149,21 @@ Minimum viable API endpoints:
 
 ---
 
-### 2.5 Add E2E tests for critical flows
+### 2.5 Add E2E tests for critical flows ⚠️ INFRASTRUCTURE DONE — AUTH BLOCKER
 
 Current test coverage is ~15–25%. Payment flows and DSAR workflows have no integration tests — a breaking change there would be silent until a customer reports it.
 
-- [ ] Signup → email verification → dashboard (happy path)
-- [ ] Add website → run scan → view results
-- [ ] Generate privacy policy → download PDF
-- [ ] Upgrade plan (Stripe + PayStack)
-- [ ] Submit DSAR → owner responds → requester receives email
-- [ ] Cancel subscription → verify downgrade to Free
-- [ ] Account deletion flow (soft delete + anonymization)
+**Playwright suite written** — 6 spec files covering all flows below. Test DB + test user seeding works. **Blocker:** `global-setup.ts` can't sign in to the test dev server (times out at 60s). See `SESSION-STATUS.md` for tomorrow's debugging steps.
 
-> Tool recommendation: Playwright. It works well with Next.js App Router.
+- [~] Signup → email verification → dashboard (happy path) — spec written
+- [~] Add website → run scan → view results — spec written
+- [~] Generate privacy policy → download PDF — spec written
+- [~] Upgrade plan (Stripe + PayStack) — spec written (no real payment)
+- [~] Submit DSAR → owner responds → requester receives email — spec written
+- [~] Cancel subscription → verify downgrade to Free — spec written
+- [~] Account deletion flow (soft delete + anonymization) — spec written
+
+> Tool: Playwright + `dotenv-cli`. Test DB on separate Supabase project. Port 3001 for test dev server.
 
 ---
 
@@ -243,10 +245,10 @@ Currently template-based. AI generation would be a meaningful differentiator.
 
 Before any marketing spend, you need a way for customers to get help.
 
-- [ ] Set up help centre / FAQ (Notion, Crisp Docs, or static page)
-- [ ] Add in-app chat or support ticket widget (Crisp, Intercom, or Tawk.to)
-- [ ] Create onboarding email sequence (Day 0, Day 3, Day 7 after signup)
-- [ ] Add in-app onboarding checklist for new users (first scan, first policy, embed banner)
+- [x] Set up help centre / FAQ — `/docs` page already covers all topics
+- [x] Add in-app chat or support ticket widget — Crisp via `NEXT_PUBLIC_CRISP_WEBSITE_ID` env var; see VERCEL_SETUP.md §10
+- [x] Create onboarding email sequence (Day 0, Day 3, Day 7 after signup) — D5, already complete
+- [x] Add in-app onboarding checklist for new users (first scan, first policy, embed banner) — E1, already complete
 
 ---
 
@@ -283,9 +285,9 @@ Minor issues identified during evaluation — address opportunistically.
 |-------|-------|------|-------|
 | Phase 1 — Hard Blockers | 5 sections | 0 | Must complete before charging |
 | Phase 2 — Important | 6 sections | 0 | Before scaling marketing |
-| Phase 3 — Growth | 6 sections | 0 | Q2 2026 |
+| Phase 3 — Growth | 6 sections | 6 | ✅ All complete (2026-04-09) |
 | Phase 4 — Longer Term | 6 items | 0 | Q3–Q4 2026 |
 
 ---
 
-*Last updated: 2026-04-08*
+*Last updated: 2026-04-09*

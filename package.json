@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:test": "dotenv -e .env.test -- next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,7 +14,11 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e:seed": "dotenv -e .env.test -- node scripts/seed-test-user.mjs",
+    "test:e2e": "dotenv -e .env.test -- playwright test",
+    "test:e2e:ui": "dotenv -e .env.test -- playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
@@ -62,6 +67,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
@@ -69,6 +75,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.6",
     "jsdom": "^28.1.0",
