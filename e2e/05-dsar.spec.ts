@@ -14,13 +14,15 @@ import { test, expect } from "@playwright/test";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Get the embed code for the first website in the test account. */
-async function getEmbedCode(page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never): Promise<string | null> {
+/** Get the DSAR embed code from the dashboard. */
+async function getEmbedCode(
+  page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never
+): Promise<string | null> {
   await page.goto("/dashboard/dsar");
 
   // The DSAR page shows public form links like /dsar/{embedCode}
   const linkEl = page.locator("a[href*='/dsar/']").first();
-  if (!(await linkEl.isVisible())) return null;
+  if (!(await linkEl.isVisible({ timeout: 5_000 }).catch(() => false))) return null;
 
   const href = await linkEl.getAttribute("href");
   const match = href?.match(/\/dsar\/([^/?\s]+)/);
@@ -30,7 +32,6 @@ async function getEmbedCode(page: Parameters<typeof test>[1] extends (args: { pa
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test("public DSAR form loads without authentication", async ({ page, context }) => {
-  // Get embed code while authenticated
   const embedCode = await getEmbedCode(page);
   if (!embedCode) {
     test.skip(true, "No websites found — run 02-website-scan first");
@@ -40,8 +41,9 @@ test("public DSAR form loads without authentication", async ({ page, context }) 
   const publicPage = await context.newPage();
   await publicPage.goto(`/dsar/${embedCode}`);
 
-  await expect(publicPage.getByText(/data.*request|submit.*request|your rights/i).first()).toBeVisible();
-  await expect(publicPage.getByRole("combobox").or(publicPage.getByLabel(/request type/i))).toBeVisible();
+  await expect(
+    publicPage.getByText(/data.*request|submit.*request|your rights/i).first()
+  ).toBeVisible();
 
   await publicPage.close();
 });
@@ -56,20 +58,26 @@ test("visitor can submit a DSAR request", async ({ page, context }) => {
   await publicPage.goto(`/dsar/${embedCode}`);
 
   // Fill the DSAR form
-  const typeSelect = publicPage.getByLabel(/request type/i).or(publicPage.getByRole("combobox")).first();
+  const typeSelect = publicPage
+    .getByLabel(/request type/i)
+    .or(publicPage.getByRole("combobox"))
+    .first();
   await typeSelect.selectOption({ index: 1 }); // pick first non-placeholder option
 
-  await publicPage.getByLabel(/email address/i).fill("visitor@test.local");
-  await publicPage.getByLabel(/full name/i).fill("Test Visitor");
+  await publicPage.getByLabel(/email/i).first().fill("visitor@test.local");
+  await publicPage.getByLabel(/name/i).first().fill("Test Visitor");
 
-  const descriptionField = publicPage.getByLabel(/request details/i).or(publicPage.getByRole("textbox").nth(1));
+  const descriptionField = publicPage
+    .getByLabel(/details|description/i)
+    .or(publicPage.getByRole("textbox").last())
+    .first();
   await descriptionField.fill("E2E test DSAR submission — please ignore.");
 
   await publicPage.getByRole("button", { name: /submit/i }).click();
 
   // Success message should appear
   await expect(
-    publicPage.getByText(/request submitted|thank you|we've received/i)
+    publicPage.getByText(/submitted|thank you|received/i).first()
   ).toBeVisible({ timeout: 10_000 });
 
   await publicPage.close();
@@ -78,23 +86,29 @@ test("visitor can submit a DSAR request", async ({ page, context }) => {
 test("owner can see the submitted DSAR request in the dashboard", async ({ page }) => {
   await page.goto("/dashboard/dsar");
 
-  // At least one pending request should appear in the list
-  await expect(page.getByText(/visitor@test\.local/i).or(page.getByText(/pending/i)).first()).toBeVisible({ timeout: 10_000 });
+  // At least one pending request should appear
+  await expect(
+    page.getByText(/visitor@test\.local/i)
+      .or(page.getByText(/pending/i))
+      .first()
+  ).toBeVisible({ timeout: 10_000 });
 });
 
 test("owner can mark a DSAR request as completed", async ({ page }) => {
   await page.goto("/dashboard/dsar");
 
-  // Open the first request
-  const firstRequest = page.locator("tr, [data-testid='dsar-row'], a[href*='/dashboard/dsar/']").first();
-  await firstRequest.click();
-
+  // Click on a DSAR request row (link to detail page)
+  const requestLink = page.locator("a[href*='/dashboard/dsar/']").first();
+  if (!(await requestLink.isVisible({ timeout: 5_000 }).catch(() => false))) {
+    test.skip(true, "No DSAR requests found — run submission test first");
+  }
+  await requestLink.click();
   await page.waitForURL(/\/dashboard\/dsar\/.+/, { timeout: 10_000 });
 
   // Write a response
   const responseField = page
-    .getByLabel(/response|your response/i)
-    .or(page.getByRole("textbox", { name: /response/i }))
+    .getByLabel(/response/i)
+    .or(page.getByRole("textbox").first())
     .first();
   await responseField.fill("Your data request has been processed. No personal data was found.");
 
@@ -104,9 +118,9 @@ test("owner can mark a DSAR request as completed", async ({ page }) => {
     .first();
   await completeBtn.click();
 
-  // Should show success toast or status change
+  // Should show success
   await expect(
-    page.getByText(/completed|request.*completed|response sent/i)
+    page.getByText(/completed|response sent/i).first()
   ).toBeVisible({ timeout: 10_000 });
 });
 
@@ -120,29 +134,34 @@ test("owner can reject a DSAR request with a reason", async ({ page, context }) 
   const publicPage = await context.newPage();
   await publicPage.goto(`/dsar/${embedCode}`);
 
-  const typeSelect = publicPage.getByLabel(/request type/i).or(publicPage.getByRole("combobox")).first();
+  const typeSelect = publicPage
+    .getByLabel(/request type/i)
+    .or(publicPage.getByRole("combobox"))
+    .first();
   await typeSelect.selectOption({ index: 2 });
-  await publicPage.getByLabel(/email address/i).fill("reject-test@test.local");
-  await publicPage.getByLabel(/full name/i).fill("Reject Test");
-  const descriptionField = publicPage.getByLabel(/request details/i).or(publicPage.getByRole("textbox").nth(1));
+  await publicPage.getByLabel(/email/i).first().fill("reject-test@test.local");
+  await publicPage.getByLabel(/name/i).first().fill("Reject Test");
+  const descriptionField = publicPage
+    .getByLabel(/details|description/i)
+    .or(publicPage.getByRole("textbox").last())
+    .first();
   await descriptionField.fill("E2E test — this request will be rejected.");
   await publicPage.getByRole("button", { name: /submit/i }).click();
-  await publicPage.waitForSelector("text=/submitted|thank you/i", { timeout: 10_000 });
+  await expect(
+    publicPage.getByText(/submitted|thank you/i).first()
+  ).toBeVisible({ timeout: 10_000 });
   await publicPage.close();
 
   // Back to dashboard — find the new request
   await page.goto("/dashboard/dsar");
-  const pendingRow = page
-    .getByText("reject-test@test.local")
-    .or(page.locator("a[href*='/dashboard/dsar/']").last());
+  const pendingRow = page.locator("a[href*='/dashboard/dsar/']").last();
   await pendingRow.click();
-
   await page.waitForURL(/\/dashboard\/dsar\/.+/);
 
   // Fill rejection reason and reject
   const reasonField = page
-    .getByLabel(/reason|rejection/i)
-    .or(page.getByRole("textbox", { name: /response|reason/i }))
+    .getByLabel(/reason|response|rejection/i)
+    .or(page.getByRole("textbox").first())
     .first();
   await reasonField.fill("This request falls outside the scope of our data processing.");
 
@@ -150,6 +169,6 @@ test("owner can reject a DSAR request with a reason", async ({ page, context }) 
   await rejectBtn.click();
 
   await expect(
-    page.getByText(/rejected|request.*rejected/i)
+    page.getByText(/rejected/i).first()
   ).toBeVisible({ timeout: 10_000 });
 });

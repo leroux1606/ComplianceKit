@@ -20,8 +20,8 @@ test("user can sign up with email and land on the dashboard", async ({ page }) =
   // Form fields
   await page.getByLabel("Name").fill("E2E Signup User");
   await page.getByLabel("Email").fill(email);
-  await page.getByPlaceholder("••••••••").nth(0).fill(password);
-  await page.getByPlaceholder("••••••••").nth(1).fill(password);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm Password").fill(password);
 
   // Required consent checkboxes
   await page.getByLabel(/Terms of Service/).check();
@@ -47,8 +47,8 @@ test("sign-up form rejects mismatched passwords", async ({ page }) => {
 
   await page.getByLabel("Name").fill("Test User");
   await page.getByLabel("Email").fill(`mismatch+${Date.now()}@test.local`);
-  await page.getByPlaceholder("••••••••").nth(0).fill("Password123!");
-  await page.getByPlaceholder("••••••••").nth(1).fill("DifferentPass123!");
+  await page.getByLabel("Password", { exact: true }).fill("Password123!");
+  await page.getByLabel("Confirm Password").fill("DifferentPass123!");
   await page.getByLabel(/Terms of Service/).check();
   await page.getByLabel(/Data Processing Agreement/).check();
 

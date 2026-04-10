@@ -8,6 +8,6 @@ export async function signIn(page: Page): Promise<void> {
   await page.goto("/sign-in");
   await page.getByLabel("Email").fill(TEST_EMAIL);
   await page.getByLabel("Password").fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL("**/dashboard**", { timeout: 15_000 });
 }

@@ -147,6 +147,9 @@ export async function signInWithCredentials(
       redirectTo: "/dashboard",
     });
 
+    // Note: signIn() throws a NEXT_REDIRECT on success (standard Next.js
+    // server-action redirect pattern). The lines below only run if Auth.js
+    // changes that behaviour in a future version.
     await recordSuccessfulLogin(sanitizedEmail, ipAddress);
 
     logAuthEvent(
@@ -160,18 +163,21 @@ export async function signInWithCredentials(
 
     return { success: true };
   } catch (error) {
-    const failureStatus = await recordFailedAttempt(sanitizedEmail, ipAddress);
-
-    logAuthEvent(
-      SecurityEventType.LOGIN_FAILED,
-      sanitizedEmail,
-      ipAddress,
-      userAgent,
-      false,
-      { attemptsRemaining: failureStatus.attemptsRemaining }
-    );
-
+    // Auth.js throws NEXT_REDIRECT on successful sign-in — rethrow it
+    // immediately so the browser navigates. Only record a failed attempt
+    // when the error is actually an authentication failure.
     if (error instanceof AuthError) {
+      const failureStatus = await recordFailedAttempt(sanitizedEmail, ipAddress);
+
+      logAuthEvent(
+        SecurityEventType.LOGIN_FAILED,
+        sanitizedEmail,
+        ipAddress,
+        userAgent,
+        false,
+        { attemptsRemaining: failureStatus.attemptsRemaining }
+      );
+
       switch (error.type) {
         case "CredentialsSignin":
           if (failureStatus.locked) {
@@ -186,6 +192,11 @@ export async function signInWithCredentials(
           return { error: "Something went wrong" };
       }
     }
+
+    // Redirect throw or unexpected error — rethrow without recording failure.
+    // For successful logins, clear any prior lockout record.
+    recordSuccessfulLogin(sanitizedEmail, ipAddress).catch(() => {});
+
     throw error;
   }
 }

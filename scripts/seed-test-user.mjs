@@ -49,6 +49,14 @@ async function main() {
   });
 
   console.log(`✓ Test user ready: ${user.email} (id: ${user.id})`);
+
+  // Clear any brute-force lockout records for the test user so E2E auth works
+  const deleted = await prisma.loginAttemptRecord.deleteMany({
+    where: { identifier: { startsWith: email.toLowerCase() } },
+  });
+  if (deleted.count > 0) {
+    console.log(`✓ Cleared ${deleted.count} lockout record(s) for ${email}`);
+  }
 }
 
 main()

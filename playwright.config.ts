@@ -26,7 +26,13 @@ export default defineConfig({
   },
 
   projects: [
-    // Global setup — creates test user and saves auth state
+    // Smoke tests — no auth needed, runs independently
+    {
+      name: "smoke",
+      testMatch: /00-smoke\.spec\.ts/,
+    },
+
+    // Global setup — signs in as test user and saves auth state
     {
       name: "setup",
       testMatch: /global-setup\.ts/,
@@ -40,6 +46,7 @@ export default defineConfig({
         storageState: AUTH_FILE,
       },
       dependencies: ["setup"],
+      testIgnore: /00-smoke\.spec\.ts/,
     },
   ],
 
