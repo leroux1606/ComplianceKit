@@ -124,34 +124,43 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
 
           <div className="pt-4 border-t space-y-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-3">Pay in ZAR (South Africa)</p>
               <div className="flex items-center justify-between mb-4">
                 <p className="font-semibold">Total due today</p>
-                <p className="text-2xl font-bold">
-                  R{billing === "annual" ? plan.yearlyPrice.toLocaleString() : plan.price}
-                </p>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">
+                    R{billing === "annual" ? plan.yearlyPrice.toLocaleString() : plan.price}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ≈ ${billing === "annual" ? plan.yearlyPriceUsd.toLocaleString() : plan.priceUsd} USD
+                  </p>
+                </div>
               </div>
               <CheckoutButton planSlug={plan.slug} planName={plan.name} billing={billing} />
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                 <Shield className="h-4 w-4" />
-                <p>Secure payment powered by PayStack</p>
+                <p>Secure payment powered by PayStack · Accepts Visa, Mastercard & Amex worldwide</p>
               </div>
             </div>
 
-            <Separator />
-
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-3">Pay in USD (International)</p>
-              <div className="flex items-center justify-between mb-4">
-                <p className="font-semibold">Total due today</p>
-                <p className="text-2xl font-bold">${plan.priceUsd}</p>
-              </div>
-              <StripeCheckoutButton planSlug={plan.slug} planName={plan.name} />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                <Shield className="h-4 w-4" />
-                <p>Secure payment powered by Stripe</p>
-              </div>
-            </div>
+            {process.env.STRIPE_SECRET_KEY && (
+              <>
+                <Separator />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Or pay in USD</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="font-semibold">Total due today</p>
+                    <p className="text-2xl font-bold">
+                      ${billing === "annual" ? plan.yearlyPriceUsd.toLocaleString() : plan.priceUsd}
+                    </p>
+                  </div>
+                  <StripeCheckoutButton planSlug={plan.slug} planName={plan.name} />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                    <Shield className="h-4 w-4" />
+                    <p>Secure payment powered by Stripe</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
