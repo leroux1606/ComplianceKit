@@ -108,21 +108,42 @@ All P0 and most security P1 items are done. Remaining P1 items ordered by impact
 
 ---
 
-## LAUNCH-PLAN PHASE STATUS (as of 2026-04-08)
+## LAUNCH-PLAN PHASE STATUS (as of 2026-04-10)
 
 | Item | Status |
 |------|--------|
 | Phase 2.4 REST API | ✅ Complete |
+| Phase 2.5 E2E tests | ✅ 18 passing, 12 expected skips |
 | Phase 3.1 Team/multi-user management | ✅ Complete |
 | Phase 3.2 CCPA compliance scanner | ✅ Complete |
 | Phase 3.3 Automated scan scheduling | ✅ Complete |
 | Phase 3.4 Remediation guidance + GDPR article links | ✅ Complete |
 | Phase 3.5 AI-powered policy generation | ✅ Complete |
-| Phase 3.6 Support infrastructure | **Next up** |
+| Phase 3.6 Support infrastructure | ✅ Complete |
 
 ---
 
 ## SESSION LOG
+
+### 2026-04-10 — Phase 2.5 E2E tests: UNBLOCKED AND PASSING
+
+**E2E test suite: ✅ 18 passing, 12 expected skips, 0 failures**
+
+Root causes found and fixed:
+1. **Password label-input broken** — `FormControl` (Radix `Slot`) passed `id` to wrapper `<div>` instead of `<Input>`. Fixed in `sign-in-form.tsx` and `sign-up-form.tsx`.
+2. **Server action redirects hang** — `signIn()` throws `NEXT_REDIRECT` that never reaches the browser (next-auth@5 beta + Next.js 16 issue). Fixed `global-setup.ts` to auth via NextAuth API endpoint.
+3. **False lockout on successful login** — `signInWithCredentials` catch block called `recordFailedAttempt()` on redirect throws, locking accounts after 5 logins. Fixed in `lib/auth-actions.ts`.
+4. **Selector issues** — button "Sign in" matched "Sign in with Google"; `.or()` chains hit strict mode; free-plan checks ran before page loaded. Fixed across all 6 spec files.
+
+Files changed:
+- `lib/auth-actions.ts` — moved `recordFailedAttempt` inside `AuthError` check; added `recordSuccessfulLogin` on redirect
+- `components/auth/sign-in-form.tsx` — moved `<div className="relative">` outside `<FormControl>`
+- `components/auth/sign-up-form.tsx` — same fix for password + confirm password fields
+- `e2e/global-setup.ts` — rewritten: authenticates via NextAuth API, not UI form
+- `e2e/00-smoke.spec.ts` — new standalone smoke test
+- `e2e/01-signup.spec.ts` through `e2e/06-cancel-delete.spec.ts` — selector fixes
+- `scripts/seed-test-user.mjs` — clears lockout records on seed
+- `playwright.config.ts` — added smoke project
 
 ### 2026-04-09 — Phase 3.6 complete + Phase 2.5 infrastructure (auth blocker)
 
