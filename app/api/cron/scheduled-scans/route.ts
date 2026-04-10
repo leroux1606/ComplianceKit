@@ -24,7 +24,7 @@ const MAX_RUNTIME_MS = 50_000; // 50 seconds
  * Websites are ordered by nextScheduledScanAt (oldest first) so that
  * no website gets permanently starved across invocations.
  *
- * vercel.json: schedule "0 */6 * * *" (every 6 hours at minute 0)
+ * vercel.json schedule: every 2 hours at minute 0
  *
  * Manual trigger:
  *   curl -H "Authorization: Bearer CRON_SECRET" https://yourdomain.com/api/cron/scheduled-scans
