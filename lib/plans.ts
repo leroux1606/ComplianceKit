@@ -42,10 +42,10 @@ export const PLANS: Plan[] = [
     name: "Starter",
     slug: "starter",
     description: "Perfect for small websites and blogs",
-    price: 299,
-    yearlyPrice: 2870, // 299 * 12 * 0.8
-    priceUsd: 16,
-    yearlyPriceUsd: 154, // 16 * 12 * 0.8
+    price: 549,
+    yearlyPrice: 5270, // 549 * 12 * 0.8
+    priceUsd: 29,
+    yearlyPriceUsd: 278, // 29 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_STARTER_PLAN_CODE || "PLN_starter",
@@ -54,7 +54,7 @@ export const PLANS: Plan[] = [
     stripeYearlyPriceId: process.env.STRIPE_STARTER_YEARLY_PRICE_ID || "",
     features: {
       maxWebsites: 1,
-      maxScansPerMonth: 10,
+      maxScansPerMonth: 20,
       cookieBanner: true,
       policyGenerator: true,
       aiPolicyGenerator: false,
@@ -71,10 +71,10 @@ export const PLANS: Plan[] = [
     name: "Professional",
     slug: "professional",
     description: "For growing businesses with multiple websites",
-    price: 799,
-    yearlyPrice: 7670, // 799 * 12 * 0.8
-    priceUsd: 43,
-    yearlyPriceUsd: 413, // 43 * 12 * 0.8
+    price: 1499,
+    yearlyPrice: 14390, // 1499 * 12 * 0.8
+    priceUsd: 79,
+    yearlyPriceUsd: 758, // 79 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_PROFESSIONAL_PLAN_CODE || "PLN_professional",
@@ -82,8 +82,8 @@ export const PLANS: Plan[] = [
     stripePriceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || "",
     stripeYearlyPriceId: process.env.STRIPE_PROFESSIONAL_YEARLY_PRICE_ID || "",
     features: {
-      maxWebsites: 5,
-      maxScansPerMonth: 50,
+      maxWebsites: 10,
+      maxScansPerMonth: 100,
       cookieBanner: true,
       policyGenerator: true,
       aiPolicyGenerator: true,
@@ -91,7 +91,7 @@ export const PLANS: Plan[] = [
       customBranding: true,
       prioritySupport: false,
       apiAccess: true,
-      teamMembers: 3,
+      teamMembers: 5,
       dataRetentionDays: 90,
     },
     popular: true,
@@ -101,10 +101,10 @@ export const PLANS: Plan[] = [
     name: "Enterprise",
     slug: "enterprise",
     description: "For large organizations with advanced needs",
-    price: 1999,
-    yearlyPrice: 19190, // 1999 * 12 * 0.8
-    priceUsd: 109,
-    yearlyPriceUsd: 1046, // 109 * 12 * 0.8
+    price: 3499,
+    yearlyPrice: 33590, // 3499 * 12 * 0.8
+    priceUsd: 199,
+    yearlyPriceUsd: 1910, // 199 * 12 * 0.8
     currency: "ZAR",
     interval: "monthly",
     paystackPlanCode: process.env.PAYSTACK_ENTERPRISE_PLAN_CODE || "PLN_enterprise",

@@ -3,14 +3,28 @@ import { db } from "@/lib/db";
 import { executeScan } from "@/lib/scan-runner";
 import { sendScanScoreDropEmail } from "@/lib/email";
 
+// Process at most this many scans per cron invocation to stay within
+// Vercel function timeout limits. The cron runs every 6 hours, so
+// remaining websites will be picked up in the next invocation.
+const BATCH_SIZE = 5;
+
+// Stop processing if we've been running longer than this (in ms).
+// Vercel Pro allows 60s, Enterprise 300s. Leave headroom for the
+// response and score-drop email sends.
+const MAX_RUNTIME_MS = 50_000; // 50 seconds
+
 /**
  * Scheduled scans cron.
  *
- * Runs every 6 hours. Finds websites whose nextScheduledScanAt is in the past,
- * triggers a scan, advances nextScheduledScanAt, and emails the owner if the
- * compliance score dropped by 5+ points vs the previous scan.
+ * Runs every 6 hours. Picks up to BATCH_SIZE websites whose
+ * nextScheduledScanAt is in the past, triggers a scan, advances
+ * nextScheduledScanAt, and emails the owner if the compliance score
+ * dropped by 5+ points vs the previous scan.
  *
- * vercel.json: schedule "0 every-6-hours * * *" (0 at minute 0, every 6th hour)
+ * Websites are ordered by nextScheduledScanAt (oldest first) so that
+ * no website gets permanently starved across invocations.
+ *
+ * vercel.json: schedule "0 */6 * * *" (every 6 hours at minute 0)
  *
  * Manual trigger:
  *   curl -H "Authorization: Bearer CRON_SECRET" https://yourdomain.com/api/cron/scheduled-scans
@@ -27,17 +41,19 @@ export async function GET(request: Request) {
 
   const now = new Date();
   const startedAt = Date.now();
-  const results = { triggered: 0, skipped: 0, errors: 0 };
+  const results = { triggered: 0, skipped: 0, errors: 0, totalDue: 0 };
 
-  // Find all websites due for a scheduled scan
+  // Find websites due for a scheduled scan, limited to BATCH_SIZE.
+  // Oldest-due first so no website is permanently starved.
   const websites = await db.website.findMany({
     where: {
       scanSchedule: { not: "none" },
       nextScheduledScanAt: { lte: now },
       status: "active",
-      // Skip websites that already have a scan running
       scans: { none: { status: { in: ["queued", "running"] } } },
     },
+    orderBy: { nextScheduledScanAt: "asc" },
+    take: BATCH_SIZE,
     include: {
       user: { select: { email: true, name: true } },
       scans: {
@@ -48,9 +64,25 @@ export async function GET(request: Request) {
     },
   });
 
+  // Also count the total due so we can report how many are queued
+  const totalDue = await db.website.count({
+    where: {
+      scanSchedule: { not: "none" },
+      nextScheduledScanAt: { lte: now },
+      status: "active",
+      scans: { none: { status: { in: ["queued", "running"] } } },
+    },
+  });
+  results.totalDue = totalDue;
+
   for (const website of websites) {
+    // Time guard: stop if we're approaching the function timeout
+    if (Date.now() - startedAt > MAX_RUNTIME_MS) {
+      console.log(`[Scheduled Scans] Time limit reached after ${results.triggered} scans, deferring rest`);
+      break;
+    }
+
     try {
-      // Create a scan record
       const scan = await db.scan.create({
         data: {
           websiteId: website.id,
@@ -72,7 +104,6 @@ export async function GET(request: Request) {
         data: { nextScheduledScanAt: next },
       });
 
-      // Run scan synchronously (cron has generous timeout)
       await executeScan(scan.id, website.id, website.url);
 
       // Reload completed scan to get score
@@ -114,15 +145,16 @@ export async function GET(request: Request) {
   }
 
   const durationMs = Date.now() - startedAt;
+  const remaining = totalDue - results.triggered;
   console.log(
-    `[Scheduled Scans] Done. Triggered: ${results.triggered}, Skipped: ${results.skipped}, Errors: ${results.errors}, Duration: ${durationMs}ms`
+    `[Scheduled Scans] Done. Triggered: ${results.triggered}, Errors: ${results.errors}, Remaining: ${remaining}, Duration: ${durationMs}ms`
   );
 
   return NextResponse.json({
     success: true,
     timestamp: now.toISOString(),
     durationMs,
-    results,
+    results: { ...results, remaining },
   });
 }
 

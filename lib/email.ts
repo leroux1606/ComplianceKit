@@ -630,7 +630,7 @@ export async function sendOnboardingDay7Email(params: {
        <div class="feature-row"><strong>Unlimited policy generation</strong> — refresh policies whenever your setup changes</div>
      </div>
 
-     <p>The Starter plan is <strong>$16/month</strong> (billed as R299 via Paystack). That's less than a parking ticket — and it protects you from fines that can run into thousands.</p>
+     <p>The Starter plan is <strong>$29/month</strong> (or R549 via Paystack). That's less than a parking ticket — and it protects you from fines that can run into thousands.</p>
 
      <p style="text-align:center;"><a href="${pricingUrl}" class="button">See all plans</a></p>
 
@@ -647,7 +647,7 @@ You've been using ComplianceKit for a week. Here's what upgrading to a paid plan
 - Consent record export — CSV download for DPA investigations
 - Unlimited policy generation
 
-The Starter plan is $16/month (billed as R299 via Paystack).
+The Starter plan is $29/month (or R549 via Paystack).
 
 See all plans: ${pricingUrl}
 
