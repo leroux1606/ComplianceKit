@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { withRateLimit, RateLimitPresets } from "@/lib/rate-limit";
 
 /**
  * GET /api/dsar/[embedCode]/verify?token=xxx - Verify a DSAR submission
  */
-export async function GET(
+export const GET = withRateLimit(async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ embedCode: string }> }
 ) {
@@ -25,8 +26,16 @@ export async function GET(
 
     if (!dsar) {
       return NextResponse.json(
-        { error: "Invalid verification token" },
+        { error: "Invalid or expired verification token" },
         { status: 404 }
+      );
+    }
+
+    // Check token expiration (72-hour window)
+    if (dsar.verificationTokenExpiresAt && new Date() > dsar.verificationTokenExpiresAt) {
+      return NextResponse.json(
+        { error: "Verification token has expired. Please submit a new request." },
+        { status: 410 }
       );
     }
 
@@ -68,7 +77,7 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+}, RateLimitPresets.strict);
 
 
 

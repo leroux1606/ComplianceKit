@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { permanentlyDeleteUser } from "@/lib/actions/user";
+import { verifyCronRequest } from "@/lib/cron-auth";
 
 /**
  * Cron job to process account deletions after 30-day grace period
@@ -19,21 +20,8 @@ import { permanentlyDeleteUser } from "@/lib/actions/user";
  */
 export async function GET(request: Request) {
   // Verify the request is authorized (from Vercel Cron or external service)
-  const authHeader = request.headers.get("authorization");
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-  
-  if (!process.env.CRON_SECRET) {
-    console.error("CRON_SECRET not configured");
-    return NextResponse.json(
-      { error: "Cron secret not configured" },
-      { status: 500 }
-    );
-  }
-
-  if (authHeader !== expectedAuth) {
-    console.warn("Unauthorized cron request attempt");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronRequest(request);
+  if (authError) return authError;
 
   try {
     // Find all users marked for deletion where grace period (30 days) has passed

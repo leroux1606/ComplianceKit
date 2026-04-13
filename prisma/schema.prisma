@@ -315,8 +315,9 @@ model DataSubjectRequest {
   requesterPhone    String?
   description       String
   additionalInfo    String?
-  verificationToken String           @unique @default(cuid())
-  verifiedAt        DateTime?
+  verificationToken           String    @unique @default(cuid())
+  verificationTokenExpiresAt  DateTime?
+  verifiedAt                  DateTime?
   assignedTo        String?
   internalNotes     String?
   responseContent   String?

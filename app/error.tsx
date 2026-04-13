@@ -25,6 +25,11 @@ export default function Error({
       <p className="text-muted-foreground text-center max-w-md">
         An error occurred while processing your request. Please try again.
       </p>
+      {error.digest && (
+        <p className="text-xs text-muted-foreground font-mono">
+          Error ID: {error.digest}
+        </p>
+      )}
       <Button onClick={reset}>Try again</Button>
     </div>
   );

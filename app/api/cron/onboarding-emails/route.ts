@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyCronRequest } from "@/lib/cron-auth";
 import {
   sendOnboardingDay1Email,
   sendOnboardingDay3Email,
@@ -23,15 +24,8 @@ import {
  *   curl -H "Authorization: Bearer CRON_SECRET" https://yourdomain.com/api/cron/onboarding-emails
  */
 export async function GET(request: Request) {
-  if (!process.env.CRON_SECRET) {
-    console.error("[Onboarding Emails] CRON_SECRET not configured");
-    return NextResponse.json({ error: "Cron secret not configured" }, { status: 500 });
-  }
-
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronRequest(request);
+  if (authError) return authError;
 
   const startedAt = Date.now();
   const now = new Date();

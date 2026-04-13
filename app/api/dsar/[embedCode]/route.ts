@@ -53,6 +53,9 @@ export const POST = withRateLimit(async function POST(
     const sanitizedAdditionalInfo = additionalInfo ? sanitizeInput(additionalInfo) : null;
 
     // Create DSAR
+    // Token expires in 72 hours
+    const verificationTokenExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+
     const dsar = await db.dataSubjectRequest.create({
       data: {
         websiteId: website.id,
@@ -65,6 +68,7 @@ export const POST = withRateLimit(async function POST(
         dueDate: calculateDueDate(),
         status: "pending",
         priority: "normal",
+        verificationTokenExpiresAt,
       },
     });
 
