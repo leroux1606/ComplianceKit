@@ -59,6 +59,34 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Retry an async operation up to maxAttempts times with exponential backoff.
+ * Delays: 1s, 2s, 4s (doubles each attempt).
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  label?: string
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        const delayMs = Math.pow(2, attempt - 1) * 1000;
+        console.warn(
+          `${label ?? "Operation"} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms...`,
+          error instanceof Error ? error.message : error
+        );
+        await sleep(delayMs);
+      }
+    }
+  }
+  throw lastError;
+}
+
 export class TimeoutError extends Error {
   constructor(ms: number, label?: string) {
     super(`${label ?? "Operation"} timed out after ${ms}ms`);

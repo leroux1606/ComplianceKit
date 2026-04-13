@@ -2,6 +2,7 @@
  * Email utility for sending transactional emails
  * Using Resend for production-ready email delivery
  */
+import { withRetry } from "@/lib/utils";
 
 interface SendEmailParams {
   to: string;
@@ -29,45 +30,43 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
     return { success: true, messageId: 'dev-mode' };
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  return withRetry(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
-  try {
-    // Use Resend API
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM || 'ComplianceKit <noreply@compliancekit.app>',
-        to,
-        subject,
-        html,
-        text,
-      }),
-    });
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || 'ComplianceKit <noreply@compliancekit.app>',
+          to,
+          subject,
+          html,
+          text,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Email send failed:', error);
-      throw new Error(`Failed to send email: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to send email: ${error}`);
+      }
+
+      const data = await response.json();
+      return { success: true, messageId: data.id };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Email service timed out after 10s');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await response.json();
-    return { success: true, messageId: data.id };
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      console.error('Email send timed out after 10s:', { to, subject });
-      throw new Error('Email service timed out');
-    }
-    console.error('Error sending email:', error);
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  }, 3, `email to ${to}`);
 }
 
 /**
