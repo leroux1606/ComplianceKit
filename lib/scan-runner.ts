@@ -93,6 +93,7 @@ export async function executeScan(
         status: "completed",
         score: result.score,
         ccpaScore: result.ccpaScore,
+        popiaScore: result.popiaScore,
         completedAt: new Date(),
       },
     });

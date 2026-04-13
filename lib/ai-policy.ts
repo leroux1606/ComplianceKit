@@ -66,7 +66,7 @@ function buildPrivacyPolicyPrompt(input: AiPolicyInput): string {
     ),
   ];
 
-  return `You are a privacy law expert specializing in GDPR (EU) compliance. Write a complete, production-ready Privacy Policy for the following website. The policy must be comprehensive, specific to this website's actual data practices (derived from the scan data below), written in clear plain English, and structured correctly.
+  return `You are a privacy law expert specializing in GDPR (EU), POPIA (South Africa), and CCPA (California) compliance. Write a complete, production-ready Privacy Policy for the following website. The policy must be comprehensive, specific to this website's actual data practices (derived from the scan data below), written in clear plain English, and structured correctly.
 
 IMPORTANT RULES:
 - Output ONLY the policy in Markdown format. No preamble, no "Here is your policy:", no explanation.
@@ -74,7 +74,8 @@ IMPORTANT RULES:
 - Start directly with: # Privacy Policy — [Company Name]
 - Be specific: reference actual cookie names, script providers, and data practices where relevant.
 - Do NOT use placeholder text like "[INSERT HERE]" — use the data provided or omit the section.
-- The policy must fully satisfy GDPR Articles 13–14 (transparency requirements).
+- The policy must fully satisfy GDPR Articles 13–14 (transparency requirements) AND POPIA Condition 6 (openness).
+- Always include a dedicated POPIA section referencing "Protection of Personal Information Act 4 of 2013" and the Information Regulator of South Africa (inforeg.org.za).
 - Where the company email or DPO details are provided, use them. Where missing, omit rather than invent.
 - Include a California section (CCPA/CPRA) if there are tracking/marketing scripts or cookies.
 - Tone: professional, clear, written for ordinary website visitors — not legalese.
@@ -105,14 +106,15 @@ REQUIRED POLICY SECTIONS (in order):
 1. Introduction — who operates the site, purpose of the policy, effective date
 2. What Personal Data We Collect — list specific categories (browser data, IP, cookies, form inputs etc.)
 3. How We Collect Data — automatic collection, forms, third-party sources
-4. How We Use Your Data — specific purposes, legal basis for each under GDPR Art. 6
+4. How We Use Your Data — specific purposes, legal basis for each under GDPR Art. 6 and POPIA Condition 2/3
 5. Cookies and Tracking Technologies — reference the actual cookies/services found above
-6. Sharing Your Data — which third parties receive data and why
-7. International Data Transfers — GDPR adequacy decisions or SCCs if US services detected
+6. Sharing Your Data — which third parties receive data and why (POPIA: disclose "operators" and "third parties")
+7. International Data Transfers — GDPR adequacy decisions or SCCs if US services detected; POPIA §72 for cross-border transfers from South Africa
 8. Data Retention — how long each category is kept
-9. Your Rights (GDPR Articles 15–22) — enumerate all eight rights with brief explanation
-10. How to Exercise Your Rights — contact details and 30-day response commitment
-${(input.ccpaScore !== null && input.ccpaScore !== undefined) || marketingCookies.length > 0 || thirdPartyServices.length > 0 ? "11. California Privacy Rights (CCPA/CPRA) — rights for California residents, Do Not Sell/Share\n12. Children's Privacy\n13. Changes to This Policy\n14. Contact Us" : "11. Children's Privacy\n12. Changes to This Policy\n13. Contact Us"}
+9. Your Rights (GDPR Articles 15–22 AND POPIA Condition 8) — enumerate all rights with brief explanation; note 30-day response obligation under both laws
+10. South African Data Rights (POPIA) — dedicated section: Information Officer details, how to contact the Information Regulator (inforeg.org.za), right to lodge complaints
+11. How to Exercise Your Rights — contact details and 30-day response commitment
+${(input.ccpaScore !== null && input.ccpaScore !== undefined) || marketingCookies.length > 0 || thirdPartyServices.length > 0 ? "12. California Privacy Rights (CCPA/CPRA) — rights for California residents, Do Not Sell/Share\n13. Children's Privacy\n14. Changes to This Policy\n15. Contact Us" : "12. Children's Privacy\n13. Changes to This Policy\n14. Contact Us"}
 
 Generate the complete Privacy Policy now:`;
 }

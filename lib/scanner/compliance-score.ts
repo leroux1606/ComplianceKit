@@ -1,4 +1,5 @@
 import type { DetectedCookie, DetectedScript, Finding, UserRightsDetection } from "./types";
+import { logger } from "@/lib/logger";
 
 interface ScoreInput {
   hasPrivacyPolicy: boolean;
@@ -27,19 +28,13 @@ interface ScoreBreakdown {
 export function calculateComplianceScore(input: ScoreInput): number {
   const breakdown = getScoreBreakdown(input);
   
-  // Debug logging
-  console.log('[Compliance Score Debug]', {
+  logger.debug("scanner.compliance_score", {
     hasPrivacyPolicy: input.hasPrivacyPolicy,
     hasCookieBanner: input.hasCookieBanner,
-    privacyPolicyScore: input.privacyPolicyScore,
-    consentQualityScore: input.consentQualityScore,
     cookiesCount: input.cookies.length,
     scriptsCount: input.scripts.length,
-    findingsCount: input.findings.length,
-    errorFindings: input.findings.filter(f => f.severity === 'error').length,
-    findings: input.findings.map(f => ({ type: f.type, severity: f.severity, title: f.title })),
-    breakdown,
-    finalScore: breakdown.total,
+    errorFindings: input.findings.filter(f => f.severity === "error").length,
+    score: breakdown.total,
   });
   
   return Math.max(0, Math.min(100, breakdown.total));

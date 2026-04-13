@@ -55,7 +55,13 @@ export type FindingType =
   // CCPA / CPRA
   | "ccpa_do_not_sell"
   | "ccpa_privacy_policy"
-  | "ccpa_consumer_rights";
+  | "ccpa_consumer_rights"
+  // POPIA (South Africa)
+  | "popia_policy_reference"
+  | "popia_information_regulator"
+  | "popia_data_subject_rights"
+  | "popia_access_request"
+  | "popia_third_party_operators";
 
 export type FindingSeverity = "info" | "warning" | "error";
 
@@ -83,7 +89,8 @@ export interface ScanResult {
   userRights?: UserRightsDetection;
   privacyPolicyScore?: number; // 0-100 completeness score
   consentQualityScore?: number; // 0-100 quality score
-  ccpaScore?: number; // 0-100 CCPA/CPRA compliance score
+  ccpaScore?: number;  // 0-100 CCPA/CPRA compliance score (California)
+  popiaScore?: number; // 0-100 POPIA compliance score (South Africa)
   score: number;
   error?: string;
   scannedAt: Date;

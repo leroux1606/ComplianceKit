@@ -10,6 +10,7 @@ import { analyzePrivacyPolicyContent, generatePrivacyPolicyFindings } from "./pr
 import { analyzeConsentQuality, generateConsentQualityFindings } from "./consent-quality-analyzer";
 import { runAdditionalComplianceChecks, generateAdditionalComplianceFindings } from "./additional-compliance-detector";
 import { detectDoNotSellLink, analyzeCcpaPolicyContent, calculateCcpaScore, generateCcpaFindings, type CcpaChecks } from "./ccpa-detector";
+import { analyzePopiaPolicyContent, calculatePopiaScore, generatePopiaFindings } from "./popia-detector";
 import { calculateComplianceScore } from "./compliance-score";
 
 const DEFAULT_TIMEOUT = 120000; // 120 seconds (2 minutes)
@@ -212,6 +213,17 @@ export class Scanner {
       const ccpaFindings = generateCcpaFindings(ccpaChecks, hasTrackingScripts);
       findings.push(...ccpaFindings);
 
+      // POPIA (Protection of Personal Information Act) checks — South Africa
+      const popiaPolicyChecks = analyzePopiaPolicyContent(ccpaPolicyContent);
+      const popiaChecks = {
+        hasPrivacyPolicy: privacyPolicy.found,
+        hasAccessRequestMechanism: userRights.hasDsarMechanism,
+        ...popiaPolicyChecks,
+      };
+      const popiaScore = calculatePopiaScore(popiaChecks);
+      const popiaFindings = generatePopiaFindings(popiaChecks, hasTrackingScripts);
+      findings.push(...popiaFindings);
+
       // Calculate compliance score
       const score = calculateComplianceScore({
         hasPrivacyPolicy: privacyPolicy.found,
@@ -238,6 +250,7 @@ export class Scanner {
         privacyPolicyScore,
         consentQualityScore,
         ccpaScore,
+        popiaScore,
         score,
         scannedAt: new Date(),
         duration,
