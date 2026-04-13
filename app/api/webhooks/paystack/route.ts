@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { getPlanByPaystackCode } from "@/lib/plans";
+import { logger } from "@/lib/logger";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
 
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("x-paystack-signature");
 
     if (!signature || !verifySignature(payload, signature)) {
-      console.error("Invalid PayStack webhook signature");
+      logger.warn("webhook.paystack.invalid_signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     const eventType = event.event;
     const data = event.data;
 
-    console.log(`PayStack webhook received: ${eventType}`);
+    logger.info("webhook.paystack.received", { eventType });
 
     switch (eventType) {
       case "subscription.create":
@@ -72,12 +73,12 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled PayStack event: ${eventType}`);
+        logger.warn("webhook.paystack.unhandled", { eventType });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("PayStack webhook error:", error);
+    logger.error("webhook.paystack.error", {}, error);
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }
@@ -102,7 +103,7 @@ async function handleSubscriptionCreate(data: {
   });
 
   if (!user) {
-    console.error(`User not found for email: ${customer.email}`);
+    logger.warn("webhook.paystack.user_not_found", { email: customer.email });
     return;
   }
 
@@ -131,7 +132,7 @@ async function handleSubscriptionCreate(data: {
     },
   });
 
-  console.log(`Subscription created for user: ${user.id}`);
+  logger.info("webhook.paystack.subscription_created", { userId: user.id });
 }
 
 /**
@@ -154,7 +155,7 @@ async function handleSubscriptionNotRenew(data: {
     },
   });
 
-  console.log(`Subscription set to not renew for user: ${user.id}`);
+  logger.info("webhook.paystack.subscription_not_renew", { userId: user.id });
 }
 
 /**
@@ -178,7 +179,7 @@ async function handleSubscriptionDisable(data: {
     },
   });
 
-  console.log(`Subscription disabled for user: ${user.id}`);
+  logger.info("webhook.paystack.subscription_disabled", { userId: user.id });
 }
 
 /**
@@ -205,7 +206,7 @@ async function handleSubscriptionEnable(data: {
     },
   });
 
-  console.log(`Subscription enabled for user: ${user.id}`);
+  logger.info("webhook.paystack.subscription_enabled", { userId: user.id });
 }
 
 /**
@@ -262,7 +263,7 @@ async function handleChargeSuccess(data: {
     });
   }
 
-  console.log(`Charge successful for user: ${user.id}`);
+  logger.info("webhook.paystack.charge_success", { userId: user.id });
 }
 
 /**
@@ -297,7 +298,7 @@ async function handleInvoiceCreate(data: {
     },
   });
 
-  console.log(`Invoice created for user: ${user.id}`);
+  logger.info("webhook.paystack.invoice_created", { userId: user.id });
 }
 
 /**
@@ -320,7 +321,7 @@ async function handleInvoicePaymentFailed(data: {
     },
   });
 
-  console.log(`Payment failed for user: ${user.id}`);
+  logger.warn("webhook.paystack.payment_failed", { userId: user.id });
 }
 
 

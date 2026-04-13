@@ -17,15 +17,19 @@ const FALLBACK_MAX_REQUESTS = 20;   // per instance per key
 
 const memoryFallback = new Map<string, { count: number; resetAt: number }>();
 
-function checkMemoryFallback(key: string): boolean {
-  const now = Date.now();
-
-  // Probabilistic cleanup to prevent unbounded memory growth on long-lived instances
-  if (memoryFallback.size > 500) {
+// Sweep expired entries every 5 minutes regardless of map size.
+// Prevents unbounded growth during extended DB outages on long-lived containers.
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
     for (const [k, v] of memoryFallback) {
       if (v.resetAt < now) memoryFallback.delete(k);
     }
-  }
+  }, 5 * 60 * 1000).unref?.(); // .unref() so the timer doesn't keep the process alive
+}
+
+function checkMemoryFallback(key: string): boolean {
+  const now = Date.now();
 
   const entry = memoryFallback.get(key);
   if (!entry || entry.resetAt < now) {

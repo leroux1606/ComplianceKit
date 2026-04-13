@@ -3,6 +3,7 @@ import { constructStripeEvent } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { getPlanBySlug } from "@/lib/plans";
 import type Stripe from "stripe";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +18,11 @@ export async function POST(request: NextRequest) {
     try {
       event = constructStripeEvent(payload, signature);
     } catch (err) {
-      console.error("Stripe webhook signature verification failed:", err);
+      logger.error("webhook.stripe.invalid_signature", {}, err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    console.log(`Stripe webhook received: ${event.type}`);
+    logger.info("webhook.stripe.received", { eventType: event.type });
 
     switch (event.type) {
       case "checkout.session.completed":
@@ -45,12 +46,12 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled Stripe event: ${event.type}`);
+        logger.warn("webhook.stripe.unhandled", { eventType: event.type });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Stripe webhook error:", error);
+    logger.error("webhook.stripe.error", {}, error);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }
@@ -60,13 +61,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const planSlug = session.metadata?.planSlug;
 
   if (!userId || !planSlug) {
-    console.error("Missing metadata in Stripe checkout session:", session.id);
+    logger.warn("webhook.stripe.missing_metadata", { sessionId: session.id });
     return;
   }
 
   const plan = getPlanBySlug(planSlug);
   if (!plan) {
-    console.error("Unknown plan slug in Stripe metadata:", planSlug);
+    logger.warn("webhook.stripe.unknown_plan", { planSlug });
     return;
   }
 
@@ -100,7 +101,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     },
   });
 
-  console.log(`Stripe subscription activated for user: ${userId}`);
+  logger.info("webhook.stripe.subscription_activated", { userId });
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
