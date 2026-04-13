@@ -13,7 +13,9 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
-  const pool = new Pool({ connectionString, max: 1 });
+  // Supabase's transaction-mode pooler (port 6543) supports up to ~25 connections
+  // per serverless worker. Keep headroom for migrations and cron jobs.
+  const pool = new Pool({ connectionString, max: 10 });
   const adapter = new PrismaPg(pool);
 
   return new PrismaClient({
