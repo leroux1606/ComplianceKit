@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { withTimeout } from "@/lib/utils";
 
 /**
  * Input data for AI policy generation.
@@ -228,11 +229,15 @@ export async function generateAiPolicyContent(
       ? buildPrivacyPolicyPrompt(input)
       : buildCookiePolicyPrompt(input);
 
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: "user", content: prompt }],
-  });
+  const message = await withTimeout(
+    client.messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: prompt }],
+    }),
+    60_000,
+    "Claude policy generation"
+  );
 
   const textBlock = message.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {

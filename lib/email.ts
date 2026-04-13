@@ -29,10 +29,14 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
     return { success: true, messageId: 'dev-mode' };
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
   try {
     // Use Resend API
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
@@ -55,8 +59,14 @@ export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
     const data = await response.json();
     return { success: true, messageId: data.id };
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('Email send timed out after 10s:', { to, subject });
+      throw new Error('Email service timed out');
+    }
     console.error('Error sending email:', error);
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

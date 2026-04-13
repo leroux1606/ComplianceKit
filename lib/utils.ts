@@ -58,3 +58,21 @@ export function truncate(str: string, length: number): string {
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export class TimeoutError extends Error {
+  constructor(ms: number, label?: string) {
+    super(`${label ?? "Operation"} timed out after ${ms}ms`);
+    this.name = "TimeoutError";
+  }
+}
+
+/**
+ * Race a promise against a timeout. Throws TimeoutError if the promise
+ * does not resolve within `ms` milliseconds.
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number, label?: string): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new TimeoutError(ms, label)), ms)
+  );
+  return Promise.race([promise, timeout]);
+}

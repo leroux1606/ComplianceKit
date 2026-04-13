@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { Scanner } from "@/lib/scanner";
 import { revalidatePath } from "next/cache";
+import { withTimeout, TimeoutError } from "@/lib/utils";
 
 /**
  * Execute a scan that has already been created with status "queued".
@@ -25,7 +26,7 @@ export async function executeScan(
 
     console.log("[SCAN START]", { scanId, websiteId, url });
     const scanner = new Scanner({ url });
-    const result = await scanner.scan();
+    const result = await withTimeout(scanner.scan(), 4 * 60 * 1000, "Website scan");
     console.log("[SCAN COMPLETE]", {
       scanId,
       websiteId,
@@ -110,19 +111,24 @@ export async function executeScan(
     revalidatePath(`/dashboard/websites/${websiteId}`);
     revalidatePath("/dashboard");
   } catch (error) {
-    console.error("[SCAN EXCEPTION]", {
+    const isTimeout = error instanceof TimeoutError;
+    console.error(isTimeout ? "[SCAN TIMEOUT]" : "[SCAN EXCEPTION]", {
       scanId,
       websiteId,
       url,
       error: error instanceof Error ? error.message : String(error),
     });
 
+    const errorMessage = error instanceof TimeoutError
+      ? "Scan timed out after 4 minutes. The website may be too slow or unresponsive."
+      : error instanceof Error ? error.message : "Unknown error";
+
     await db.scan
       .update({
         where: { id: scanId },
         data: {
           status: "failed",
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
           completedAt: new Date(),
         },
       })
