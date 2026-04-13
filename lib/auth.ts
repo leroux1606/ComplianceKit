@@ -6,9 +6,11 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signInSchema } from "@/lib/validations";
 
+import { authConfig } from "@/auth.config";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(db),
-  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days max (but controlled by JWT callback)
@@ -24,10 +26,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         maxAge: 30 * 24 * 60 * 60, // 30 days (but session controlled by JWT)
       },
     },
-  },
-  pages: {
-    signIn: "/sign-in",
-    error: "/sign-in",
   },
   providers: [
     Google({
