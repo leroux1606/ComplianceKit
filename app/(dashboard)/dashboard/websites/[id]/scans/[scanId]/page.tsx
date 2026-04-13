@@ -146,6 +146,25 @@ export default async function ScanResultsPage({
               </CardFooter>
             </Card>
           )}
+
+          {scan.popiaScore !== null && scan.popiaScore !== undefined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  POPIA Score
+                </CardTitle>
+                <CardDescription className="text-xs">South Africa</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center pb-2">
+                <ComplianceScore score={scan.popiaScore} size="md" />
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground">
+                  Protection of Personal Information Act (SA).
+                </p>
+              </CardFooter>
+            </Card>
+          )}
         </div>
 
         <Card className="md:col-span-2">

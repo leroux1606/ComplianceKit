@@ -136,6 +136,47 @@ const FINDING_META: Record<string, FindingMeta> = {
     gdprArticle: "Art. 16",
     gdprArticleUrl: "https://gdpr-info.eu/art-16-gdpr/",
   },
+  // POPIA (South Africa) findings
+  popia_policy_reference: {
+    whyItMatters:
+      "POPIA Condition 6 (Openness) requires that your privacy policy explicitly references the Protection of Personal Information Act. Without a POPIA-specific section, South African regulators and courts may view your policy as non-compliant.",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "POPIA Condition 6",
+    gdprArticleUrl: "https://www.inforeg.org.za",
+  },
+  popia_information_regulator: {
+    whyItMatters:
+      "Data subjects have the right to lodge complaints with the Information Regulator of South Africa. Your privacy policy must tell them how — by referencing inforeg.org.za. Omitting this is a common POPIA compliance gap.",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "POPIA §5 / Condition 6",
+    gdprArticleUrl: "https://www.inforeg.org.za",
+  },
+  popia_data_subject_rights: {
+    whyItMatters:
+      "POPIA Condition 8 (Data Subject Participation) gives individuals the right to access, correct, and delete their personal information, and to object to processing. These rights must be clearly disclosed in your privacy policy.",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "POPIA Condition 8",
+    gdprArticleUrl: "https://www.inforeg.org.za",
+  },
+  popia_access_request: {
+    whyItMatters:
+      "POPIA requires operators to provide a clear mechanism for data subjects to submit access or correction requests. Without a visible contact method, you are not meeting your Condition 8 obligations.",
+    actionLabel: "View DSAR",
+    actionPath: "dsar",
+    gdprArticle: "POPIA Condition 8 / PAIA",
+    gdprArticleUrl: "https://www.inforeg.org.za",
+  },
+  popia_third_party_operators: {
+    whyItMatters:
+      "POPIA Condition 2 (Processing Limitation) requires you to disclose which third-party operators process personal data on your behalf. Undisclosed data sharing is an enforcement priority for the Information Regulator.",
+    actionLabel: "Generate policy",
+    actionPath: "policies",
+    gdprArticle: "POPIA Condition 2",
+    gdprArticleUrl: "https://www.inforeg.org.za",
+  },
   // CCPA / CPRA findings
   ccpa_do_not_sell: {
     whyItMatters:
@@ -382,7 +423,7 @@ export function ActionChecklist({ findings, websiteId }: ActionChecklistProps) {
                                     rel="noopener noreferrer"
                                     className="text-sm text-primary underline underline-offset-2"
                                   >
-                                    {finding.type.startsWith("ccpa_")
+                                    {finding.type.startsWith("ccpa_") || finding.type.startsWith("popia_")
                                       ? meta.gdprArticle
                                       : `GDPR ${meta.gdprArticle}`}{" "}
                                     ↗
