@@ -138,43 +138,31 @@ Both apps need a payment processor. **Stripe is not available in South Africa.**
 
 **PayGate is now Peach Payments** (`peachpayments.com`) — same company, rebranded.
 
-### Two accounts or one?
+### Decision: Both apps use PayStack
 
-**Recommendation: two separate Peach Payments accounts** (one per app), at least initially.
+**Both ComplianceKit and AccessKit use PayStack** — one payment processor, consistent implementation, same knowledge.
 
-Reasons:
-- Revenue is tracked separately per product
-- Different pricing models (ComplianceKit in ZAR, AccessKit potentially USD for international)
-- Separate webhook secrets, API credentials, and subscription plans per app
-- Simpler to manage — no risk of billing events from one app affecting the other
+- ComplianceKit: PayStack code already written, just needs live account + plan codes
+- AccessKit: PayStack integration needs to be built (mirroring ComplianceKit's implementation)
 
-If you ever sell them as a bundle (see below), the bundle discount can be handled at the **app level** — not at the payment processor level. For example, a "Bundle" plan in ComplianceKit that includes an AccessKit access code, or a shared "Compliance Suite" landing page that handles the pricing logic before redirecting to individual checkouts.
+Stripe code remains in both codebases untouched — for potential future use if a foreign entity is incorporated.
 
-### What you need to do to set up billing (both apps)
+### Two PayStack accounts
 
-1. **Sign up** at peachpayments.com (create two accounts or two "merchants" under one account)
-2. **Contact support** at support@peachpayments.com to activate **recurring/subscription billing** on each account — this is not enabled by default and requires explicit activation
-3. **Get sandbox credentials** from the Peach Payments Dashboard:
-   - Entity ID
-   - Client ID
-   - Client Secret
-   - Merchant ID
-4. **Create subscription plans** in the Dashboard (Starter, Professional, etc.)
-5. **Implement `src/lib/peach.ts`** in AccessKit (ComplianceKit already has PayStack — keep that, Peach Payments is only for AccessKit)
+Use **two separate PayStack accounts** (one per app) for clean revenue tracking. Bundle pricing is handled at the marketing/app level, not the payment processor level.
 
-### Wait — ComplianceKit uses PayStack, not Peach Payments
+### What you need to do
 
-ComplianceKit is already integrated with **PayStack** (which is also a South African payment gateway). The billing code is written. You just need:
-- A PayStack account (paystack.com)
-- Create plans in the PayStack dashboard
-- Fill in the plan codes in your environment variables
-- Test the webhook flow
+1. **Sign up at paystack.com** — create one account for ComplianceKit, one for AccessKit
+2. Get your **Secret Key** and **Public Key** from each dashboard
+3. **Create subscription plans** in each PayStack dashboard (Starter, Professional, Enterprise)
+4. Fill in the plan codes in each app's environment variables
 
 So the payment situation is:
 | App | Payment Processor | Status |
 |-----|------------------|--------|
 | ComplianceKit | PayStack | Code written, needs live account + plan codes |
-| AccessKit | Peach Payments | Needs to be built after account setup |
+| AccessKit | PayStack | Needs to be built (mirror ComplianceKit), needs live account |
 
 ---
 
@@ -213,8 +201,8 @@ So the payment situation is:
 ## Immediate Next Steps (Priority Order)
 
 ### Tonight / Tomorrow
-1. Sign up for PayStack (compliancekit) + Peach Payments (accesskit)
-2. Email Peach Payments support to activate recurring billing
+1. Sign up for PayStack account #1 (ComplianceKit) at paystack.com
+2. Sign up for PayStack account #2 (AccessKit) at paystack.com
 
 ### This Week
 3. Create PayStack subscription plans → fill plan codes in ComplianceKit `.env`
@@ -223,7 +211,7 @@ So the payment situation is:
 6. Fix AccessKit multi-org membership bug
 
 ### Next Week
-7. Build Peach Payments integration in AccessKit (`src/lib/peach.ts`)
+7. Build PayStack integration in AccessKit (mirror ComplianceKit's `lib/paystack.ts`)
 8. Test AccessKit billing end-to-end
 9. Deploy ComplianceKit to Vercel (production)
 10. Deploy AccessKit to Vercel (production)
