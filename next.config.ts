@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
               "frame-src 'self' https://accounts.google.com https://js.paystack.co",
               "object-src 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://accounts.google.com",
               "frame-ancestors 'self'",
               "upgrade-insecure-requests",
             ].join("; "),

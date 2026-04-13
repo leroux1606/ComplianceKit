@@ -47,6 +47,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# sensitive local files
+Login Info .txt
+Supabase.txt
+*.txt
+.claude/
+.playwright-mcp/
+e2e/.auth/
+
 # prisma
 /app/generated/prisma
 
