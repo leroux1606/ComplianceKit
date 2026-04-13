@@ -33,10 +33,9 @@ export async function recordConsent(
       return { error: "Website not found" };
     }
 
-    // Upsert consent record
     await db.consent.upsert({
       where: {
-        id: `${websiteId}_${visitorId}`, // This won't work as id is cuid, need different approach
+        websiteId_visitorId: { websiteId, visitorId },
       },
       create: {
         websiteId,
@@ -49,46 +48,14 @@ export async function recordConsent(
         preferences: preferences as object,
         ipAddress: metadata?.ipAddress,
         userAgent: metadata?.userAgent,
+        updatedAt: new Date(),
       },
     });
 
     return { success: true };
   } catch (error) {
-    // If upsert fails due to unique constraint, try find and update
-    try {
-      const existingConsent = await db.consent.findFirst({
-        where: {
-          websiteId,
-          visitorId,
-        },
-      });
-
-      if (existingConsent) {
-        await db.consent.update({
-          where: { id: existingConsent.id },
-          data: {
-            preferences: preferences as object,
-            ipAddress: metadata?.ipAddress,
-            userAgent: metadata?.userAgent,
-          },
-        });
-      } else {
-        await db.consent.create({
-          data: {
-            websiteId,
-            visitorId,
-            preferences: preferences as object,
-            ipAddress: metadata?.ipAddress,
-            userAgent: metadata?.userAgent,
-          },
-        });
-      }
-
-      return { success: true };
-    } catch (innerError) {
-      console.error("Failed to record consent:", innerError);
-      return { error: "Failed to record consent" };
-    }
+    console.error("Failed to record consent:", error);
+    return { error: "Failed to record consent" };
   }
 }
 

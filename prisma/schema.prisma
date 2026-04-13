@@ -209,8 +209,7 @@ model Consent {
   policyVersion       Int?
   website             Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
-  @@index([websiteId])
-  @@index([visitorId])
+  @@unique([websiteId, visitorId])
   @@index([websiteId, consentedAt])
   @@map("consents")
 }
