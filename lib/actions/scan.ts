@@ -45,6 +45,15 @@ export async function triggerScan(websiteId: string) {
     return { error: "Website not found" };
   }
 
+  // Prevent duplicate scans — block if one is already queued or running
+  const inFlight = await db.scan.findFirst({
+    where: { websiteId, status: { in: ["queued", "running"] } },
+    select: { id: true },
+  });
+  if (inFlight) {
+    return { error: "A scan is already in progress for this website." };
+  }
+
   const scan = await db.scan.create({
     data: { websiteId, status: "queued" },
   });

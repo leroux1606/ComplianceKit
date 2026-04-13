@@ -544,36 +544,19 @@ export async function getDsarStats() {
 
   const { ownerId } = await getTeamContext(session.user.id);
 
-  const [total, pending, inProgress, completed, overdue] = await Promise.all([
-    db.dataSubjectRequest.count({
-      where: { website: { userId: session.user.id } },
-    }),
-    db.dataSubjectRequest.count({
-      where: { 
-        website: { userId: ownerId },
-        status: { in: ["pending", "verified"] },
-      },
-    }),
-    db.dataSubjectRequest.count({
-      where: { 
-        website: { userId: ownerId },
-        status: "in_progress",
-      },
-    }),
-    db.dataSubjectRequest.count({
-      where: { 
-        website: { userId: ownerId },
-        status: "completed",
-      },
-    }),
-    db.dataSubjectRequest.count({
-      where: { 
-        website: { userId: ownerId },
-        status: { notIn: ["completed", "rejected"] },
-        dueDate: { lt: new Date() },
-      },
-    }),
-  ]);
+  const now = new Date();
+  const dsars = await db.dataSubjectRequest.findMany({
+    where: { website: { userId: ownerId } },
+    select: { status: true, dueDate: true },
+  });
+
+  const total = dsars.length;
+  const pending = dsars.filter((d) => ["pending", "verified"].includes(d.status)).length;
+  const inProgress = dsars.filter((d) => d.status === "in_progress").length;
+  const completed = dsars.filter((d) => d.status === "completed").length;
+  const overdue = dsars.filter(
+    (d) => !["completed", "rejected"].includes(d.status) && d.dueDate < now
+  ).length;
 
   return { total, pending, inProgress, completed, overdue };
 }

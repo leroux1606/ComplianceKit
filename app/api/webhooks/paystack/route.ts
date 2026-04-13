@@ -244,18 +244,23 @@ async function handleChargeSuccess(data: {
     },
   });
 
-  // Create invoice
-  await db.invoice.create({
-    data: {
-      subscriptionId: subscription.id,
-      paystackRef: data.reference,
-      amount: data.amount / 100,
-      currency: data.currency,
-      status: "paid",
-      paidAt: new Date(data.paid_at),
-      dueDate: subscription.currentPeriodEnd,
-    },
+  // Idempotency: skip if this charge reference was already recorded
+  const existing = await db.invoice.findFirst({
+    where: { paystackRef: data.reference },
   });
+  if (!existing) {
+    await db.invoice.create({
+      data: {
+        subscriptionId: subscription.id,
+        paystackRef: data.reference,
+        amount: data.amount / 100,
+        currency: data.currency,
+        status: "paid",
+        paidAt: new Date(data.paid_at),
+        dueDate: subscription.currentPeriodEnd,
+      },
+    });
+  }
 
   console.log(`Charge successful for user: ${user.id}`);
 }

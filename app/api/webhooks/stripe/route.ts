@@ -167,17 +167,23 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   const amountPaid = (raw.amount_paid as number | undefined) ?? 0;
   const currency = (raw.currency as string | undefined) ?? "usd";
 
-  await db.invoice.create({
-    data: {
-      subscriptionId: dbSub.id,
-      paystackRef: invoice.id,
-      amount: amountPaid / 100,
-      currency: currency.toUpperCase(),
-      status: "paid",
-      paidAt: new Date(),
-      dueDate: dbSub.currentPeriodEnd,
-    },
+  // Idempotency: skip if this invoice was already recorded
+  const existingInvoice = await db.invoice.findFirst({
+    where: { paystackRef: invoice.id },
   });
+  if (!existingInvoice) {
+    await db.invoice.create({
+      data: {
+        subscriptionId: dbSub.id,
+        paystackRef: invoice.id,
+        amount: amountPaid / 100,
+        currency: currency.toUpperCase(),
+        status: "paid",
+        paidAt: new Date(),
+        dueDate: dbSub.currentPeriodEnd,
+      },
+    });
+  }
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {

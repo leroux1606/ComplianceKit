@@ -42,17 +42,20 @@ export function AddWebsiteForm() {
   async function onSubmit(values: WebsiteInput) {
     setIsLoading(true);
 
-    const result = await createWebsite(values);
+    try {
+      const result = await createWebsite(values);
 
-    if (result.error) {
-      toast.error(result.error);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(t("websiteAdded"));
+      router.push(`/dashboard/websites/${result.websiteId}`);
+      router.refresh();
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    toast.success(t("websiteAdded"));
-    router.push(`/dashboard/websites/${result.websiteId}`);
-    router.refresh();
   }
 
   return (

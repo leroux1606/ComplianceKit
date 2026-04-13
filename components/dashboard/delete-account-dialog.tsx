@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertTriangle } from "lucide-react";
 import {
@@ -34,6 +34,13 @@ export function DeleteAccountDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [reason, setReason] = useState("");
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    };
+  }, []);
 
   const handleDelete = async () => {
     if (confirmText !== "DELETE") {
@@ -55,7 +62,7 @@ export function DeleteAccountDialog({
         onOpenChange(false);
         
         // Redirect to sign in after a short delay (user is logged out)
-        setTimeout(() => {
+        redirectTimer.current = setTimeout(() => {
           router.push("/sign-in");
         }, 2000);
       } else {
