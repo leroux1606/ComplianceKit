@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { 
@@ -245,7 +246,11 @@ export function PolicyViewer({ policy, websiteUrl }: PolicyViewerProps) {
             <TabsContent value="preview" className="mt-4">
               <div 
                 className="prose prose-sm dark:prose-invert max-w-none p-6 border rounded-lg bg-card"
-                dangerouslySetInnerHTML={{ __html: policy.htmlContent || policy.content }}
+                dangerouslySetInnerHTML={{
+                  __html: typeof window !== "undefined"
+                    ? DOMPurify.sanitize(policy.htmlContent || policy.content)
+                    : policy.htmlContent || policy.content,
+                }}
               />
             </TabsContent>
             <TabsContent value="html" className="mt-4">

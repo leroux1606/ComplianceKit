@@ -227,6 +227,8 @@ async function getConsentData(
       preferences: true,
       consentedAt: true,
     },
+    take: 50_000, // Safety cap — prevents OOM on high-volume accounts
+    orderBy: { consentedAt: "desc" },
   });
 
   // Calculate metrics

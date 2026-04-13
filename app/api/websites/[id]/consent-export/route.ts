@@ -30,22 +30,18 @@ export async function GET(
     const from = searchParams.get("from");
     const to = searchParams.get("to");
 
-    const consents = await db.consent.findMany({
-      where: {
-        websiteId: id,
-        ...(from || to
-          ? {
-              consentedAt: {
-                ...(from ? { gte: new Date(from) } : {}),
-                ...(to ? { lte: new Date(to) } : {}),
-              },
-            }
-          : {}),
-      },
-      orderBy: { consentedAt: "desc" },
-    });
+    const whereClause = {
+      websiteId: id,
+      ...(from || to
+        ? {
+            consentedAt: {
+              ...(from ? { gte: new Date(from) } : {}),
+              ...(to ? { lte: new Date(to) } : {}),
+            },
+          }
+        : {}),
+    };
 
-    // Build CSV
     const header = [
       "visitor_id",
       "consented_at",
@@ -61,31 +57,63 @@ export async function GET(
       "user_agent",
     ].join(",");
 
-    const rows = consents.map((c) => {
-      const prefs = (c.preferences as Record<string, boolean>) ?? {};
-      return [
-        csvCell(c.visitorId),
-        csvCell(c.consentedAt.toISOString()),
-        csvCell(c.updatedAt.toISOString()),
-        csvCell(c.consentMethod),
-        csvCell(c.policyVersion?.toString() ?? ""),
-        csvCell(c.bannerConfigVersion ?? ""),
-        csvCell(String(prefs.necessary ?? "")),
-        csvCell(String(prefs.analytics ?? "")),
-        csvCell(String(prefs.marketing ?? "")),
-        csvCell(String(prefs.functional ?? "")),
-        csvCell(c.ipAddress ?? ""),
-        csvCell(c.userAgent ?? ""),
-      ].join(",");
-    });
-
-    const csv = [header, ...rows].join("\r\n");
-
     const safeName = website.name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
     const date = new Date().toISOString().split("T")[0];
     const filename = `consent-log-${safeName}-${date}.csv`;
 
-    return new NextResponse(csv, {
+    // Stream in batches to avoid loading all records into memory
+    const BATCH_SIZE = 1000;
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          controller.enqueue(encoder.encode(header + "\r\n"));
+
+          let skip = 0;
+          while (true) {
+            const batch = await db.consent.findMany({
+              where: whereClause,
+              orderBy: { consentedAt: "desc" },
+              take: BATCH_SIZE,
+              skip,
+            });
+
+            if (batch.length === 0) break;
+
+            const chunk = batch
+              .map((c) => {
+                const prefs = (c.preferences as Record<string, boolean>) ?? {};
+                return [
+                  csvCell(c.visitorId),
+                  csvCell(c.consentedAt.toISOString()),
+                  csvCell(c.updatedAt.toISOString()),
+                  csvCell(c.consentMethod),
+                  csvCell(c.policyVersion?.toString() ?? ""),
+                  csvCell(c.bannerConfigVersion ?? ""),
+                  csvCell(String(prefs.necessary ?? "")),
+                  csvCell(String(prefs.analytics ?? "")),
+                  csvCell(String(prefs.marketing ?? "")),
+                  csvCell(String(prefs.functional ?? "")),
+                  csvCell(c.ipAddress ?? ""),
+                  csvCell(c.userAgent ?? ""),
+                ].join(",");
+              })
+              .join("\r\n") + "\r\n";
+
+            controller.enqueue(encoder.encode(chunk));
+            skip += BATCH_SIZE;
+            if (batch.length < BATCH_SIZE) break;
+          }
+
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+
+    return new NextResponse(stream, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,

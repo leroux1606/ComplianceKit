@@ -8,7 +8,7 @@ import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
 import { validateScanUrl } from "@/lib/ssrf-check";
 import { checkPlanLimit } from "@/lib/actions/subscription";
 import { getTeamContext, canWrite } from "@/lib/team-context";
-import type { Website, Scan, Policy, BannerConfig, Cookie, Script, Finding } from "@prisma/client";
+import type { Website, Scan, Policy, BannerConfig } from "@prisma/client";
 
 // Types for website with relations
 export type WebsiteWithCounts = Website & {
@@ -18,14 +18,14 @@ export type WebsiteWithCounts = Website & {
   };
 };
 
-export type ScanWithRelations = Scan & {
-  cookies: Cookie[];
-  scripts: Script[];
-  findings: Finding[];
+export type ScanSummary = Pick<Scan, "id" | "status" | "score" | "ccpaScore" | "createdAt" | "completedAt" | "error"> & {
+  cookies: { category: string | null }[];
+  scripts: { category: string | null }[];
+  findings: { severity: string }[];
 };
 
 export type WebsiteWithDetails = Website & {
-  scans: ScanWithRelations[];
+  scans: ScanSummary[];
   policies: Policy[];
   bannerConfig: BannerConfig | null;
   _count: {
@@ -75,10 +75,19 @@ export async function getWebsite(id: string): Promise<WebsiteWithDetails | null>
       scans: {
         orderBy: { createdAt: "desc" },
         take: 5,
-        include: {
-          cookies: true,
-          scripts: true,
-          findings: true,
+        select: {
+          id: true,
+          status: true,
+          score: true,
+          ccpaScore: true,
+          createdAt: true,
+          completedAt: true,
+          error: true,
+          // Only fetch the fields ScanHistory actually needs — avoids over-fetching
+          // full Cookie/Script/Finding records (10+ fields each) just for counts
+          cookies: { select: { category: true } },
+          scripts: { select: { category: true } },
+          findings: { select: { severity: true } },
         },
       },
       policies: {

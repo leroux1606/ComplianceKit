@@ -79,7 +79,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.sub && session.user) {
         session.user.id = token.sub;
       }
-      
+
+      // Block access for accounts pending permanent deletion
+      if (token.sub) {
+        const user = await db.user.findUnique({
+          where: { id: token.sub },
+          select: { deletedAt: true },
+        });
+        const GRACE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+        if (user?.deletedAt && Date.now() > user.deletedAt.getTime() + GRACE_PERIOD_MS) {
+          return null as any;
+        }
+      }
+
       const now = Date.now();
       const lastActivity = (token.lastActivity as number) || now;
       const loginTime = (token.loginTime as number) || now;
