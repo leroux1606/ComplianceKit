@@ -134,6 +134,33 @@ export function sanitizeRichText(html: string): string {
 }
 
 /**
+ * Sanitize custom CSS input for banner widget.
+ *
+ * Strips patterns that can be used for CSS injection attacks:
+ *   - @import statements (load external stylesheets)
+ *   - url() with external http/https references (CSS exfiltration)
+ *   - expression() (IE CSS expressions — JS execution)
+ *   - javascript: URIs
+ *   - behavior: (IE HTML Components)
+ *   - Any < or > characters (HTML injection via CSS string context)
+ *
+ * Legitimate use-cases (local colours, spacing, fonts) are unaffected.
+ */
+export function sanitizeCustomCss(css: string): string {
+  if (!css) return "";
+
+  return css
+    .replace(/@import\b[^;]*/gi, "")              // @import url(...) or @import "..."
+    .replace(/expression\s*\([^)]*\)/gi, "")       // expression(...)
+    .replace(/javascript\s*:/gi, "")               // javascript: URI
+    .replace(/behavior\s*:/gi, "")                 // behavior: (IE HTC)
+    .replace(/url\s*\(\s*["']?\s*https?:\/\/[^)]*\)/gi, "url()") // url(https://...) -> url()
+    .replace(/url\s*\(\s*["']?\s*\/\/[^)]*\)/gi, "url()")         // url(//...) protocol-relative
+    .replace(/[<>]/g, "")                          // no HTML tag injection
+    .trim();
+}
+
+/**
  * Validate and sanitize JSON input
  * Prevents JSON injection
  */

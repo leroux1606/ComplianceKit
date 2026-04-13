@@ -1,3 +1,5 @@
+import { sanitizeCustomCss } from "@/lib/sanitize";
+
 /**
  * Pure TypeScript functions that generate the srcdoc HTML for the live banner
  * preview iframe (E4).
@@ -127,7 +129,7 @@ export function generateBannerCss(config: BannerConfigInput): string {
       background: ${config.primaryColor}; color: ${config.textColor};
       font-size: 14px; font-weight: 500; cursor: pointer;
     }
-    ${config.customCss || ""}
+    ${sanitizeCustomCss(config.customCss || "")}
   `;
 }
 

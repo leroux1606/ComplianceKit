@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeCustomCss } from "@/lib/sanitize";
 
 // ============================================
 // Auth Validations
@@ -98,7 +99,11 @@ export const bannerConfigSchema = z.object({
   textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format"),
   buttonStyle: z.enum(["rounded", "square", "pill"]),
   animation: z.enum(["slide", "fade", "none"]),
-  customCss: z.string().max(5000, "Custom CSS must be less than 5000 characters").optional(),
+  customCss: z
+    .string()
+    .max(5000, "Custom CSS must be less than 5000 characters")
+    .transform(sanitizeCustomCss)
+    .optional(),
   // GDPR Issue #9 — configurable policy page links
   privacyPolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/privacy)").optional().or(z.literal("")),
   cookiePolicyUrl: z.string().url("Must be a valid URL (e.g. https://example.com/cookies)").optional().or(z.literal("")),
