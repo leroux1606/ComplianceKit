@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { getTeamContext } from "@/lib/team-context";
 import { 
   dsarSubmissionSchema, 
@@ -99,7 +100,7 @@ export async function submitDsar(
       dueDate: dsar.dueDate,
       websiteName: website.name,
       companyName: website.user.companyName || null,
-    }).catch((err) => console.error('[DSAR] Failed to send confirmation email:', err));
+    }).catch((err) => logger.error('dsar.email.confirmation_failed', {}, err));
 
     // Send notification email to website owner (fire-and-forget)
     sendDsarOwnerNotificationEmail({
@@ -111,7 +112,7 @@ export async function submitDsar(
       dueDate: dsar.dueDate,
       websiteName: website.name,
       dashboardUrl: `${appUrl}/dashboard/dsar/${dsar.id}`,
-    }).catch((err) => console.error('[DSAR] Failed to send owner notification:', err));
+    }).catch((err) => logger.error('dsar.email.owner_notification_failed', {}, err));
 
     return {
       success: true, 
@@ -122,7 +123,7 @@ export async function submitDsar(
         : "Your request has been submitted."
     };
   } catch (error) {
-    console.error("Failed to submit DSAR:", error);
+    logger.error("dsar.submit_failed", {}, error);
     return { error: "Failed to submit request. Please try again." };
   }
 }
@@ -165,7 +166,7 @@ export async function verifyDsar(verificationToken: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to verify DSAR:", error);
+    logger.error("dsar.verify_failed", {}, error);
     return { error: "Verification failed" };
   }
 }
@@ -355,7 +356,7 @@ export async function updateDsar(dsarId: string, values: DsarUpdateInput) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to update DSAR:", error);
+    logger.error("dsar.update_failed", {}, error);
     return { error: "Failed to update request" };
   }
 }
@@ -397,7 +398,7 @@ export async function addDsarNote(dsarId: string, note: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to add note:", error);
+    logger.error("dsar.note_failed", {}, error);
     return { error: "Failed to add note" };
   }
 }
@@ -455,14 +456,14 @@ export async function completeDsar(dsarId: string, responseContent: string) {
       websiteName: dsar.website.name,
       companyName: dsar.website.user.companyName || null,
       responseContent,
-    }).catch((err) => console.error('[DSAR] Failed to send response email:', err));
+    }).catch((err) => logger.error('dsar.email.response_failed', {}, err));
 
     revalidatePath("/dashboard/dsar");
     revalidatePath(`/dashboard/dsar/${dsarId}`);
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to complete DSAR:", error);
+    logger.error("dsar.complete_failed", {}, error);
     return { error: "Failed to complete request" };
   }
 }
@@ -520,14 +521,14 @@ export async function rejectDsar(dsarId: string, reason: string) {
       websiteName: dsar.website.name,
       companyName: dsar.website.user.companyName || null,
       reason,
-    }).catch((err) => console.error('[DSAR] Failed to send rejection email:', err));
+    }).catch((err) => logger.error('dsar.email.rejection_failed', {}, err));
 
     revalidatePath("/dashboard/dsar");
     revalidatePath(`/dashboard/dsar/${dsarId}`);
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to reject DSAR:", error);
+    logger.error("dsar.reject_failed", {}, error);
     return { error: "Failed to reject request" };
   }
 }

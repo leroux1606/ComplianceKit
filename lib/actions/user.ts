@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendAccountDeletionEmail, sendEmail } from "@/lib/email";
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
 
 export interface UserCompanyDetails {
   companyName?: string | null;
@@ -252,7 +253,7 @@ export async function requestAccountDeletion(reason?: string) {
   try {
     await sendAccountDeletionEmail(user.email, user.name);
   } catch (error) {
-    console.error("Failed to send account deletion email:", error);
+    logger.error("user.deletion_email_failed", {}, error);
     // Don't fail the deletion request if email fails
   }
 
@@ -444,7 +445,7 @@ export async function submitAccountRightsRequest(
     });
   } catch {
     // Email failure should not surface as an error to the user — log and continue
-    console.error("Rights request email failed to send");
+    logger.error("user.rights_request_email_failed");
   }
 
   return { success: true };

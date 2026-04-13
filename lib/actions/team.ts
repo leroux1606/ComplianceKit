@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendTeamInviteEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 import { getUserFeatures } from "@/lib/actions/subscription";
 import { isWithinLimit } from "@/lib/plans";
 
@@ -137,7 +138,7 @@ export async function inviteTeamMember(email: string, role: "admin" | "viewer") 
     inviterEmail: session.user.email,
     role,
     acceptUrl: `${appUrl}/accept-invite?token=${member.inviteToken}`,
-  }).catch((err) => console.error("[Team] Invite email failed:", err));
+  }).catch((err) => logger.error("team.invite_email_failed", {}, err));
 
   revalidatePath("/dashboard/team");
   return { success: true };

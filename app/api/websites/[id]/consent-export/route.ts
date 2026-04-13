@@ -126,7 +126,11 @@ export async function GET(
   }
 }
 
-/** Wrap a value in double-quotes and escape any internal double-quotes. */
+/** Wrap a value in double-quotes, escaping internal quotes and stripping newlines. */
 function csvCell(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
+  const safe = value
+    .replace(/\r/g, " ")   // carriage return breaks CSV row boundaries
+    .replace(/\n/g, " ")   // newline breaks CSV row boundaries
+    .replace(/"/g, '""');  // RFC 4180: escape double-quotes by doubling
+  return `"${safe}"`;
 }
