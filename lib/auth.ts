@@ -88,16 +88,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       const now = Date.now();
-      const lastActivity = (token.lastActivity as number) || now;
       const loginTime = (token.loginTime as number) || now;
       const rememberMe = token.rememberMe as boolean;
-      
-      // Idle timeout: 30 minutes of inactivity
-      const idleTimeout = 30 * 60 * 1000;
-      if (now - lastActivity > idleTimeout) {
-        return null as any; // Force re-authentication
-      }
-      
+
+      // NOTE: idle timeout removed — session.update() is never called in this
+      // codebase so lastActivity stays frozen at login, causing all sessions to
+      // expire after 30 min. Session duration is enforced by loginTime below.
+      // Wire up session.update() on user interactions to re-enable idle timeout.
+
       // Session duration based on remember me preference
       if (!rememberMe) {
         // Without "remember me": session expires after 24 hours

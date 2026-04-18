@@ -69,7 +69,13 @@ export function FindingsList({ findings }: FindingsListProps) {
   }
 
   // Sort findings by severity
-  const sortedFindings = findings;
+  const sortedFindings = [...findings].sort((a, b) => {
+    const severityOrder = { critical: 0, error: 1, warning: 2, info: 3 };
+    return (
+      (severityOrder[a.severity as keyof typeof severityOrder] ?? 4) -
+      (severityOrder[b.severity as keyof typeof severityOrder] ?? 4)
+    );
+  });
 
   const criticalCount = findings.filter((f) => f.severity === "critical").length;
   const errorCount = findings.filter((f) => f.severity === "error").length;
