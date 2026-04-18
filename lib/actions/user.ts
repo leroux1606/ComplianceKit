@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { sendAccountDeletionEmail, sendEmail } from "@/lib/email";
 import crypto from "crypto";
 import { logger } from "@/lib/logger";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export interface UserCompanyDetails {
   companyName?: string | null;
@@ -433,12 +434,12 @@ export async function submitAccountRightsRequest(
       html: `
         <h2>GDPR Rights Request</h2>
         <p><strong>Type:</strong> ${typeLabel}</p>
-        <p><strong>User:</strong> ${user.name ?? "N/A"} (${user.email})</p>
-        <p><strong>User ID:</strong> ${session.user.id}</p>
+        <p><strong>User:</strong> ${sanitizeHtml(user.name ?? "N/A")} (${sanitizeHtml(user.email)})</p>
+        <p><strong>User ID:</strong> ${sanitizeHtml(session.user.id)}</p>
         <p><strong>Submitted:</strong> ${new Date().toISOString()}</p>
         <hr />
         <p><strong>Description:</strong></p>
-        <p>${description.replace(/\n/g, "<br/>")}</p>
+        <p>${sanitizeHtml(description).replace(/\n/g, "<br/>")}</p>
         <hr />
         <p>Respond within 30 days as required by GDPR Art. 12.</p>
       `,

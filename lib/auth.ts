@@ -126,8 +126,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.rememberMe = (user as any).rememberMe || false;
       }
       
-      // Update last activity on each request to track idle time
-      if (trigger === "update" || trigger === undefined) {
+      // Only update lastActivity on an explicit session.update() call.
+      // trigger === undefined fires on every passive JWT read (server components,
+      // layout auth calls) — updating there defeats the idle timeout entirely.
+      if (trigger === "update") {
         token.lastActivity = Date.now();
       }
       

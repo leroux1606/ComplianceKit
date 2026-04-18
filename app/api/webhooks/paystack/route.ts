@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { getPlanByPaystackCode } from "@/lib/plans";
+import { getPlanByPaystackCode, PLANS } from "@/lib/plans";
 import { logger } from "@/lib/logger";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
@@ -232,9 +232,14 @@ async function handleChargeSuccess(data: {
 
   if (!subscription) return;
 
-  // Update subscription period
+  // Update subscription period — respect plan interval (monthly vs yearly)
+  const isYearly = PLANS.some(p => p.paystackYearlyPlanCode === subscription.paystackPlanCode);
   const periodEnd = new Date(subscription.currentPeriodEnd);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
+  if (isYearly) {
+    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+  } else {
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+  }
 
   await db.subscription.update({
     where: { userId: user.id },
@@ -273,6 +278,7 @@ async function handleInvoiceCreate(data: {
   subscription: { subscription_code: string };
   customer: { email: string };
   amount: number;
+  currency: string;
   due_date: string;
 }) {
   const user = await db.user.findUnique({
@@ -287,16 +293,22 @@ async function handleInvoiceCreate(data: {
 
   if (!subscription) return;
 
-  // Create pending invoice
-  await db.invoice.create({
-    data: {
-      subscriptionId: subscription.id,
-      amount: data.amount / 100,
-      currency: "ZAR",
-      status: "pending",
-      dueDate: new Date(data.due_date),
-    },
+  // Idempotency: skip if a pending invoice already exists for this due date
+  const dueDate = new Date(data.due_date);
+  const existing = await db.invoice.findFirst({
+    where: { subscriptionId: subscription.id, dueDate },
   });
+  if (!existing) {
+    await db.invoice.create({
+      data: {
+        subscriptionId: subscription.id,
+        amount: data.amount / 100,
+        currency: data.currency,
+        status: "pending",
+        dueDate,
+      },
+    });
+  }
 
   logger.info("webhook.paystack.invoice_created", { userId: user.id });
 }

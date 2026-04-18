@@ -12,54 +12,6 @@ export interface ConsentPreferences {
 }
 
 /**
- * Record consent (called from widget - no auth required)
- */
-export async function recordConsent(
-  websiteId: string,
-  visitorId: string,
-  preferences: ConsentPreferences,
-  metadata?: {
-    ipAddress?: string;
-    userAgent?: string;
-  }
-) {
-  try {
-    // Verify website exists
-    const website = await db.website.findUnique({
-      where: { id: websiteId },
-    });
-
-    if (!website) {
-      return { error: "Website not found" };
-    }
-
-    await db.consent.upsert({
-      where: {
-        websiteId_visitorId: { websiteId, visitorId },
-      },
-      create: {
-        websiteId,
-        visitorId,
-        preferences: preferences as object,
-        ipAddress: metadata?.ipAddress,
-        userAgent: metadata?.userAgent,
-      },
-      update: {
-        preferences: preferences as object,
-        ipAddress: metadata?.ipAddress,
-        userAgent: metadata?.userAgent,
-        updatedAt: new Date(),
-      },
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to record consent:", error);
-    return { error: "Failed to record consent" };
-  }
-}
-
-/**
  * Get consent records for a website (requires auth)
  */
 export async function getConsents(

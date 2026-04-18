@@ -13,6 +13,7 @@ import {
 } from "@/lib/validations";
 import { calculateDueDate, type DsarStatus, type DsarActivityAction, DSAR_REQUEST_TYPES, type DsarRequestType } from "@/lib/dsar/types";
 import { requireFeature } from "@/lib/actions/subscription";
+import { PLANS, FREE_TIER } from "@/lib/plans";
 import {
   sendDsarConfirmationEmail,
   sendDsarOwnerNotificationEmail,
@@ -54,11 +55,24 @@ export async function submitDsar(
     return { error: "Website not found" };
   }
 
-  // Check if website owner has DSAR feature
-  // For now, allow all submissions but mark for upgrade if needed
-  const hasFeature = website.user.subscription?.status === "active";
+  // Determine the owner's plan features
+  const sub = website.user.subscription;
+  const ownerPlan = sub?.status === "active"
+    ? PLANS.find(p => p.paystackPlanCode === sub.paystackPlanCode || p.paystackYearlyPlanCode === sub.paystackPlanCode)
+    : null;
+  const ownerFeatures = ownerPlan?.features ?? FREE_TIER;
 
-  const { requestType, requesterEmail, requesterName, requesterPhone, description, additionalInfo } = 
+  // If the owner's plan doesn't include DSAR management, the request would be
+  // invisible to them — a GDPR compliance risk. Reject clearly so the data
+  // subject can contact the controller directly instead.
+  if (!ownerFeatures.dsarManagement) {
+    const contactEmail = website.user.companyEmail || website.user.email;
+    return {
+      error: `This website does not currently process data requests through this portal. Please contact the data controller directly${contactEmail ? ` at ${contactEmail}` : ""}.`,
+    };
+  }
+
+  const { requestType, requesterEmail, requesterName, requesterPhone, description, additionalInfo } =
     validatedFields.data;
 
   try {
@@ -115,12 +129,10 @@ export async function submitDsar(
     }).catch((err) => logger.error('dsar.email.owner_notification_failed', {}, err));
 
     return {
-      success: true, 
+      success: true,
       dsarId: dsar.id,
       verificationToken: dsar.verificationToken,
-      message: hasFeature 
-        ? "Your request has been submitted. Please check your email to verify."
-        : "Your request has been submitted."
+      message: "Your request has been submitted. Please check your email to verify.",
     };
   } catch (error) {
     logger.error("dsar.submit_failed", {}, error);

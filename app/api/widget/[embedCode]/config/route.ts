@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getWidgetCorsHeaders } from "@/lib/cors";
+import { logger } from "@/lib/logger";
 
-// CORS headers for cross-origin requests
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-export async function OPTIONS() {
-  return new NextResponse(null, { headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { headers: getWidgetCorsHeaders(request) });
 }
 
 export async function GET(
@@ -29,9 +24,11 @@ export async function GET(
     if (!website) {
       return NextResponse.json(
         { error: "Website not found" },
-        { status: 404, headers: corsHeaders }
+        { status: 404, headers: getWidgetCorsHeaders(request) }
       );
     }
+
+    const corsHeaders = getWidgetCorsHeaders(request, website.url);
 
     const config = website.bannerConfig || {
       theme: "light",
@@ -52,7 +49,6 @@ export async function GET(
         websiteId: website.id,
         privacyPolicyUrl: config.privacyPolicyUrl ?? null,
         cookiePolicyUrl: config.cookiePolicyUrl ?? null,
-        // D1 — Google Consent Mode v2 flag
         consentModeV2: config.consentModeV2 ?? true,
         config: {
           theme: config.theme,
@@ -62,17 +58,16 @@ export async function GET(
           buttonStyle: config.buttonStyle,
           animation: config.animation,
           customCss: config.customCss,
-          // A4 — withdrawal button position
           withdrawalButtonPosition: config.withdrawalButtonPosition ?? "bottom-right",
         },
       },
       { headers: corsHeaders }
     );
   } catch (error) {
-    console.error("Widget config error:", error);
+    logger.error("widget.config.error", {}, error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500, headers: corsHeaders }
+      { status: 500, headers: getWidgetCorsHeaders(request) }
     );
   }
 }
