@@ -13,6 +13,7 @@ import {
   toKobo,
 } from "@/lib/paystack";
 import { PLANS, FREE_TIER, getPlanBySlug, type PlanFeatures } from "@/lib/plans";
+import { logger } from "@/lib/logger";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -114,7 +115,7 @@ export async function initializeSubscription(planSlug: string, billing: "monthly
       reference: transaction.reference,
     };
   } catch (error) {
-    console.error("Failed to initialize subscription:", error);
+    logger.error("subscription.initialize_failed", {}, error);
     return { error: "Failed to initialize payment. Please try again." };
   }
 }
@@ -155,7 +156,7 @@ export async function verifyPaymentAndActivate(reference: string) {
     }
 
     // Create or update subscription
-    await db.subscription.upsert({
+    const sub = await db.subscription.upsert({
       where: { userId: session.user.id },
       create: {
         userId: session.user.id,
@@ -181,9 +182,7 @@ export async function verifyPaymentAndActivate(reference: string) {
     // Create invoice record
     await db.invoice.create({
       data: {
-        subscriptionId: (await db.subscription.findUnique({
-          where: { userId: session.user.id },
-        }))!.id,
+        subscriptionId: sub.id,
         paystackRef: reference,
         amount: transaction.amount / 100, // Convert from kobo
         currency: transaction.currency,
@@ -198,7 +197,7 @@ export async function verifyPaymentAndActivate(reference: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to verify payment:", error);
+    logger.error("subscription.verify_payment_failed", {}, error);
     return { error: "Failed to verify payment. Please contact support." };
   }
 }
@@ -234,7 +233,7 @@ export async function cancelSubscription() {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to cancel subscription:", error);
+    logger.error("subscription.cancel_failed", {}, error);
     return { error: "Failed to cancel subscription" };
   }
 }
@@ -270,7 +269,7 @@ export async function resumeSubscription() {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to resume subscription:", error);
+    logger.error("subscription.resume_failed", {}, error);
     return { error: "Failed to resume subscription" };
   }
 }
@@ -297,7 +296,7 @@ export async function getManagementLink() {
     const result = await generateSubscriptionLink(subscription.paystackSubCode);
     return { success: true, link: result.link };
   } catch (error) {
-    console.error("Failed to get management link:", error);
+    logger.error("subscription.management_link_failed", {}, error);
     return { error: "Failed to get management link" };
   }
 }

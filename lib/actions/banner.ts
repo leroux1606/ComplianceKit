@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { bannerConfigSchema, type BannerConfigInput } from "@/lib/validations";
 import { generateEmbedCode } from "@/lib/utils";
 import { getTeamContext } from "@/lib/team-context";
+import { logger } from "@/lib/logger";
+import { DEFAULT_BANNER_CONFIG } from "@/lib/banner-defaults";
 import type { BannerConfig } from "@prisma/client";
 
 /**
@@ -95,7 +97,7 @@ export async function saveBannerConfig(
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to save banner config:", error);
+    logger.error("banner.save_config_failed", {}, error);
     return { error: "Failed to save configuration" };
   }
 }
@@ -105,15 +107,10 @@ export async function saveBannerConfig(
  */
 export async function getDefaultBannerConfig(): Promise<BannerConfigInput> {
   return {
-    theme: "light",
-    position: "bottom",
-    primaryColor: "#0f172a",
-    textColor: "#ffffff",
-    buttonStyle: "rounded",
-    animation: "slide",
+    ...DEFAULT_BANNER_CONFIG,
     customCss: "",
-    consentModeV2: true,
-    withdrawalButtonPosition: "bottom-right" as const,
+    privacyPolicyUrl: undefined,
+    cookiePolicyUrl: undefined,
   };
 }
 

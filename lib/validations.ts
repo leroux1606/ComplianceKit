@@ -23,11 +23,11 @@ export const signUpSchema = z
       ),
     confirmPassword: z.string(),
     // GDPR Art. 7 — affirmative consent required
-    acceptTerms: z.literal(true, {
+    acceptTerms: z.boolean().refine((v) => v === true, {
       message: "You must accept the Terms of Service and Privacy Policy",
     }),
     // GDPR Art. 28 — Data Processing Agreement acceptance
-    acceptDpa: z.literal(true, {
+    acceptDpa: z.boolean().refine((v) => v === true, {
       message: "You must accept the Data Processing Agreement",
     }),
   })

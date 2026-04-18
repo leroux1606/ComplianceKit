@@ -78,16 +78,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.sub;
       }
 
-      // Block access for accounts pending permanent deletion
-      if (token.sub) {
-        const user = await db.user.findUnique({
-          where: { id: token.sub },
-          select: { deletedAt: true },
-        });
-        const GRACE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-        if (user?.deletedAt && Date.now() > user.deletedAt.getTime() + GRACE_PERIOD_MS) {
-          return null as any;
-        }
+      // Block access for accounts past their deletion grace period.
+      // deletedAt is stored in the JWT (set at sign-in, refreshed on session.update)
+      // so this check never hits the DB.
+      const GRACE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+      const deletedAt = token.deletedAt as number | null | undefined;
+      if (deletedAt && Date.now() > deletedAt + GRACE_PERIOD_MS) {
+        return null as any;
       }
 
       const now = Date.now();
@@ -124,15 +121,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.loginTime = Date.now();
         token.lastActivity = Date.now();
         token.rememberMe = (user as any).rememberMe || false;
+        // Cache deletedAt in the JWT so the session callback never hits the DB.
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id! },
+          select: { deletedAt: true },
+        });
+        token.deletedAt = dbUser?.deletedAt?.getTime() ?? null;
       }
-      
+
       // Only update lastActivity on an explicit session.update() call.
       // trigger === undefined fires on every passive JWT read (server components,
       // layout auth calls) — updating there defeats the idle timeout entirely.
       if (trigger === "update") {
         token.lastActivity = Date.now();
+        // Also refresh deletedAt so account deletion is reflected promptly.
+        if (token.sub) {
+          const dbUser = await db.user.findUnique({
+            where: { id: token.sub },
+            select: { deletedAt: true },
+          });
+          token.deletedAt = dbUser?.deletedAt?.getTime() ?? null;
+        }
       }
-      
+
       return token;
     },
   },

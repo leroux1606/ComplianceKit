@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { getUserSubscription, getUserInvoices } from "@/lib/actions/subscription";
 import { formatAmount } from "@/lib/paystack";
+import { formatDate } from "@/lib/utils";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
 import { ResumeSubscriptionButton } from "@/components/billing/resume-subscription-button";
 
@@ -104,14 +105,7 @@ export default async function BillingPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>
                       {subscription.cancelAtPeriodEnd ? "Ends" : "Renews"} on{" "}
-                      {new Date(subscription.currentPeriodEnd).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
+                      {formatDate(subscription.currentPeriodEnd)}
                     </span>
                   </div>
                 </div>
@@ -126,7 +120,7 @@ export default async function BillingPage() {
                     </p>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                       Your subscription will end on{" "}
-                      {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.
+                      {formatDate(subscription.currentPeriodEnd)}.
                       You can resume it before then to keep your plan.
                     </p>
                     <ResumeSubscriptionButton className="mt-3" />
@@ -136,7 +130,7 @@ export default async function BillingPage() {
 
               <div className="flex gap-3">
                 <Button variant="outline" asChild>
-                  <Link href="/pricing">
+                  <Link href="/dashboard/billing/checkout">
                     <ArrowUpRight className="mr-2 h-4 w-4" />
                     Change Plan
                   </Link>
@@ -260,11 +254,7 @@ export default async function BillingPage() {
                 {invoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>
-                      {new Date(invoice.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {formatDate(invoice.createdAt)}
                     </TableCell>
                     <TableCell>
                       {formatAmount(Number(invoice.amount) * 100, invoice.currency)}

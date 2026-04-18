@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { permanentlyDeleteUser } from "@/lib/actions/user";
 import { verifyCronRequest } from "@/lib/cron-auth";
+import { logger } from "@/lib/logger";
 
 /**
  * Cron job to process account deletions after 30-day grace period
@@ -42,9 +43,7 @@ export async function GET(request: Request) {
       },
     });
 
-    console.log(
-      `[Account Deletion Cron] Found ${usersToDelete.length} users to process`
-    );
+    logger.info("cron.account_deletion.start", { count: usersToDelete.length });
 
     const results = {
       totalFound: usersToDelete.length,
@@ -58,9 +57,7 @@ export async function GET(request: Request) {
     // Process each user
     for (const user of usersToDelete) {
       try {
-        console.log(
-          `[Account Deletion Cron] Processing user ${user.id} (deleted on: ${user.deletedAt})`
-        );
+        logger.info("cron.account_deletion.processing", { userId: user.id, deletedAt: user.deletedAt });
 
         const result = await permanentlyDeleteUser(user.id);
 
@@ -68,14 +65,10 @@ export async function GET(request: Request) {
           results.processed++;
           if (result.anonymized) {
             results.anonymized++;
-            console.log(
-              `[Account Deletion Cron] ✓ Anonymized user: ${user.id}`
-            );
+            logger.info("cron.account_deletion.anonymized", { userId: user.id });
           } else {
             results.fullyDeleted++;
-            console.log(
-              `[Account Deletion Cron] ✓ Fully deleted user: ${user.id}`
-            );
+            logger.info("cron.account_deletion.deleted", { userId: user.id });
           }
         } else {
           results.errors++;
@@ -83,10 +76,7 @@ export async function GET(request: Request) {
             userId: user.id,
             error: result.error || "Unknown error",
           });
-          console.error(
-            `[Account Deletion Cron] ✗ Failed to process user ${user.id}:`,
-            result.error
-          );
+          logger.error("cron.account_deletion.failed", { userId: user.id, error: result.error });
         }
       } catch (error) {
         results.errors++;
@@ -96,16 +86,11 @@ export async function GET(request: Request) {
           userId: user.id,
           error: errorMessage,
         });
-        console.error(
-          `[Account Deletion Cron] ✗ Exception processing user ${user.id}:`,
-          error
-        );
+        logger.error("cron.account_deletion.exception", { userId: user.id }, error);
       }
     }
 
-    console.log(
-      `[Account Deletion Cron] Complete. Processed: ${results.processed}, Anonymized: ${results.anonymized}, Fully Deleted: ${results.fullyDeleted}, Errors: ${results.errors}`
-    );
+    logger.info("cron.account_deletion.complete", results);
 
     return NextResponse.json({
       success: true,
@@ -114,7 +99,7 @@ export async function GET(request: Request) {
       results,
     });
   } catch (error) {
-    console.error("[Account Deletion Cron] Fatal error:", error);
+    logger.error("cron.account_deletion.fatal", {}, error);
     return NextResponse.json(
       {
         error: "Internal server error",

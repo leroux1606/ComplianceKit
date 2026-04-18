@@ -8,6 +8,7 @@ import { normalizeUrl, generateEmbedCode } from "@/lib/utils";
 import { validateScanUrl } from "@/lib/ssrf-check";
 import { checkPlanLimit } from "@/lib/actions/subscription";
 import { getTeamContext, canWrite } from "@/lib/team-context";
+import { logger } from "@/lib/logger";
 import type { Website, Scan, Policy, BannerConfig } from "@prisma/client";
 
 // Types for website with relations
@@ -74,7 +75,7 @@ export async function getWebsite(id: string): Promise<WebsiteWithDetails | null>
     include: {
       scans: {
         orderBy: { createdAt: "desc" },
-        take: 5,
+        take: 20,
         select: {
           id: true,
           status: true,
@@ -171,7 +172,7 @@ export async function createWebsite(values: WebsiteInput) {
 
     return { success: true, websiteId: website.id };
   } catch (error) {
-    console.error("Failed to create website:", error);
+    logger.error("website.create_failed", {}, error);
     return { error: "Failed to create website" };
   }
 }
@@ -244,7 +245,7 @@ export async function updateWebsite(id: string, values: Partial<WebsiteInput>) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to update website:", error);
+    logger.error("website.update_failed", {}, error);
     return { error: "Failed to update website" };
   }
 }
@@ -281,7 +282,7 @@ export async function deleteWebsite(id: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete website:", error);
+    logger.error("website.delete_failed", {}, error);
     return { error: "Failed to delete website" };
   }
 }

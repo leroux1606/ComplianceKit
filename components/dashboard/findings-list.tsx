@@ -31,6 +31,11 @@ const severityConfig: Record<
   string,
   { icon: typeof AlertCircle; color: string; bgColor: string }
 > = {
+  critical: {
+    icon: AlertCircle,
+    color: "text-red-700",
+    bgColor: "bg-red-500/20",
+  },
   error: {
     icon: AlertCircle,
     color: "text-red-600",
@@ -64,14 +69,9 @@ export function FindingsList({ findings }: FindingsListProps) {
   }
 
   // Sort findings by severity
-  const sortedFindings = [...findings].sort((a, b) => {
-    const severityOrder = { error: 0, warning: 1, info: 2 };
-    return (
-      (severityOrder[a.severity as keyof typeof severityOrder] || 3) -
-      (severityOrder[b.severity as keyof typeof severityOrder] || 3)
-    );
-  });
+  const sortedFindings = findings;
 
+  const criticalCount = findings.filter((f) => f.severity === "critical").length;
   const errorCount = findings.filter((f) => f.severity === "error").length;
   const warningCount = findings.filter((f) => f.severity === "warning").length;
   const infoCount = findings.filter((f) => f.severity === "info").length;
@@ -79,6 +79,11 @@ export function FindingsList({ findings }: FindingsListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
+        {criticalCount > 0 && (
+          <Badge variant="outline" className="bg-red-500/20 text-red-700">
+            {criticalCount} Critical
+          </Badge>
+        )}
         {errorCount > 0 && (
           <Badge variant="outline" className="bg-red-500/10 text-red-600">
             {errorCount} Error{errorCount > 1 ? "s" : ""}

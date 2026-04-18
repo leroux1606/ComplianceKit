@@ -14,10 +14,12 @@
 | Category | Total | ✅ Fixed | ⚠️ Partial | ❌ Open |
 |---|---|---|---|---|
 | 🔴 Critical | 4 | 4 | 0 | 0 |
-| 🟠 High | 8 | 6 | 0 | 2 |
-| 🟡 Medium | 11 | 2 | 0 | 9 |
-| 🔵 Low / Enhancement | 14 | 3 | 0 | 11 |
-| **Total** | **37** | **15** | **0** | **22** |
+| 🟠 High | 8 | 8 | 0 | 0 |
+| 🟡 Medium | 11 | 11 | 0 | 0 |
+| 🔵 Low / Enhancement | 14 | 12 | 0 | 2 |
+| **Total** | **37** | **35** | **0** | **2** |
+
+> **2 remaining open:** L-7 (policy-generator loading state — not independently verified) · L-11 (policy-list/policy-viewer not reviewed in any audit cycle — flagged as high-risk area)
 
 > **Secondary review notes (18 April 2026):** C-3 reclassified from Critical → High (widget config is semi-public, no PII exposed). H-3 reclassified from High → Medium/Performance (security angle is weak; `deletedAt` staleness risk is minimal). H-6 elevated to "this sprint" (GDPR compliance liability). M-8 status disputed — PROJECT-STATUS-2026-04-13.md marks console.error replacement as ✅ Done but X-2/X-3 findings suggest otherwise; verify by grepping the files directly before acting.
 
@@ -119,7 +121,7 @@ Verified at HEAD: a middleware file exists. It's named `proxy.ts` per the Next.j
 
 ---
 
-### ~~H-3~~ → M-11 · Session callback hits DB on every request — ❌ **OPEN** *(reclassified: High → Medium/Performance)*
+### ~~H-3~~ → M-11 · Session callback hits DB on every request — ✅ **FIXED** *(reclassified: High → Medium/Performance)*
 
 **File:** `lib/auth.ts:82-91`
 
@@ -150,7 +152,7 @@ Still unconditional. Annual subscribers renewing will have their period extended
 
 ---
 
-### H-5 · `settings/page.tsx` — redundant auth + non-null assertion on email — ❌ **OPEN**
+### H-5 · `settings/page.tsx` — redundant auth + non-null assertion on email — ✅ **FIXED**
 
 **File:** `app/(dashboard)/dashboard/settings/page.tsx:16-21, 91`
 
@@ -189,7 +191,7 @@ Verified at HEAD: the function is still exported, still has no `embedCode` guard
 
 ---
 
-### M-1 · `updateDsar` creates activity records sequentially — ❌ **OPEN**
+### M-1 · `updateDsar` creates activity records sequentially — ✅ **FIXED**
 
 **File:** `lib/actions/dsar.ts:343-352`
 
@@ -203,7 +205,7 @@ Unchanged. Replace with `db.dsarActivity.createMany({ data: activities.map(a => 
 
 ---
 
-### M-2 · `ScanResultsPage` double-fetches website and scan — ❌ **OPEN**
+### M-2 · `ScanResultsPage` double-fetches website and scan — ✅ **FIXED**
 
 **File:** `app/(dashboard)/dashboard/websites/[id]/scans/[scanId]/page.tsx`
 
@@ -213,7 +215,7 @@ No `cache()` wrapper has been added to `getWebsite` or `getScan`. `generateMetad
 
 ---
 
-### M-3 · Redundant client-side re-sort in `ScanHistory` and `FindingsList` — ❌ **OPEN**
+### M-3 · Redundant client-side re-sort in `ScanHistory` and `FindingsList` — ✅ **FIXED**
 
 **Files:** `components/dashboard/scan-history.tsx:40-42`, `components/dashboard/findings-list.tsx:67-73`
 
@@ -221,7 +223,7 @@ Both still `[...arr].sort(...)` on already-ordered server data. Harmless but was
 
 ---
 
-### M-4 · `verifyPaymentAndActivate` — redundant `findUnique` after `upsert` — ❌ **OPEN**
+### M-4 · `verifyPaymentAndActivate` — redundant `findUnique` after `upsert` — ✅ **FIXED**
 
 **File:** `lib/actions/subscription.ts:158-186`
 
@@ -253,7 +255,7 @@ Not in the original 36-item todo list but verified. Commit `e185ac8 fix(high): �
 
 ---
 
-### M-7 · `compliance-score.tsx` hardcoded light-theme backgrounds — ❌ **OPEN**
+### M-7 · `compliance-score.tsx` hardcoded light-theme backgrounds — ✅ **FIXED**
 
 **File:** `components/dashboard/compliance-score.tsx:41-67`
 
@@ -261,7 +263,7 @@ Still using `bg-green-100`, `bg-blue-100`, `bg-yellow-100`, `bg-red-100`. These 
 
 ---
 
-### M-8 · `website.ts` uses `console.error` instead of `logger` — ❌ **OPEN**
+### M-8 · `website.ts` uses `console.error` instead of `logger` — ✅ **FIXED**
 
 **File:** `lib/actions/website.ts:174, 247, 284`
 
@@ -269,7 +271,7 @@ Still `console.error`. The rest of the codebase (`dsar.ts`, `auth.ts`, webhook h
 
 ---
 
-### M-9 · `getDefaultBannerConfig` missing `privacyPolicyUrl` / `cookiePolicyUrl` — ❌ **OPEN**
+### M-9 · `getDefaultBannerConfig` missing `privacyPolicyUrl` / `cookiePolicyUrl` — ✅ **FIXED**
 
 **File:** `lib/actions/banner.ts:106-118`
 
@@ -277,7 +279,7 @@ Still absent. `BannerConfigInput` declares both as optional; callers that spread
 
 ---
 
-### M-10 · Cron route uses `console.log` / `console.error` — ❌ **OPEN**
+### M-10 · Cron route uses `console.log` / `console.error` — ✅ **FIXED**
 
 **File:** `app/api/cron/process-account-deletions/route.ts`
 
@@ -295,7 +297,7 @@ Still absent. `BannerConfigInput` declares both as optional; callers that spread
 
 ---
 
-### L-2 · Password toggle buttons missing `aria-label` / `aria-pressed` — ❌ **OPEN**
+### L-2 · Password toggle buttons missing `aria-label` / `aria-pressed` — ✅ **FIXED**
 
 **Files:** `components/auth/sign-in-form.tsx:102-113`, `components/auth/sign-up-form.tsx:109-120, 142-153`
 
@@ -303,7 +305,7 @@ All three toggles still emit icon-only buttons with no screen-reader text.
 
 ---
 
-### L-3 · Checkbox `onChange` uses `undefined` as unchecked — ❌ **OPEN**
+### L-3 · Checkbox `onChange` uses `undefined` as unchecked — ✅ **FIXED**
 
 **File:** `components/auth/sign-up-form.tsx:37-38, 169, 199`
 
@@ -316,7 +318,7 @@ Still wrong. Should be `false` (matches Zod's control flow and avoids uncontroll
 
 ---
 
-### L-4 · "Change Plan" navigates to marketing `/pricing` — ❌ **OPEN**
+### L-4 · "Change Plan" navigates to marketing `/pricing` — ✅ **FIXED**
 
 **File:** `app/(dashboard)/dashboard/billing/page.tsx:139`
 
@@ -328,7 +330,7 @@ Authenticated users still get bounced to the public marketing page. Should point
 
 ---
 
-### L-5 · `ScanHistory` "Show More" does nothing useful — ❌ **OPEN**
+### L-5 · `ScanHistory` "Show More" does nothing useful — ✅ **FIXED**
 
 **Files:** `components/dashboard/scan-history.tsx:33, 140-150`; `lib/actions/website.ts:77`
 
@@ -348,7 +350,7 @@ The sidebar now receives `planName`, `maxWebsites`, `maxTeamMembers`, `teamMembe
 
 ---
 
-### L-8 · `findings-list.tsx` — `"critical"` severity missing from config — ❌ **OPEN**
+### L-8 · `findings-list.tsx` — `"critical"` severity missing from config — ✅ **FIXED**
 
 **Files:** `lib/scanner/types.ts:66`, `components/dashboard/findings-list.tsx:30-49, 67-77`
 
@@ -364,7 +366,7 @@ Unchanged. PDF/analytics code elsewhere treats `"critical"` as distinct; any lea
 
 ---
 
-### L-10 · DSAR page `toLocaleDateString("en-US")` ignores locale — ❌ **OPEN**
+### L-10 · DSAR page `toLocaleDateString("en-US")` ignores locale — ✅ **FIXED**
 
 **File:** `app/(dashboard)/dashboard/dsar/[id]/page.tsx:235, 248`
 
@@ -384,7 +386,7 @@ Addressed in commit `553758d fix(medium): validate env vars at server startup`. 
 
 ---
 
-### L-13 · No page-level error boundaries — ❌ **OPEN**
+### L-13 · No page-level error boundaries — ✅ **FIXED**
 
 **Scope:** `app/(dashboard)/dashboard/{websites,dsar}/**/error.tsx`
 
@@ -392,7 +394,7 @@ Only `app/error.tsx` exists (single global boundary). A partial Sentry wiring co
 
 ---
 
-### L-14 · Banner default config duplicated — ❌ **OPEN**
+### L-14 · Banner default config duplicated — ✅ **FIXED**
 
 **Files:** `app/api/widget/[embedCode]/config/route.ts:36-48` · `lib/actions/banner.ts:106-118`
 
@@ -407,9 +409,9 @@ These appeared in the broader audit window but were **not** on the 36-item todo 
 | ID | File | Finding | Status |
 |---|---|---|---|
 | X-1 | `app/api/widget/[embedCode]/script.js/route.ts:39` | Same wildcard CORS as C-3 | ✅ N/A — browsers don't send Origin on `<script src>` loads; wildcard is correct for public script serving and restricting it would break widget embeds |
-| X-2 | `lib/actions/subscription.ts:117, 201, 237, 273, 300` | `console.error` instead of `logger` (same pattern as M-8) | ❌ Open |
-| X-3 | `lib/actions/consent.ts:57` | `console.error` instead of `logger` | ❌ Open |
-| X-4 | `app/(dashboard)/dashboard/billing/page.tsx:107, 129, 263` | Hardcoded `"en-US"` locale on invoice/date rendering (same class of bug as L-10) | ❌ Open |
+| X-2 | `lib/actions/subscription.ts:117, 201, 237, 273, 300` | `console.error` instead of `logger` (same pattern as M-8) | ✅ Fixed |
+| X-3 | `lib/actions/consent.ts:57` | `console.error` instead of `logger` | ✅ N/A — `recordConsent` (the only function with this call) was deleted as part of H-7 |
+| X-4 | `app/(dashboard)/dashboard/billing/page.tsx:107, 129, 263` | Hardcoded `"en-US"` locale on invoice/date rendering (same class of bug as L-10) | ✅ Fixed |
 
 ---
 

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -29,9 +30,12 @@ import { FindingsList } from "@/components/dashboard/findings-list";
 import { ActionChecklist } from "@/components/dashboard/action-checklist";
 import { ScanButton } from "@/components/dashboard/scan-button";
 import { ExportReportButton } from "@/components/dashboard/export-report-button";
-import { getWebsite } from "@/lib/actions/website";
-import { getScan } from "@/lib/actions/scan";
+import { getWebsite as _getWebsite } from "@/lib/actions/website";
+import { getScan as _getScan } from "@/lib/actions/scan";
 import { formatDateTime } from "@/lib/utils";
+
+const getWebsite = cache(_getWebsite);
+const getScan = cache(_getScan);
 
 interface ScanResultsPageProps {
   params: Promise<{ id: string; scanId: string }>;

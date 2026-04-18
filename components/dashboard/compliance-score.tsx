@@ -42,25 +42,25 @@ function getScoreStyle(score: number) {
   if (score >= 80) {
     return {
       color: "text-green-600",
-      bgColor: "bg-green-100",
+      bgColor: "bg-green-500/10",
       label: "Excellent",
     };
   } else if (score >= 60) {
     return {
       color: "text-blue-600",
-      bgColor: "bg-blue-100",
+      bgColor: "bg-blue-500/10",
       label: "Good",
     };
   } else if (score >= 40) {
     return {
       color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
+      bgColor: "bg-yellow-500/10",
       label: "Fair",
     };
   } else {
     return {
       color: "text-red-600",
-      bgColor: "bg-red-100",
+      bgColor: "bg-red-500/10",
       label: "Needs Work",
     };
   }

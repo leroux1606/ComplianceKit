@@ -34,8 +34,8 @@ export function SignUpForm() {
       email: "",
       password: "",
       confirmPassword: "",
-      acceptTerms: undefined,
-      acceptDpa: undefined,
+      acceptTerms: false,
+      acceptDpa: false,
     },
   });
 
@@ -111,11 +111,13 @@ export function SignUpForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     disabled={isLoading}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4" aria-hidden="true" />
                     )}
                   </button>
                 </div>
@@ -144,11 +146,13 @@ export function SignUpForm() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     disabled={isLoading}
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    aria-pressed={showConfirmPassword}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4" aria-hidden="true" />
                     )}
                   </button>
                 </div>
@@ -166,7 +170,7 @@ export function SignUpForm() {
                 <FormControl>
                   <Checkbox
                     checked={field.value === true}
-                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
                     disabled={isLoading}
                   />
                 </FormControl>
@@ -196,7 +200,7 @@ export function SignUpForm() {
                 <FormControl>
                   <Checkbox
                     checked={field.value === true}
-                    onCheckedChange={(checked) => field.onChange(checked === true ? true : undefined)}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
                     disabled={isLoading}
                   />
                 </FormControl>

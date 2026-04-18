@@ -36,12 +36,7 @@ export function ScanHistory({ websiteId, scans }: ScanHistoryProps) {
     return null;
   }
 
-  // Sort by date, most recent first
-  const sortedScans = [...scans].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  const displayedScans = sortedScans.slice(0, limit);
+  const displayedScans = scans.slice(0, limit);
 
   // Calculate trends
   const calculateTrend = (current: number | null, previous: number | null) => {

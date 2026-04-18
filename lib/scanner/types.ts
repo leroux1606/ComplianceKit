@@ -63,7 +63,7 @@ export type FindingType =
   | "popia_access_request"
   | "popia_third_party_operators";
 
-export type FindingSeverity = "info" | "warning" | "error";
+export type FindingSeverity = "info" | "warning" | "error" | "critical";
 
 export interface UserRightsDetection {
   hasProfileSettings: boolean;

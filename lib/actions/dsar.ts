@@ -351,15 +351,14 @@ export async function updateDsar(dsarId: string, values: DsarUpdateInput) {
       data: updateData,
     });
 
-    // Create activity records
-    for (const activity of activities) {
-      await db.dsarActivity.create({
-        data: {
+    if (activities.length > 0) {
+      await db.dsarActivity.createMany({
+        data: activities.map((a) => ({
           dsarId,
-          action: activity.action,
-          description: activity.description,
-          performedBy: session.user.id,
-        },
+          action: a.action,
+          description: a.description,
+          performedBy: session.user!.id,
+        })),
       });
     }
 

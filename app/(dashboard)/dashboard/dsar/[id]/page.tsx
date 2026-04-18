@@ -35,6 +35,7 @@ import {
 import { DsarStatusActions } from "@/components/dsar/dsar-status-actions";
 import { DsarActivityTimeline } from "@/components/dsar/dsar-activity-timeline";
 import { DsarResponseForm } from "@/components/dsar/dsar-response-form";
+import { formatDate } from "@/lib/utils";
 
 interface DsarDetailPageProps {
   params: Promise<{ id: string }>;
@@ -231,13 +232,7 @@ export default async function DsarDetailPage({ params }: DsarDetailPageProps) {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Submitted</p>
-                  <p className="font-medium">
-                    {new Date(dsar.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
+                  <p className="font-medium">{formatDate(dsar.createdAt)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -245,11 +240,7 @@ export default async function DsarDetailPage({ params }: DsarDetailPageProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">Due Date</p>
                   <p className={`font-medium ${isOverdue ? "text-red-600" : ""}`}>
-                    {new Date(dsar.dueDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {formatDate(dsar.dueDate)}
                     {!isOverdue && dsar.status !== "completed" && dsar.status !== "rejected" && (
                       <span className="text-sm text-muted-foreground ml-1">
                         ({daysRemaining} days left)
@@ -262,7 +253,7 @@ export default async function DsarDetailPage({ params }: DsarDetailPageProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">Verified</p>
                   <p className="font-medium text-green-600">
-                    {new Date(dsar.verifiedAt).toLocaleDateString()}
+                    {formatDate(dsar.verifiedAt)}
                   </p>
                 </div>
               )}
@@ -272,7 +263,7 @@ export default async function DsarDetailPage({ params }: DsarDetailPageProps) {
                     {dsar.status === "rejected" ? "Rejected" : "Completed"}
                   </p>
                   <p className="font-medium">
-                    {new Date(dsar.completedAt).toLocaleDateString()}
+                    {formatDate(dsar.completedAt)}
                   </p>
                 </div>
               )}

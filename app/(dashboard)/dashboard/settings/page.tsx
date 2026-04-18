@@ -6,7 +6,6 @@ import { AccountDeletionSection } from "@/components/dashboard/account-deletion-
 import { ApiKeySection } from "@/components/dashboard/api-key-section";
 import { getApiKey } from "@/lib/actions/api-key";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Settings | ComplianceKit",
@@ -15,11 +14,6 @@ export const metadata: Metadata = {
 
 export default async function SettingsPage() {
   const session = await auth();
-  
-  if (!session?.user) {
-    redirect("/sign-in");
-  }
-
   const companyDetails = await getUserCompanyDetails();
   const apiKey = await getApiKey();
   const maskedKey = apiKey
@@ -88,7 +82,7 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Account Deletion Section */}
-      <AccountDeletionSection userEmail={session.user.email!} />
+      <AccountDeletionSection userEmail={session?.user?.email ?? ""} />
     </div>
   );
 }
