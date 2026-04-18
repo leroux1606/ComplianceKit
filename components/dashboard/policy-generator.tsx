@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { generatePolicy, type PolicyType } from "@/lib/actions/policy";
+import { formatDate } from "@/lib/utils";
 
 interface PolicyGeneratorProps {
   websiteId: string;
@@ -41,6 +42,7 @@ export function PolicyGenerator({
 }: PolicyGeneratorProps) {
   const router = useRouter();
   const [generatingType, setGeneratingType] = useState<PolicyType | null>(null);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   async function handleGenerate(type: PolicyType) {
     if (!hasCompanyInfo) {
@@ -150,12 +152,7 @@ export function PolicyGenerator({
               <div className="space-y-3">
                 {policy.existing && (
                   <p className="text-xs text-muted-foreground">
-                    Last generated:{" "}
-                    {new Date(policy.existing.generatedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    Last generated: {formatDate(policy.existing.generatedAt)}
                   </p>
                 )}
                 <div className="flex gap-2">
@@ -179,13 +176,17 @@ export function PolicyGenerator({
                   {policy.existing && (
                     <Button
                       variant="outline"
-                      onClick={() =>
-                        router.push(
-                          `/dashboard/websites/${websiteId}/policies/${policy.existing!.id}`
-                        )
-                      }
+                      disabled={navigatingTo === policy.existing.id}
+                      onClick={() => {
+                        setNavigatingTo(policy.existing!.id);
+                        router.push(`/dashboard/websites/${websiteId}/policies/${policy.existing!.id}`);
+                      }}
                     >
-                      View
+                      {navigatingTo === policy.existing.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "View"
+                      )}
                     </Button>
                   )}
                 </div>

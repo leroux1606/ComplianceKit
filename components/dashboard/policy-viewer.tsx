@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { deletePolicy } from "@/lib/actions/policy";
+import { formatDate } from "@/lib/utils";
 import type { Policy } from "@prisma/client";
 
 interface PolicyViewerProps {
@@ -47,6 +48,13 @@ interface PolicyViewerProps {
 export function PolicyViewer({ policy, websiteUrl }: PolicyViewerProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Sanitize on client only — DOMPurify requires a DOM.
+  // Server render returns empty string (SSR); client hydrates with sanitized HTML.
+  const sanitizedHtml = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return DOMPurify.sanitize(policy.htmlContent || policy.content);
+  }, [policy.htmlContent, policy.content]);
 
   const policyTitle = policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy";
 
@@ -192,11 +200,7 @@ export function PolicyViewer({ policy, websiteUrl }: PolicyViewerProps) {
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Generated {new Date(policy.generatedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              Generated {formatDate(policy.generatedAt)}
             </div>
           </div>
         </CardContent>
@@ -244,13 +248,10 @@ export function PolicyViewer({ policy, websiteUrl }: PolicyViewerProps) {
               <TabsTrigger value="html">HTML Source</TabsTrigger>
             </TabsList>
             <TabsContent value="preview" className="mt-4">
-              <div 
+              <div
                 className="prose prose-sm dark:prose-invert max-w-none p-6 border rounded-lg bg-card"
-                dangerouslySetInnerHTML={{
-                  __html: typeof window !== "undefined"
-                    ? DOMPurify.sanitize(policy.htmlContent || policy.content)
-                    : policy.htmlContent || policy.content,
-                }}
+                dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+                suppressHydrationWarning
               />
             </TabsContent>
             <TabsContent value="html" className="mt-4">

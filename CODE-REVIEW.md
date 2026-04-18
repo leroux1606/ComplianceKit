@@ -16,10 +16,8 @@
 | 🔴 Critical | 4 | 4 | 0 | 0 |
 | 🟠 High | 8 | 8 | 0 | 0 |
 | 🟡 Medium | 11 | 11 | 0 | 0 |
-| 🔵 Low / Enhancement | 14 | 12 | 0 | 2 |
-| **Total** | **37** | **35** | **0** | **2** |
-
-> **2 remaining open:** L-7 (policy-generator loading state — not independently verified) · L-11 (policy-list/policy-viewer not reviewed in any audit cycle — flagged as high-risk area)
+| 🔵 Low / Enhancement | 14 | 14 | 0 | 0 |
+| **Total** | **37** | **37** | **0** | **0** |
 
 > **Secondary review notes (18 April 2026):** C-3 reclassified from Critical → High (widget config is semi-public, no PII exposed). H-3 reclassified from High → Medium/Performance (security angle is weak; `deletedAt` staleness risk is minimal). H-6 elevated to "this sprint" (GDPR compliance liability). M-8 status disputed — PROJECT-STATUS-2026-04-13.md marks console.error replacement as ✅ Done but X-2/X-3 findings suggest otherwise; verify by grepping the files directly before acting.
 
@@ -346,7 +344,7 @@ The sidebar now receives `planName`, `maxWebsites`, `maxTeamMembers`, `teamMembe
 
 ---
 
-### L-7 · `policy-generator.tsx` missing `router.push` loading state — ❌ **OPEN** *(not independently re-verified — flagged for follow-up)*
+### L-7 · `policy-generator.tsx` missing `router.push` loading state — ✅ **FIXED**
 
 ---
 
@@ -374,9 +372,12 @@ Still hardcoded to `"en-US"`. App otherwise supports i18n via next-intl. Lines 2
 
 ---
 
-### L-11 · `policy-list.tsx` / `policy-viewer.tsx` not reviewed — ❌ **STILL OPEN** (follow-up review)
+### L-11 · `policy-list.tsx` / `policy-viewer.tsx` not reviewed — ✅ **FIXED**
 
-Not audited in this pass either. Still flagged as high-risk area (active policy filtering, public policy endpoint sanitisation).
+Reviewed and corrected:
+- `policy-viewer.tsx`: DOMPurify was called inline with a `typeof window` guard that let raw unsanitised HTML render server-side. Fixed: `useMemo` now produces an empty string on SSR; client hydrates with `DOMPurify.sanitize()`. `suppressHydrationWarning` suppresses the expected SSR/client mismatch. Also fixed `toLocaleDateString("en-US")` → `formatDate()`.
+- `policy-list.tsx`: fixed `toLocaleDateString("en-US")` → `formatDate()`; added loading state to View button.
+- `policy-generator.tsx`: added `navigatingTo` state so the View button shows a spinner while navigation initiates; fixed `toLocaleDateString("en-US")` → `formatDate()`.
 
 ---
 

@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  FileText, 
-  Cookie, 
-  Calendar, 
+import {
+  FileText,
+  Cookie,
+  Calendar,
   Hash,
   ExternalLink,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Policy } from "@prisma/client";
+import { formatDate } from "@/lib/utils";
 
 interface PolicyListProps {
   policies: Policy[];
@@ -101,6 +104,7 @@ interface PolicyCardProps {
 }
 
 function PolicyCard({ policy, onView }: PolicyCardProps) {
+  const [navigating, setNavigating] = useState(false);
   const policyTitle = policy.type === "privacy_policy" ? "Privacy Policy" : "Cookie Policy";
   const Icon = policy.type === "privacy_policy" ? FileText : Cookie;
 
@@ -129,18 +133,25 @@ function PolicyCard({ policy, onView }: PolicyCardProps) {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {new Date(policy.generatedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {formatDate(policy.generatedAt)}
                 </span>
               </CardDescription>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onView}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={navigating}
+            onClick={() => { setNavigating(true); onView(); }}
+          >
+            {navigating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View
+              </>
+            )}
           </Button>
         </div>
       </CardHeader>
